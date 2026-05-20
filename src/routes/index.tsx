@@ -432,7 +432,7 @@ function Home() {
                 e.preventDefault();
                 const fd = new FormData(e.currentTarget);
                 const msg = `Hola, soy ${fd.get("nombre")}. ${fd.get("mensaje")}`;
-                window.open(`https://wa.me/51900000000?text=${encodeURIComponent(msg)}`, "_blank");
+                window.open(`https://wa.me/51932269859?text=${encodeURIComponent(msg)}`, "_blank");
               }}
             >
               <p className="font-display text-2xl text-white">Escríbenos</p>

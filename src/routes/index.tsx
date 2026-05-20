@@ -387,7 +387,7 @@ function Home() {
                 <span className="h-11 w-11 rounded-xl bg-white/10 flex items-center justify-center text-gold shrink-0"><Phone size={20} /></span>
                 <div>
                   <p className="font-semibold text-white">Teléfono</p>
-                  <p className="text-white/75 text-sm">+51 (054) 000-000</p>
+                  <p className="text-white/75 text-sm">+51 932 269 859</p>
                 </div>
               </li>
               <li className="flex items-start gap-4">

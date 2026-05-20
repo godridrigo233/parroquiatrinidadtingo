@@ -264,11 +264,10 @@ function Home() {
                     <Icon size={32} className="text-gold" />
                     <h3 className="mt-4 font-display text-2xl text-primary">{m.name}</h3>
                     <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{m.description}</p>
-                    {m.leader && (
-                      <div className="mt-5 pt-5 border-t border-border space-y-1.5 text-sm">
-                        <p className="text-foreground"><span className="text-muted-foreground">Encargado:</span> {m.leader}</p>
-                      </div>
-                    )}
+                    <div className="mt-5 pt-5 border-t border-border space-y-1.5 text-sm">
+                      {m.leader && <p className="text-foreground"><span className="text-muted-foreground">Encargado:</span> {m.leader}</p>}
+                      {m.schedule && <p className="text-foreground flex items-center gap-1.5"><Clock size={14} className="text-gold" /> {m.schedule}</p>}
+                    </div>
                   </div>
                 </Reveal>
               );

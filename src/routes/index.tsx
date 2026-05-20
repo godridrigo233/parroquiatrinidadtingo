@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/site/Navbar";
 import { Reveal } from "@/components/site/Reveal";
 import { WhatsAppFab } from "@/components/site/WhatsAppFab";
+import { FacebookFeed } from "@/components/site/FacebookFeed";
 import logo from "@/assets/logo.png";
 import heroImg from "@/assets/hero-church.jpg";
 import interiorImg from "@/assets/church-interior.jpg";

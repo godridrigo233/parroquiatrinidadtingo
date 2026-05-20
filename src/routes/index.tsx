@@ -111,7 +111,7 @@ function Home() {
             <span className="text-gold italic">Santísima Trinidad</span>
           </h1>
           <p className="fade-up fade-up-delay-2 mt-6 max-w-2xl text-lg md:text-xl text-white/85 leading-relaxed">
-            «Donde dos o tres se reúnen en mi nombre, allí estoy yo en medio de ellos.» — Una comunidad viva en Tingo, animada por las Carmelitas de María Inmaculada.
+            «Donde dos o tres se reúnen en mi nombre, allí estoy yo en medio de ellos.»
           </p>
           <div className="fade-up fade-up-delay-3 mt-10 flex flex-wrap gap-3 justify-center">
             <a href="#horarios" className="px-7 py-3.5 rounded-full bg-gradient-gold text-primary-foreground font-semibold shadow-elegant hover:scale-105 transition-transform flex items-center gap-2">

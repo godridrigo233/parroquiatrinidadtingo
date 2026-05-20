@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/site/Navbar";
 import { Reveal } from "@/components/site/Reveal";
 import { WhatsAppFab } from "@/components/site/WhatsAppFab";
+import { FacebookFeed } from "@/components/site/FacebookFeed";
 import logo from "@/assets/logo.png";
 import heroImg from "@/assets/hero-church.jpg";
 import interiorImg from "@/assets/church-interior.jpg";
@@ -69,7 +70,7 @@ const galleryImgs = [
 ];
 
 function Home() {
-  const [news, setNews] = useState<News[]>([]);
+  const [, setNews] = useState<News[]>([]);
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [ministries, setMinistries] = useState<Ministry[]>([]);
   const [events, setEvents] = useState<Eventt[]>([]);
@@ -238,31 +239,12 @@ function Home() {
             </Reveal>
           )}
 
-          <div className="mt-12 grid md:grid-cols-2 lg:grid-cols-3 gap-7">
-            {news.map((n, i) => (
-              <Reveal key={n.id} delay={i * 80}>
-                <article className="h-full bg-card rounded-2xl overflow-hidden border border-border shadow-card hover:shadow-elegant transition-shadow group">
-                  <div className="aspect-[16/10] bg-secondary overflow-hidden">
-                    <img
-                      src={n.image_url || interiorImg}
-                      alt={n.title}
-                      loading="lazy"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                    />
-                  </div>
-                  <div className="p-6">
-                    <p className="text-xs text-gold uppercase tracking-widest">
-                      {new Date(n.published_at).toLocaleDateString("es-PE", { day: "numeric", month: "long", year: "numeric" })}
-                    </p>
-                    <h3 className="mt-3 font-display text-2xl text-primary leading-snug">{n.title}</h3>
-                    <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{n.excerpt}</p>
-                  </div>
-                </article>
-              </Reveal>
-            ))}
-          </div>
+          <Reveal className="mt-12">
+            <FacebookFeed />
+          </Reveal>
         </div>
       </section>
+
 
       {/* MINISTERIOS */}
       <section id="ministerios" className="py-24 px-5 lg:px-8 bg-secondary/50">

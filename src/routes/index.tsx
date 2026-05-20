@@ -176,12 +176,14 @@ function Home() {
             <p className="mt-4 text-muted-foreground">Te esperamos para celebrar juntos la fe.</p>
           </Reveal>
 
-          <div className="mt-16 grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Object.entries(groupedSchedules).map(([cat, items], i) => {
+          <div className="mt-16 flex flex-wrap justify-center gap-6">
+            {Object.entries(groupedSchedules)
+              .filter(([cat]) => cat !== "catequesis")
+              .map(([cat, items], i) => {
               const meta = categoryMeta[cat] ?? { label: cat, icon: Church };
               const Icon = meta.icon;
               return (
-                <Reveal key={cat} delay={i * 80}>
+                <Reveal key={cat} delay={i * 80} className="w-full sm:w-[calc(50%-12px)] lg:w-[calc(25%-18px)]">
                   <div className="h-full bg-card rounded-2xl p-7 border border-border shadow-card hover:shadow-elegant transition-shadow group">
                     <div className="h-14 w-14 rounded-xl bg-gradient-gold flex items-center justify-center text-primary-foreground shadow-card group-hover:scale-110 transition-transform">
                       <Icon size={26} />

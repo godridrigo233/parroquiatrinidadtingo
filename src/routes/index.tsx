@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
   Church, Clock, BookOpen, Flame, Heart, Users, Music, GraduationCap,
-  Sparkles, MapPin, Phone, Facebook, Mail, Calendar, ArrowRight, Quote,
+  Sparkles, MapPin, Phone, Facebook, Instagram, Mail, Calendar, ArrowRight, Quote,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/site/Navbar";

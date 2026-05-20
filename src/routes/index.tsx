@@ -70,7 +70,7 @@ const galleryImgs = [
 ];
 
 function Home() {
-  const [news, setNews] = useState<News[]>([]);
+  const [, setNews] = useState<News[]>([]);
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [ministries, setMinistries] = useState<Ministry[]>([]);
   const [events, setEvents] = useState<Eventt[]>([]);

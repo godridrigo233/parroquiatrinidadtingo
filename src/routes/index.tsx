@@ -400,6 +400,13 @@ function Home() {
                 </div>
               </li>
               <li className="flex items-start gap-4">
+                <span className="h-11 w-11 rounded-xl bg-white/10 flex items-center justify-center text-gold shrink-0"><Instagram size={20} /></span>
+                <div>
+                  <p className="font-semibold text-white">Instagram</p>
+                  <a href="https://www.instagram.com/stma_trinidad_tingo/" target="_blank" rel="noopener noreferrer" className="text-white/75 text-sm hover:text-gold">@stma_trinidad_tingo</a>
+                </div>
+              </li>
+              <li className="flex items-start gap-4">
                 <span className="h-11 w-11 rounded-xl bg-white/10 flex items-center justify-center text-gold shrink-0"><Mail size={20} /></span>
                 <div>
                   <p className="font-semibold text-white">Correo</p>

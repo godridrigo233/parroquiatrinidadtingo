@@ -483,9 +483,14 @@ function Home() {
           </div>
           <div>
             <p className="font-semibold text-white uppercase tracking-widest text-xs">Síguenos</p>
-            <a href="https://www.facebook.com/parroquiasantisimatrinidadtingo/" target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 transition text-sm">
-              <Facebook size={16} /> Facebook oficial
-            </a>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <a href="https://www.facebook.com/parroquiasantisimatrinidadtingo/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 transition text-sm">
+                <Facebook size={16} /> Facebook
+              </a>
+              <a href="https://www.instagram.com/stma_trinidad_tingo/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 transition text-sm">
+                <Instagram size={16} /> Instagram
+              </a>
+            </div>
           </div>
         </div>
         <div className="max-w-7xl mx-auto mt-10 pt-6 border-t border-white/10 text-center text-xs text-white/50">

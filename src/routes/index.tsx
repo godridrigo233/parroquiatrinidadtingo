@@ -110,7 +110,7 @@ function Home() {
             Parroquia<br />
             <span className="text-gold italic">Santísima Trinidad</span>
           </h1>
-          <p className="fade-up fade-up-delay-2 mt-6 max-w-2xl text-lg md:text-xl text-white/85 leading-relaxed">
+          <p className="fade-up fade-up-delay-2 mt-6 text-sm sm:text-base md:text-lg text-white/85 leading-relaxed italic md:whitespace-nowrap">
             «Donde dos o tres se reúnen en mi nombre, allí estoy yo en medio de ellos.»
           </p>
           <div className="fade-up fade-up-delay-3 mt-10 flex flex-wrap gap-3 justify-center">

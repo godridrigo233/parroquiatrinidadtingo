@@ -111,7 +111,7 @@ function Home() {
             <span className="text-gold italic">Santísima Trinidad</span>
           </h1>
           <p className="fade-up fade-up-delay-2 mt-6 max-w-2xl text-lg md:text-xl text-white/85 leading-relaxed">
-            «Donde dos o tres se reúnen en mi nombre, allí estoy yo en medio de ellos.» — Una comunidad viva en Tingo, animada por las Carmelitas de María Inmaculada.
+            «Donde dos o tres se reúnen en mi nombre, allí estoy yo en medio de ellos.»
           </p>
           <div className="fade-up fade-up-delay-3 mt-10 flex flex-wrap gap-3 justify-center">
             <a href="#horarios" className="px-7 py-3.5 rounded-full bg-gradient-gold text-primary-foreground font-semibold shadow-elegant hover:scale-105 transition-transform flex items-center gap-2">
@@ -387,7 +387,7 @@ function Home() {
                 <span className="h-11 w-11 rounded-xl bg-white/10 flex items-center justify-center text-gold shrink-0"><Phone size={20} /></span>
                 <div>
                   <p className="font-semibold text-white">Teléfono</p>
-                  <p className="text-white/75 text-sm">+51 (054) 000-000</p>
+                  <p className="text-white/75 text-sm">+51 932 269 859</p>
                 </div>
               </li>
               <li className="flex items-start gap-4">
@@ -432,7 +432,7 @@ function Home() {
                 e.preventDefault();
                 const fd = new FormData(e.currentTarget);
                 const msg = `Hola, soy ${fd.get("nombre")}. ${fd.get("mensaje")}`;
-                window.open(`https://wa.me/51900000000?text=${encodeURIComponent(msg)}`, "_blank");
+                window.open(`https://wa.me/51932269859?text=${encodeURIComponent(msg)}`, "_blank");
               }}
             >
               <p className="font-display text-2xl text-white">Escríbenos</p>

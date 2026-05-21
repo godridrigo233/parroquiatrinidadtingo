@@ -74,6 +74,13 @@ function Home() {
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [ministries, setMinistries] = useState<Ministry[]>([]);
   const [events, setEvents] = useState<Eventt[]>([]);
+  const [scrollY, setScrollY] = useState(0);
+
+  useEffect(() => {
+    const onScroll = () => setScrollY(window.scrollY);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -101,21 +108,45 @@ function Home() {
 
       {/* HERO */}
       <section id="inicio" className="relative h-[100svh] min-h-[640px] w-full overflow-hidden">
-        <img src={heroImg} alt="Parroquia Santísima Trinidad" className="absolute inset-0 h-full w-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-hero" />
-        <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6 max-w-5xl mx-auto">
-          <span className="fade-up inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 backdrop-blur text-white/90 text-xs uppercase tracking-[0.2em]">
-            <Sparkles size={14} className="text-gold" /> Arequipa · Perú
+        {/* Imagen con ken-burns + parallax */}
+        <div
+          className="absolute inset-0 will-change-transform"
+          style={{ transform: `translate3d(0, ${scrollY * 0.35}px, 0)` }}
+        >
+          <img
+            src={heroImg}
+            alt="Parroquia Santísima Trinidad"
+            className="ken-burns absolute inset-0 h-[115%] w-full object-cover"
+          />
+        </div>
+
+        {/* Overlay multicapa: profundidad + viñeta + glow dorado sutil */}
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/70 via-primary/40 to-primary/85" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,oklch(0.18_0.03_265/0.55)_75%,oklch(0.14_0.03_265/0.9)_100%)]" />
+        <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-black/40 to-transparent" />
+
+        {/* Contenido */}
+        <div
+          className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6 max-w-5xl mx-auto"
+          style={{ transform: `translate3d(0, ${scrollY * -0.15}px, 0)`, opacity: Math.max(0, 1 - scrollY / 600) }}
+        >
+          <span className="fade-up gold-divider text-white/90">
+            <Sparkles size={14} className="text-gold" />
+            <span>Arequipa · Perú</span>
           </span>
-          <h1 className="fade-up fade-up-delay-1 mt-6 font-display text-5xl md:text-7xl lg:text-8xl font-medium text-white leading-[1.05]">
+          <h1 className="fade-up fade-up-delay-1 hero-title-glow mt-7 font-display text-5xl md:text-7xl lg:text-[5.5rem] font-medium text-white leading-[1.02] tracking-tight">
             Parroquia<br />
             <span className="text-gold italic">Santísima Trinidad</span>
           </h1>
-          <p className="fade-up fade-up-delay-2 mt-6 text-sm sm:text-base md:text-lg text-white/85 leading-relaxed italic md:whitespace-nowrap">
-            «Donde dos o tres se reúnen en mi nombre, allí estoy yo en medio de ellos.»
-          </p>
-          <div className="fade-up fade-up-delay-3 mt-10 flex flex-wrap gap-3 justify-center">
-            <a href="#horarios" className="px-7 py-3.5 rounded-full bg-gradient-gold text-primary-foreground font-semibold shadow-elegant hover:scale-105 transition-transform flex items-center gap-2">
+          <div className="fade-up fade-up-delay-2 mt-7 flex items-center justify-center">
+            <span className="h-px w-12 bg-gold/70" />
+            <p className="px-5 text-sm sm:text-base md:text-lg text-white/85 leading-relaxed italic font-display">
+              «Donde dos o tres se reúnen en mi nombre, allí estoy yo en medio de ellos.»
+            </p>
+            <span className="h-px w-12 bg-gold/70" />
+          </div>
+          <div className="fade-up fade-up-delay-3 mt-11 flex flex-wrap gap-3 justify-center">
+            <a href="#horarios" className="px-7 py-3.5 rounded-full bg-gradient-gold text-primary-foreground font-semibold shadow-elegant hover:scale-105 hover:shadow-[0_25px_60px_-20px_oklch(0.72_0.13_80/0.6)] transition-all flex items-center gap-2">
               <Clock size={18} /> Ver horarios
             </a>
             <a href="#noticias" className="px-7 py-3.5 rounded-full bg-white/10 border border-white/30 backdrop-blur text-white font-semibold hover:bg-white/20 transition-colors">
@@ -126,8 +157,11 @@ function Home() {
             </a>
           </div>
         </div>
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/70 text-xs tracking-widest uppercase animate-pulse">
-          Desliza para descubrir
+
+        {/* Scroll cue refinado */}
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/60">
+          <span className="text-[10px] tracking-[0.35em] uppercase">Desliza</span>
+          <span className="block h-10 w-px bg-gradient-to-b from-gold/80 to-transparent animate-pulse" />
         </div>
       </section>
 

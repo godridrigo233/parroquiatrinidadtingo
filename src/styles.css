@@ -136,4 +136,38 @@
     transition: opacity 0.8s ease-out, transform 0.8s ease-out;
   }
   .reveal.in-view { opacity: 1; transform: translateY(0); }
+
+  /* Hero ken-burns: lento zoom + pan cinematográfico */
+  .ken-burns {
+    animation: kenBurns 24s ease-out forwards;
+    transform-origin: center 40%;
+    will-change: transform;
+  }
+  @keyframes kenBurns {
+    0%   { transform: scale(1.08) translate3d(0,0,0); }
+    100% { transform: scale(1.18) translate3d(0,-1.5%,0); }
+  }
+
+  /* Divisor dorado decorativo */
+  .gold-divider {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.85rem;
+    color: var(--gold);
+    font-size: 0.7rem;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+  }
+  .gold-divider::before,
+  .gold-divider::after {
+    content: "";
+    height: 1px;
+    width: 48px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+
+  /* Brillo sutil en el título del hero */
+  .hero-title-glow {
+    text-shadow: 0 2px 30px oklch(0.22 0.04 260 / 0.55), 0 0 80px oklch(0.22 0.04 260 / 0.3);
+  }
 }

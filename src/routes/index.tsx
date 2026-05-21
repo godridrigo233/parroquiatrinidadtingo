@@ -226,6 +226,41 @@ function Home() {
         </div>
       </section>
 
+      {/* SACERDOTES */}
+      <section id="sacerdotes" className="py-24 md:py-28 px-5 lg:px-8 bg-secondary/40">
+        <div className="max-w-6xl mx-auto">
+          <Reveal className="text-center max-w-2xl mx-auto">
+            <p className="text-gold uppercase tracking-[0.25em] text-xs font-semibold">Al servicio de la comunidad</p>
+            <h2 className="mt-3 font-display text-4xl md:text-5xl font-medium">Nuestros sacerdotes</h2>
+            <p className="mt-4 text-muted-foreground">
+              Pastores que acompañan la vida espiritual de la parroquia.
+            </p>
+          </Reveal>
+
+          <div className="mt-16 grid sm:grid-cols-2 gap-8 md:gap-12">
+            {sacerdotes.map((p, i) => (
+              <Reveal key={p.name} delay={i * 120}>
+                <article className="group relative bg-card rounded-2xl overflow-hidden border border-border shadow-card hover:shadow-elegant transition-shadow">
+                  <div className="aspect-[3/4] overflow-hidden">
+                    <img
+                      src={p.img}
+                      alt={`${p.role} ${p.name}`}
+                      loading="lazy"
+                      className="w-full h-full object-cover object-top group-hover:scale-[1.03] transition-transform duration-1000"
+                    />
+                  </div>
+                  <div className="p-7">
+                    <p className="text-gold uppercase tracking-[0.2em] text-xs font-semibold">{p.role}</p>
+                    <h3 className="mt-2 font-display text-3xl text-primary">{p.name}</h3>
+                    <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{p.desc}</p>
+                  </div>
+                </article>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* HORARIOS */}
       <section id="horarios" className="py-24 px-5 lg:px-8 bg-secondary/50">
         <div className="max-w-7xl mx-auto">

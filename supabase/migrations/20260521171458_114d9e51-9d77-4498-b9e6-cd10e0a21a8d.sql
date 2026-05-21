@@ -1,0 +1,1 @@
+INSERT INTO public.schedules (category, day_label, time_label, sort_order) VALUES ('secretaria', 'Lunes a Sábado', '3:00 PM – 6:00 PM', 10);

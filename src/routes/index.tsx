@@ -74,6 +74,13 @@ function Home() {
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [ministries, setMinistries] = useState<Ministry[]>([]);
   const [events, setEvents] = useState<Eventt[]>([]);
+  const [scrollY, setScrollY] = useState(0);
+
+  useEffect(() => {
+    const onScroll = () => setScrollY(window.scrollY);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
     (async () => {

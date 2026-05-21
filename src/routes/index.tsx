@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
   Church, Clock, BookOpen, Flame, Heart, Users, Music, GraduationCap,
-  Sparkles, MapPin, Phone, Facebook, Instagram, Mail, Calendar, ArrowRight, Quote,
+  Sparkles, MapPin, Phone, Facebook, Instagram, Mail, Calendar, ArrowRight, Quote, Briefcase,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/site/Navbar";
@@ -14,12 +14,17 @@ import heroImg from "@/assets/hero-church.jpg";
 import interiorImg from "@/assets/church-interior.jpg";
 import virgenImg from "@/assets/virgen-dolores.jpg";
 import trinidadImg from "@/assets/trinidad.jpg";
+import padreTommy from "@/assets/padre-tommy.jpg";
+import padreManesh from "@/assets/padre-manesh.jpg";
 import gMass from "@/assets/gallery-mass.jpg";
 import gProc from "@/assets/gallery-procession.jpg";
 import gComm from "@/assets/gallery-communion.jpg";
 import gYouth from "@/assets/gallery-youth.jpg";
 import gChoir from "@/assets/gallery-choir.jpg";
 import gCandles from "@/assets/gallery-candles.jpg";
+import gFacade from "@/assets/gallery-facade.jpg";
+import gCommunity from "@/assets/gallery-community.jpg";
+import gAltar from "@/assets/gallery-altar.jpg";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -49,6 +54,7 @@ const categoryMeta: Record<string, { label: string; icon: typeof Church }> = {
   catequesis: { label: "Catequesis", icon: BookOpen },
   adoracion: { label: "Adoración", icon: Flame },
   pastoral: { label: "Pastoral", icon: Users },
+  secretaria: { label: "Secretaría", icon: Briefcase },
 };
 
 const ministryIcons = [Music, BookOpen, Users, Sparkles, Heart, GraduationCap];
@@ -61,12 +67,30 @@ const testimonios = [
 ];
 
 const galleryImgs = [
+  { src: gFacade, label: "Fachada de la parroquia" },
   { src: gMass, label: "Santa Misa" },
+  { src: gAltar, label: "Altar mayor" },
   { src: gProc, label: "Procesión" },
   { src: gComm, label: "Primera Comunión" },
+  { src: gCommunity, label: "Comunidad parroquial" },
   { src: gYouth, label: "Pastoral Juvenil" },
   { src: gChoir, label: "Coro Parroquial" },
   { src: gCandles, label: "Oración" },
+];
+
+const sacerdotes = [
+  {
+    img: padreTommy,
+    name: "Padre Tommy",
+    role: "Párroco",
+    desc: "Pastor de la comunidad, dedicado a la celebración de los sacramentos, la formación de los fieles y el acompañamiento espiritual de la familia parroquial.",
+  },
+  {
+    img: padreManesh,
+    name: "Padre Manesh",
+    role: "Vicario parroquial",
+    desc: "Colabora en la vida pastoral de la parroquia, animando los ministerios, la catequesis y la cercanía con los jóvenes y las familias.",
+  },
 ];
 
 function Home() {

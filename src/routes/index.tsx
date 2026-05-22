@@ -551,8 +551,8 @@ function Home() {
           <div>
             <p className="font-semibold text-white uppercase tracking-widest text-xs">Horarios rápidos</p>
             <ul className="mt-4 space-y-2 text-sm text-white/75">
-              <li>Domingos · 8:00 AM, 10:00 AM y 7:00 PM</li>
-              <li>Lun – Vie · 7:00 PM</li>
+              <li>Domingos · 8:00 AM y 6:00 PM</li>
+              <li>Lun – Vie · 6:00 PM</li>
               <li>Sábado · 6:00 PM (vigilia)</li>
             </ul>
           </div>

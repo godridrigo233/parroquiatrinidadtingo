@@ -71,7 +71,7 @@ const galleryImgs = [
   { src: gNinosPrimeraComunion, label: "Niños de Primera Comunión" },
   { src: gBendicionNinos, label: "Bendición de los niños" },
   { src: gComunidadOracion, label: "Comunidad en oración" },
-  { src: gConfirmacionJovenes, label: "Sacramento de la Confirmación" },
+  { src: gConfirmacionJovenes, label: "Catequistas" },
   { src: gPeregrinos, label: "Peregrinos de Esperanza · Jubileo 2025" },
   { src: gAlasDeFe, label: "Ministerio Alas de Fe" },
   { src: gSiervosDeLuz, label: "Ministerio Siervos de Luz" },

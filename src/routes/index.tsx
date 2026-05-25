@@ -16,15 +16,15 @@ import virgenImg from "@/assets/virgen-dolores.jpg";
 import trinidadImg from "@/assets/trinidad.jpg";
 import padreTommy from "@/assets/padre-tommy.jpg";
 import padreManesh from "@/assets/padre-manesh.jpg";
-import gMass from "@/assets/gallery-mass.jpg";
-import gProc from "@/assets/gallery-procession.jpg";
-import gComm from "@/assets/gallery-communion.jpg";
-import gYouth from "@/assets/gallery-youth.jpg";
-import gChoir from "@/assets/gallery-choir.jpg";
-import gCandles from "@/assets/gallery-candles.jpg";
-import gFacade from "@/assets/gallery-facade.jpg";
-import gCommunity from "@/assets/gallery-community.jpg";
-import gAltar from "@/assets/gallery-altar.jpg";
+import gPrimeraComunionMisa from "@/assets/gallery-primera-comunion-misa.jpg";
+import gNinosPrimeraComunion from "@/assets/gallery-ninos-primera-comunion.jpg";
+import gBendicionNinos from "@/assets/gallery-bendicion-ninos.jpg";
+import gComunidadOracion from "@/assets/gallery-comunidad-oracion.jpg";
+import gConfirmacionJovenes from "@/assets/gallery-confirmacion-jovenes.jpg";
+import gPeregrinos from "@/assets/gallery-peregrinos-esperanza.jpg";
+import gAlasDeFe from "@/assets/gallery-alas-de-fe.jpg";
+import gSiervosDeLuz from "@/assets/gallery-siervos-de-luz.jpg";
+import gHermandadDolores from "@/assets/gallery-hermandad-dolores.jpg";
 
 export const Route = createFileRoute("/")({
   head: () => ({

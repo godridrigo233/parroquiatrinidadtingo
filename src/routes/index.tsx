@@ -550,11 +550,13 @@ function Home() {
             </p>
           </div>
           <div>
-            <p className="font-semibold text-white uppercase tracking-widest text-xs">Horarios rápidos</p>
+            <p className="font-semibold text-white uppercase tracking-widest text-xs">Horarios y contacto</p>
             <ul className="mt-4 space-y-2 text-sm text-white/75">
               <li>Domingos · 8:00 AM y 6:00 PM</li>
               <li>Lun – Vie · 6:00 PM</li>
               <li>Sábado · 6:00 PM (vigilia)</li>
+              <li className="pt-2">Tel: (054) 232767</li>
+              <li>WhatsApp: +51 932 269 859</li>
             </ul>
           </div>
           <div>

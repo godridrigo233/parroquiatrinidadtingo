@@ -1,37 +1,37 @@
-## Reemplazar la sección "Noticias y avisos" con el Page Plugin oficial de Facebook
+## Plan: Email del formulario + Teléfono de la parroquia
 
-### Qué hago
+### 1. Email desde el formulario "Escríbenos"
 
-En la sección `#noticias` de `src/routes/index.tsx`, sustituyo el grid de noticias internas (las que vienen de la base de datos) por un embed oficial de Facebook Page Plugin que muestra los últimos posts de **facebook.com/parroquiasantisimatrinidadtingo** en tiempo real.
+**Objetivo:** cuando alguien llene el formulario, la parroquia reciba un email con sus datos.
 
-### Cómo se ve
+**Cómo funciona:**
+- Visitante escribe nombre, correo y mensaje → presiona "Enviar".
+- El sitio envía un email a **parroquiatrinidadtingo@gmail.com** con el mensaje, con *Responder* apuntando al correo del visitante.
+- Se muestra confirmación en pantalla ("Mensaje enviado").
+- El botón WhatsApp sigue funcionando como respaldo (se abre después de enviar el email).
 
-- Mantengo el título de sección **"Noticias y avisos"** con el mismo estilo dorado + serif que ya tienes.
-- Mantengo el botón **"Síguenos en Facebook"** arriba a la derecha.
-- Mantengo el banner dorado de **"Próximos eventos"** (sigue saliendo de la base de datos del admin).
-- Debajo: el feed de Facebook embebido (tabs: posts y eventos, altura ~700px, ancho responsive hasta 500px máximo según limitaciones del plugin, centrado en un card claro con sombra para que combine con el resto del diseño).
+**Paso previo obligatorio:** necesitamos configurar un dominio de email (ej. `notify.parroquiatrinidadtingo.lovable.app`). Esto se hace una vez con un botón en el chat. Mientras DNS verifica, todo queda listo.
 
-### Cómo lo implemento técnicamente
+**Archivos a crear/modificar:**
+- Configurar dominio de email + infraestructura (botón en chat)
+- `src/routes/api/public/contact.ts` — ruta pública que valida el formulario y encola el email
+- `src/lib/email-templates/contact-form-message.tsx` — plantilla del email
+- `src/routes/index.tsx` — actualizar el `onSubmit` del formulario para enviar email + mostrar confirmación
 
-- Creo un componente `src/components/site/FacebookFeed.tsx` que renderiza el iframe oficial:
-  ```
-  https://www.facebook.com/plugins/page.php?href=https://www.facebook.com/parroquiasantisimatrinidadtingo&tabs=timeline&width=500&height=700&small_header=true&adapt_container_width=true&hide_cover=false&show_facepile=true
-  ```
-- Es un `<iframe>` puro — **no requiere SDK de Facebook, ni clave de API, ni token**. Solo necesita que tu página de Facebook sea pública (ya lo es).
-- Carga `loading="lazy"` para no afectar el rendimiento del hero.
+### 2. Teléfono fijo de la parroquia
 
-### Limitaciones que debes saber (importante)
+**Objetivo:** mostrar el número (054) 232767 en el sitio.
 
-1. **El widget se ve "como Facebook"** (fondo blanco, fuente de Facebook). No se puede personalizar el color dorado/azul dentro del iframe — es una restricción de Facebook.
-2. **Ancho máximo ~500px**: Facebook no permite plugins más anchos. Por eso lo centro en un card.
-3. **Bloqueadores de rastreadores** (uBlock, Brave shields, etc.) pueden ocultarlo a algunos visitantes. Para esos casos dejo un mensaje de fallback con link directo a Facebook.
-4. La sección **"Noticias" del panel admin** (`/admin`) deja de mostrarse en el sitio público. ¿La dejo igual en el panel por si más adelante quieres volver a usarla, o también la quito del admin? — *Propongo dejarla en el admin sin tocarla, así no perdemos nada.*
+**Dónde:**
+- En la sección de contacto (redes sociales, correo, teléfono)
+- En el footer
 
-### Archivos a modificar
+**Archivo a modificar:**
+- `src/routes/index.tsx` — agregar el teléfono en la lista de contacto y en el footer
 
-- `src/components/site/FacebookFeed.tsx` — **nuevo** componente con el iframe.
-- `src/routes/index.tsx` — reemplazo el grid de `news.map(...)` por `<FacebookFeed />` dentro de la sección `#noticias`. Quito el `useState`/`fetch` de `news` que ya no se usa.
+---
 
-### Lo que NO toco
-
-- Base de datos, panel admin, eventos, horarios, ministerios, galería, hero, footer, WhatsApp, Instagram — todo igual.
+**Datos clave que me diste:**
+- Teléfono fijo: (054) 232767
+- Correo: parroquiatrinidadtingo@gmail.com
+- WhatsApp: +51 932 269 859

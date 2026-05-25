@@ -67,15 +67,15 @@ const testimonios = [
 ];
 
 const galleryImgs = [
-  { src: gFacade, label: "Fachada de la parroquia" },
-  { src: gMass, label: "Santa Misa" },
-  { src: gAltar, label: "Altar mayor" },
-  { src: gProc, label: "Procesión" },
-  { src: gComm, label: "Primera Comunión" },
-  { src: gCommunity, label: "Comunidad parroquial" },
-  { src: gYouth, label: "Pastoral Juvenil" },
-  { src: gChoir, label: "Coro Parroquial" },
-  { src: gCandles, label: "Oración" },
+  { src: gPrimeraComunionMisa, label: "Primera Comunión" },
+  { src: gNinosPrimeraComunion, label: "Niños de Primera Comunión" },
+  { src: gBendicionNinos, label: "Bendición de los niños" },
+  { src: gComunidadOracion, label: "Comunidad en oración" },
+  { src: gConfirmacionJovenes, label: "Sacramento de la Confirmación" },
+  { src: gPeregrinos, label: "Peregrinos de Esperanza · Jubileo 2025" },
+  { src: gAlasDeFe, label: "Ministerio Alas de Fe" },
+  { src: gSiervosDeLuz, label: "Ministerio Siervos de Luz" },
+  { src: gHermandadDolores, label: "Hermandad Virgen de los Dolores" },
 ];
 
 const sacerdotes = [

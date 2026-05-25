@@ -16,15 +16,15 @@ import virgenImg from "@/assets/virgen-dolores.jpg";
 import trinidadImg from "@/assets/trinidad.jpg";
 import padreTommy from "@/assets/padre-tommy.jpg";
 import padreManesh from "@/assets/padre-manesh.jpg";
-import gMass from "@/assets/gallery-mass.jpg";
-import gProc from "@/assets/gallery-procession.jpg";
-import gComm from "@/assets/gallery-communion.jpg";
-import gYouth from "@/assets/gallery-youth.jpg";
-import gChoir from "@/assets/gallery-choir.jpg";
-import gCandles from "@/assets/gallery-candles.jpg";
-import gFacade from "@/assets/gallery-facade.jpg";
-import gCommunity from "@/assets/gallery-community.jpg";
-import gAltar from "@/assets/gallery-altar.jpg";
+import gPrimeraComunionMisa from "@/assets/gallery-primera-comunion-misa.jpg";
+import gNinosPrimeraComunion from "@/assets/gallery-ninos-primera-comunion.jpg";
+import gBendicionNinos from "@/assets/gallery-bendicion-ninos.jpg";
+import gComunidadOracion from "@/assets/gallery-comunidad-oracion.jpg";
+import gConfirmacionJovenes from "@/assets/gallery-confirmacion-jovenes.jpg";
+import gPeregrinos from "@/assets/gallery-peregrinos-esperanza.jpg";
+import gAlasDeFe from "@/assets/gallery-alas-de-fe.jpg";
+import gSiervosDeLuz from "@/assets/gallery-siervos-de-luz.jpg";
+import gHermandadDolores from "@/assets/gallery-hermandad-dolores.jpg";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -67,15 +67,15 @@ const testimonios = [
 ];
 
 const galleryImgs = [
-  { src: gFacade, label: "Fachada de la parroquia" },
-  { src: gMass, label: "Santa Misa" },
-  { src: gAltar, label: "Altar mayor" },
-  { src: gProc, label: "Procesión" },
-  { src: gComm, label: "Primera Comunión" },
-  { src: gCommunity, label: "Comunidad parroquial" },
-  { src: gYouth, label: "Pastoral Juvenil" },
-  { src: gChoir, label: "Coro Parroquial" },
-  { src: gCandles, label: "Oración" },
+  { src: gPrimeraComunionMisa, label: "Primera Comunión" },
+  { src: gNinosPrimeraComunion, label: "Niños de Primera Comunión" },
+  { src: gBendicionNinos, label: "Bendición de los niños" },
+  { src: gComunidadOracion, label: "Comunidad en oración" },
+  { src: gConfirmacionJovenes, label: "Sacramento de la Confirmación" },
+  { src: gPeregrinos, label: "Peregrinos de Esperanza · Jubileo 2025" },
+  { src: gAlasDeFe, label: "Ministerio Alas de Fe" },
+  { src: gSiervosDeLuz, label: "Ministerio Siervos de Luz" },
+  { src: gHermandadDolores, label: "Hermandad Virgen de los Dolores" },
 ];
 
 const sacerdotes = [
@@ -464,7 +464,8 @@ function Home() {
                 <span className="h-11 w-11 rounded-xl bg-white/10 flex items-center justify-center text-gold shrink-0"><Phone size={20} /></span>
                 <div>
                   <p className="font-semibold text-white">Teléfono</p>
-                  <p className="text-white/75 text-sm">+51 932 269 859</p>
+                  <p className="text-white/75 text-sm">(054) 232767 · Fijo parroquial</p>
+                  <p className="text-white/75 text-sm">+51 932 269 859 · WhatsApp</p>
                 </div>
               </li>
               <li className="flex items-start gap-4">
@@ -549,11 +550,13 @@ function Home() {
             </p>
           </div>
           <div>
-            <p className="font-semibold text-white uppercase tracking-widest text-xs">Horarios rápidos</p>
+            <p className="font-semibold text-white uppercase tracking-widest text-xs">Horarios y contacto</p>
             <ul className="mt-4 space-y-2 text-sm text-white/75">
               <li>Domingos · 8:00 AM y 6:00 PM</li>
               <li>Lun – Vie · 6:00 PM</li>
               <li>Sábado · 6:00 PM (vigilia)</li>
+              <li className="pt-2">Tel: (054) 232767</li>
+              <li>WhatsApp: +51 932 269 859</li>
             </ul>
           </div>
           <div>

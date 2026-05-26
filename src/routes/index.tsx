@@ -455,6 +455,16 @@ function Home() {
               Las puertas de la parroquia están abiertas. Acércate, conversa con nosotros y forma parte de esta gran familia.
             </p>
 
+            <div className="mt-6 p-5 rounded-xl bg-white/10 border border-white/15 backdrop-blur">
+              <div className="flex items-start gap-4">
+                <span className="h-10 w-10 rounded-lg bg-white/10 flex items-center justify-center text-gold shrink-0"><Clock size={20} /></span>
+                <div>
+                  <p className="font-semibold text-white">Horario de atención en secretaría</p>
+                  <p className="text-white/75 text-sm">Lunes a sábado · 3:00 PM – 6:00 PM</p>
+                </div>
+              </div>
+            </div>
+
             <ul className="mt-10 space-y-5">
               <li className="flex items-start gap-4">
                 <span className="h-11 w-11 rounded-xl bg-white/10 flex items-center justify-center text-gold shrink-0"><MapPin size={20} /></span>
@@ -559,7 +569,8 @@ function Home() {
               <li>Domingos · 8:00 AM y 6:00 PM</li>
               <li>Lun – Vie · 6:00 PM</li>
               <li>Sábado · 6:00 PM (vigilia)</li>
-              <li className="pt-2">Tel: +51 915 049 850 <span className="text-white/50">(solo llamadas)</span></li>
+              <li className="pt-2 border-t border-white/10 mt-2">Secretaría: Lun – Sáb · 3:00 – 6:00 PM</li>
+              <li className="pt-1">Tel: +51 915 049 850 <span className="text-white/50">(solo llamadas)</span></li>
             </ul>
           </div>
           <div>

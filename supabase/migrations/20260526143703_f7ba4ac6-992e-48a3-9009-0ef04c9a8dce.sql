@@ -1,0 +1,2 @@
+UPDATE public.ministries SET name = 'Legión de María' WHERE id = 'ec114dce-ebf6-4156-83c1-7a334465bbb4';
+UPDATE public.ministries SET leader = 'Coordinador: Hno. Ernesto' WHERE id = '21481bac-9602-465c-ad57-c07d1d8d72b8';

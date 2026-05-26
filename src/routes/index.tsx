@@ -12,7 +12,7 @@ import { FacebookFeed } from "@/components/site/FacebookFeed";
 import logo from "@/assets/logo.png";
 import heroImg from "@/assets/hero-church.jpg";
 import interiorImg from "@/assets/church-interior.jpg";
-import virgenImg from "@/assets/virgen-dolores.jpg";
+import virgenImg from "@/assets/virgen-dolorosa.jpg";
 import trinidadImg from "@/assets/trinidad.jpg";
 import padreTommy from "@/assets/padre-tommy.jpg";
 import padreManesh from "@/assets/padre-manesh.jpg";
@@ -81,13 +81,13 @@ const galleryImgs = [
 const sacerdotes = [
   {
     img: padreTommy,
-    name: "Padre Tommy",
+    name: "Padre Tommy Varghese",
     role: "Párroco",
     desc: "Pastor de la comunidad, dedicado a la celebración de los sacramentos, la formación de los fieles y el acompañamiento espiritual de la familia parroquial.",
   },
   {
     img: padreManesh,
-    name: "Padre Manesh",
+    name: "Padre Manesh Joseph",
     role: "Vicario parroquial",
     desc: "Colabora en la vida pastoral de la parroquia, animando los ministerios, la catequesis y la cercanía con los jóvenes y las familias.",
   },
@@ -162,12 +162,15 @@ function Home() {
             Parroquia<br />
             <span className="text-gold italic">Santísima Trinidad</span>
           </h1>
-          <div className="fade-up fade-up-delay-2 mt-7 flex items-center justify-center">
-            <span className="h-px w-12 bg-gold/70" />
-            <p className="px-5 text-sm sm:text-base md:text-lg text-white/85 leading-relaxed italic font-display">
-              «Donde dos o tres se reúnen en mi nombre, allí estoy yo en medio de ellos.»
-            </p>
-            <span className="h-px w-12 bg-gold/70" />
+          <div className="fade-up fade-up-delay-2 mt-7 flex flex-col items-center justify-center gap-2">
+            <div className="flex items-center justify-center">
+              <span className="h-px w-12 bg-gold/70" />
+              <p className="px-5 text-sm sm:text-base md:text-lg text-white/90 leading-relaxed italic font-display max-w-2xl">
+                «Donde dos o tres se reúnen en mi nombre, allí estoy yo en medio de ellos.»
+              </p>
+              <span className="h-px w-12 bg-gold/70" />
+            </div>
+            <span className="text-[11px] tracking-[0.3em] uppercase text-gold/90">Mateo 18, 20</span>
           </div>
           <div className="fade-up fade-up-delay-3 mt-11 flex flex-wrap gap-3 justify-center">
             <a href="#horarios" className="px-7 py-3.5 rounded-full bg-gradient-gold text-primary-foreground font-semibold shadow-elegant hover:scale-105 hover:shadow-[0_25px_60px_-20px_oklch(0.72_0.13_80/0.6)] transition-all flex items-center gap-2">
@@ -464,8 +467,8 @@ function Home() {
                 <span className="h-11 w-11 rounded-xl bg-white/10 flex items-center justify-center text-gold shrink-0"><Phone size={20} /></span>
                 <div>
                   <p className="font-semibold text-white">Teléfono</p>
-                  <p className="text-white/75 text-sm">(054) 232767 · Fijo parroquial</p>
-                  <p className="text-white/75 text-sm">+51 932 269 859 · WhatsApp</p>
+                  <a href="tel:+51915049850" className="text-white/75 text-sm hover:text-gold">+51 915 049 850</a>
+                  <p className="text-white/55 text-xs mt-0.5">Solo llamadas</p>
                 </div>
               </li>
               <li className="flex items-start gap-4">
@@ -517,7 +520,8 @@ function Home() {
                 e.preventDefault();
                 const fd = new FormData(e.currentTarget);
                 const msg = `Hola, soy ${fd.get("nombre")}. ${fd.get("mensaje")}`;
-                window.open(`https://wa.me/51932269859?text=${encodeURIComponent(msg)}`, "_blank");
+                const subject = `Mensaje desde la web — ${fd.get("nombre")}`;
+                window.location.href = `mailto:parroquiatrinidadtingo@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(msg)}`;
               }}
             >
               <p className="font-display text-2xl text-white">Escríbenos</p>
@@ -555,8 +559,7 @@ function Home() {
               <li>Domingos · 8:00 AM y 6:00 PM</li>
               <li>Lun – Vie · 6:00 PM</li>
               <li>Sábado · 6:00 PM (vigilia)</li>
-              <li className="pt-2">Tel: (054) 232767</li>
-              <li>WhatsApp: +51 932 269 859</li>
+              <li className="pt-2">Tel: +51 915 049 850 <span className="text-white/50">(solo llamadas)</span></li>
             </ul>
           </div>
           <div>

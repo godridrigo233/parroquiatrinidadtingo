@@ -499,7 +499,7 @@ function Home() {
                 <span className="h-11 w-11 rounded-xl bg-white/10 flex items-center justify-center text-gold shrink-0"><Mail size={20} /></span>
                 <div>
                   <p className="font-semibold text-white">Correo</p>
-                  <p className="text-white/75 text-sm">parroquiatrinidadtingo@gmail.com</p>
+                  <p className="text-white/75 text-sm">pstrinidadtingo@gmail.com</p>
                 </div>
               </li>
             </ul>
@@ -531,7 +531,7 @@ function Home() {
                 const fd = new FormData(e.currentTarget);
                 const msg = `Hola, soy ${fd.get("nombre")}. ${fd.get("mensaje")}`;
                 const subject = `Mensaje desde la web — ${fd.get("nombre")}`;
-                window.location.href = `mailto:parroquiatrinidadtingo@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(msg)}`;
+                window.location.href = `mailto:pstrinidadtingo@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(msg)}`;
               }}
             >
               <p className="font-display text-2xl text-white">Escríbenos</p>

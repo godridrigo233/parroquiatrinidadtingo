@@ -1,37 +1,30 @@
-## Plan: Email del formulario + Teléfono de la parroquia
+## Objetivo
 
-### 1. Email desde el formulario "Escríbenos"
+Que el formulario "Escríbenos" envíe el mensaje directamente al correo **pstrinidadtingo@gmail.com** sin abrir el cliente de correo del usuario, y muestre una notificación de confirmación al enviarse.
 
-**Objetivo:** cuando alguien llene el formulario, la parroquia reciba un email con sus datos.
+## Cómo se hará
 
-**Cómo funciona:**
-- Visitante escribe nombre, correo y mensaje → presiona "Enviar".
-- El sitio envía un email a **parroquiatrinidadtingo@gmail.com** con el mensaje, con *Responder* apuntando al correo del visitante.
-- Se muestra confirmación en pantalla ("Mensaje enviado").
-- El botón WhatsApp sigue funcionando como respaldo (se abre después de enviar el email).
+1. **Configurar el sistema de correos de Lovable**
+   - Para enviar correos desde la web hace falta verificar un dominio remitente (ej. `notify.parroquiatrinidadtingo.lovable.app` o uno propio). Lovable abrirá un asistente para configurarlo.
+   - Una vez configurado, se prepara la infraestructura interna para enviar correos.
 
-**Paso previo obligatorio:** necesitamos configurar un dominio de email (ej. `notify.parroquiatrinidadtingo.lovable.app`). Esto se hace una vez con un botón en el chat. Mientras DNS verifica, todo queda listo.
+2. **Plantilla de correo**
+   - Se crea una plantilla con el aspecto de la parroquia (colores dorado/azul, logo) que incluye: nombre del remitente, correo, mensaje y fecha.
+   - El correo llegará a **pstrinidadtingo@gmail.com** con asunto: *"Nuevo mensaje desde la web — [nombre]"*.
 
-**Archivos a crear/modificar:**
-- Configurar dominio de email + infraestructura (botón en chat)
-- `src/routes/api/public/contact.ts` — ruta pública que valida el formulario y encola el email
-- `src/lib/email-templates/contact-form-message.tsx` — plantilla del email
-- `src/routes/index.tsx` — actualizar el `onSubmit` del formulario para enviar email + mostrar confirmación
+3. **Conectar el formulario**
+   - Se reemplaza el `mailto:` actual por un envío real al servidor de la parroquia.
+   - El formulario validará y enviará el mensaje sin redirigir.
+   - Al terminar, se muestra una notificación tipo *toast* en pantalla:
+     - Éxito: *"Mensaje enviado. Te responderemos pronto."*
+     - Error: *"No se pudo enviar. Inténtalo nuevamente o escríbenos por Facebook."*
+   - Mientras se envía, el botón mostrará "Enviando…" y quedará deshabilitado.
 
-### 2. Teléfono fijo de la parroquia
+4. **Anti-spam mínimo**
+   - Validación básica del correo y campo oculto "honeypot" para evitar bots.
 
-**Objetivo:** mostrar el número (054) 232767 en el sitio.
+## Lo que necesito de ti
 
-**Dónde:**
-- En la sección de contacto (redes sociales, correo, teléfono)
-- En el footer
+Para empezar tendrás que completar un breve diálogo de configuración del dominio de correo (1 sola vez). Lovable se encarga del resto automáticamente — no necesitas cuentas externas ni claves API.
 
-**Archivo a modificar:**
-- `src/routes/index.tsx` — agregar el teléfono en la lista de contacto y en el footer
-
----
-
-**Datos clave que me diste:**
-- Teléfono fijo: (054) 232767
-- Correo: parroquiatrinidadtingo@gmail.com
-- WhatsApp: +51 932 269 859
+¿Avanzo con esto?

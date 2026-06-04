@@ -6,9 +6,41 @@ import {
   useRouter,
   HeadContent,
   Scripts,
+  ScriptOnce,
 } from "@tanstack/react-router";
 
 import appCss from "../styles.css?url";
+
+const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem('theme');var d=t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme: dark)').matches);if(d)document.documentElement.classList.add('dark');}catch(e){}})();`;
+
+const ORG_JSONLD = {
+  "@context": "https://schema.org",
+  "@type": "CatholicChurch",
+  name: "Parroquia Santísima Trinidad de Tingo",
+  url: "https://parroquiatrinidadtingo.lovable.app",
+  telephone: "+51 915 049 850",
+  address: {
+    "@type": "PostalAddress",
+    streetAddress: "Américas 1820",
+    addressLocality: "Tingo, Jacobo Hunter",
+    addressRegion: "Arequipa",
+    postalCode: "04011",
+    addressCountry: "PE",
+  },
+  sameAs: [
+    "https://www.facebook.com/parroquiasantisimatrinidadtingo/",
+    "https://www.instagram.com/stma_trinidad_tingo/",
+  ],
+  openingHoursSpecification: [
+    {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+      opens: "15:00",
+      closes: "18:00",
+      description: "Secretaría parroquial",
+    },
+  ],
+};
 
 function NotFoundComponent() {
   return (
@@ -72,17 +104,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Parroquia Santísima Trinidad de Tingo" },
-      { name: "description", content: "Parroquia católica Santísima Trinidad de Tingo," },
+      { title: "Parroquia Santísima Trinidad de Tingo · Arequipa" },
+      {
+        name: "description",
+        content:
+          "Parroquia católica Santísima Trinidad de Tingo, Arequipa. Horarios de misa, sacramentos y comunidad parroquial.",
+      },
       { name: "theme-color", content: "#1e2a5e" },
-      { property: "og:title", content: "Parroquia Santísima Trinidad de Tingo" },
-      { name: "twitter:title", content: "Parroquia Santísima Trinidad de Tingo" },
-      { property: "og:description", content: "Parroquia católica Santísima Trinidad de Tingo," },
-      { name: "twitter:description", content: "Parroquia católica Santísima Trinidad de Tingo," },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/3432647d-43db-4a55-b562-41513493df53/id-preview-91ff1323--99ad5a9e-cbbf-4cb3-8a34-00165e03bf57.lovable.app-1779232569211.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/3432647d-43db-4a55-b562-41513493df53/id-preview-91ff1323--99ad5a9e-cbbf-4cb3-8a34-00165e03bf57.lovable.app-1779232569211.png" },
-      { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:site_name", content: "Parroquia Santísima Trinidad de Tingo" },
       { property: "og:type", content: "website" },
+      { property: "og:locale", content: "es_PE" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -91,6 +123,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600;700&display=swap",
+      },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify(ORG_JSONLD),
       },
     ],
   }),
@@ -103,8 +141,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="es" suppressHydrationWarning>
       <head>
+        <ScriptOnce>{THEME_INIT_SCRIPT}</ScriptOnce>
         <HeadContent />
       </head>
       <body>

@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
   Church, Clock, BookOpen, Flame, Heart, Users, Music, GraduationCap,
@@ -26,6 +26,10 @@ import gAlasDeFe from "@/assets/gallery-alas-de-fe.jpg";
 import gSiervosDeLuz from "@/assets/gallery-siervos-de-luz.jpg";
 import gHermandadDolores from "@/assets/gallery-hermandad-dolores.jpg";
 
+const SITE_URL = "https://parroquiatrinidadtingo.lovable.app";
+const HOME_OG_IMAGE =
+  "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/3432647d-43db-4a55-b562-41513493df53/id-preview-91ff1323--99ad5a9e-cbbf-4cb3-8a34-00165e03bf57.lovable.app-1779232569211.png";
+
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
@@ -36,9 +40,16 @@ export const Route = createFileRoute("/")({
           "Parroquia Santísima Trinidad de Tingo (Arequipa) — Carmelitas de María Inmaculada. Horarios de misa, sacramentos, devoción a Nuestra Señora de los Dolores y comunidad parroquial.",
       },
       { property: "og:title", content: "Parroquia Santísima Trinidad · Tingo" },
-      { property: "og:description", content: "Comunidad católica viva en Tingo, Arequipa. Horarios, noticias, ministerios y devociones." },
-      { property: "og:type", content: "website" },
+      {
+        property: "og:description",
+        content:
+          "Comunidad católica viva en Tingo, Arequipa. Horarios, noticias, ministerios y devociones.",
+      },
+      { property: "og:url", content: SITE_URL + "/" },
+      { property: "og:image", content: HOME_OG_IMAGE },
+      { name: "twitter:image", content: HOME_OG_IMAGE },
     ],
+    links: [{ rel: "canonical", href: SITE_URL + "/" }],
   }),
   component: Home,
 });
@@ -300,6 +311,18 @@ function Home() {
               );
             })}
           </div>
+
+          <Reveal className="mt-14 text-center">
+            <Link
+              to="/sacramentos"
+              className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-gradient-gold text-primary-foreground font-semibold shadow-card hover:shadow-elegant transition-shadow"
+            >
+              Ver requisitos de sacramentos <ArrowRight size={18} />
+            </Link>
+            <p className="mt-3 text-sm text-muted-foreground">
+              Bautismo, Primera Comunión, Confirmación, Matrimonio y más.
+            </p>
+          </Reveal>
         </div>
       </section>
 
@@ -311,6 +334,7 @@ function Home() {
               <p className="text-gold uppercase tracking-[0.25em] text-xs font-semibold">Vida parroquial</p>
               <h2 className="mt-3 font-display text-4xl md:text-5xl font-medium">Noticias y avisos</h2>
             </div>
+
             <a href="https://www.facebook.com/parroquiasantisimatrinidadtingo/" target="_blank" rel="noopener noreferrer" className="text-primary font-semibold inline-flex items-center gap-2 hover:text-gold transition-colors">
               <Facebook size={18} /> Síguenos en Facebook
             </a>

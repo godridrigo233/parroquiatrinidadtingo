@@ -311,6 +311,18 @@ function Home() {
               );
             })}
           </div>
+
+          <Reveal className="mt-14 text-center">
+            <Link
+              to="/sacramentos"
+              className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-gradient-gold text-primary-foreground font-semibold shadow-card hover:shadow-elegant transition-shadow"
+            >
+              Ver requisitos de sacramentos <ArrowRight size={18} />
+            </Link>
+            <p className="mt-3 text-sm text-muted-foreground">
+              Bautismo, Primera Comunión, Confirmación, Matrimonio y más.
+            </p>
+          </Reveal>
         </div>
       </section>
 
@@ -322,6 +334,7 @@ function Home() {
               <p className="text-gold uppercase tracking-[0.25em] text-xs font-semibold">Vida parroquial</p>
               <h2 className="mt-3 font-display text-4xl md:text-5xl font-medium">Noticias y avisos</h2>
             </div>
+
             <a href="https://www.facebook.com/parroquiasantisimatrinidadtingo/" target="_blank" rel="noopener noreferrer" className="text-primary font-semibold inline-flex items-center gap-2 hover:text-gold transition-colors">
               <Facebook size={18} /> Síguenos en Facebook
             </a>

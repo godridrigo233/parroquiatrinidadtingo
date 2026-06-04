@@ -1,16 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Sun, Moon } from "lucide-react";
 import logo from "@/assets/logo.png";
+import { useTheme } from "@/hooks/use-theme";
 
 const links = [
-  { href: "#inicio", label: "Inicio" },
-  { href: "#parroquia", label: "Parroquia" },
-  { href: "#horarios", label: "Horarios" },
-  { href: "#noticias", label: "Noticias" },
-  { href: "#ministerios", label: "Ministerios" },
-  { href: "#galeria", label: "Galería" },
-  { href: "#contacto", label: "Contacto" },
+  { href: "/#inicio", label: "Inicio" },
+  { href: "/#parroquia", label: "Parroquia" },
+  { href: "/#horarios", label: "Horarios" },
+  { href: "/sacramentos", label: "Sacramentos", route: true },
+  { href: "/#noticias", label: "Noticias" },
+  { href: "/#ministerios", label: "Ministerios" },
+  { href: "/#galeria", label: "Galería" },
+  { href: "/#contacto", label: "Contacto" },
 ];
 
 export function Navbar() {
@@ -19,6 +21,7 @@ export function Navbar() {
   const clicks = useRef(0);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navigate = useNavigate();
+  const { theme, toggle } = useTheme();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -36,6 +39,11 @@ export function Navbar() {
       navigate({ to: "/admin/login" });
     }
   };
+
+  const linkClass = (active = false) =>
+    `text-sm font-medium transition-colors hover:text-gold ${
+      scrolled ? "text-foreground/80" : "text-white/90"
+    } ${active ? "text-gold" : ""}`;
 
   return (
     <header
@@ -62,18 +70,27 @@ export function Navbar() {
           </div>
         </button>
 
-        <nav className="hidden lg:flex items-center gap-7">
-          {links.map((l) => (
-            <a
-              key={l.href}
-              href={l.href}
-              className={`text-sm font-medium transition-colors hover:text-gold ${
-                scrolled ? "text-foreground/80" : "text-white/90"
-              }`}
-            >
-              {l.label}
-            </a>
-          ))}
+        <nav className="hidden lg:flex items-center gap-6">
+          {links.map((l) =>
+            l.route ? (
+              <Link key={l.href} to={l.href} className={linkClass()} activeProps={{ className: "text-gold" }}>
+                {l.label}
+              </Link>
+            ) : (
+              <a key={l.href} href={l.href} className={linkClass()}>
+                {l.label}
+              </a>
+            ),
+          )}
+          <button
+            onClick={toggle}
+            aria-label="Cambiar tema"
+            className={`p-2 rounded-full transition-colors ${
+              scrolled ? "hover:bg-secondary text-foreground" : "hover:bg-white/10 text-white"
+            }`}
+          >
+            {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
           <Link
             to="/"
             hash="contacto"
@@ -83,28 +100,48 @@ export function Navbar() {
           </Link>
         </nav>
 
-        <button
-          onClick={() => setOpen(!open)}
-          className={`lg:hidden p-2 ${scrolled ? "text-foreground" : "text-white"}`}
-          aria-label="Menú"
-        >
-          {open ? <X size={24} /> : <Menu size={24} />}
-        </button>
+        <div className="lg:hidden flex items-center gap-1">
+          <button
+            onClick={toggle}
+            aria-label="Cambiar tema"
+            className={`p-2 ${scrolled ? "text-foreground" : "text-white"}`}
+          >
+            {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
+          </button>
+          <button
+            onClick={() => setOpen(!open)}
+            className={`p-2 ${scrolled ? "text-foreground" : "text-white"}`}
+            aria-label="Menú"
+          >
+            {open ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
       </div>
 
       {open && (
         <div className="lg:hidden bg-background border-t border-border">
           <nav className="px-5 py-4 flex flex-col gap-1">
-            {links.map((l) => (
-              <a
-                key={l.href}
-                href={l.href}
-                onClick={() => setOpen(false)}
-                className="py-2.5 text-foreground/90 border-b border-border/50 text-sm"
-              >
-                {l.label}
-              </a>
-            ))}
+            {links.map((l) =>
+              l.route ? (
+                <Link
+                  key={l.href}
+                  to={l.href}
+                  onClick={() => setOpen(false)}
+                  className="py-2.5 text-foreground/90 border-b border-border/50 text-sm"
+                >
+                  {l.label}
+                </Link>
+              ) : (
+                <a
+                  key={l.href}
+                  href={l.href}
+                  onClick={() => setOpen(false)}
+                  className="py-2.5 text-foreground/90 border-b border-border/50 text-sm"
+                >
+                  {l.label}
+                </a>
+              ),
+            )}
           </nav>
         </div>
       )}

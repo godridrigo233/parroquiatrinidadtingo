@@ -320,7 +320,7 @@ function Home() {
               Ver requisitos de sacramentos <ArrowRight size={18} />
             </Link>
             <p className="mt-3 text-sm text-muted-foreground">
-              Bautismo, Primera Comunión, Confirmación, Matrimonio y más.
+              Bautismo, Primera Comunión, Matrimonio, Confesión y más.
             </p>
           </Reveal>
         </div>

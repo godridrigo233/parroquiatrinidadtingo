@@ -228,6 +228,10 @@ function SacramentosPage() {
                           <Clock size={16} className="text-gold mt-0.5 shrink-0" />
                           <p className="text-foreground/85">{s.horario}</p>
                         </div>
+                        <div className="flex items-start gap-2.5 text-sm bg-gold/10 border border-gold/30 rounded-lg p-4">
+                          <FileText size={16} className="text-gold mt-0.5 shrink-0" />
+                          <p className="text-foreground/85">{NOTA_DOCUMENTACION}</p>
+                        </div>
                         {s.nota && (
                           <p className="text-xs italic text-muted-foreground border-l-2 border-gold pl-3">
                             {s.nota}

@@ -176,17 +176,6 @@ function SacramentosPage() {
             </h2>
           </Reveal>
 
-          <Reveal>
-            <div className="mb-8 flex items-start gap-3 rounded-2xl border border-gold/40 bg-gold/10 p-5 shadow-card">
-              <span className="h-10 w-10 rounded-lg bg-gradient-gold text-primary-foreground flex items-center justify-center shrink-0">
-                <FileText size={18} />
-              </span>
-              <div>
-                <p className="font-semibold text-foreground">Entrega de documentos</p>
-                <p className="text-sm text-foreground/80 mt-0.5">{NOTA_DOCUMENTACION}</p>
-              </div>
-            </div>
-          </Reveal>
 
 
           <Reveal>
@@ -271,19 +260,12 @@ function SacramentosPage() {
               Conversa con nosotros
             </h2>
             <p className="mt-4 text-muted-foreground max-w-xl mx-auto">
-              Las puertas de la parroquia están abiertas. Acércate a la secretaría o escríbenos para acompañarte en este paso de fe.
+              Las puertas de la parroquia están abiertas. Llámanos o acércate a la secretaría para acompañarte en este paso de fe.
             </p>
             <div className="mt-8 flex flex-wrap gap-3 justify-center">
-              <Link
-                to="/"
-                hash="contacto"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-gold text-primary-foreground font-semibold shadow-card hover:shadow-elegant transition-shadow"
-              >
-                <Mail size={18} /> Escríbenos
-              </Link>
               <a
                 href="tel:+51915049850"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-card border border-border font-semibold text-foreground hover:shadow-card transition-shadow"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-gold text-primary-foreground font-semibold shadow-card hover:shadow-elegant transition-shadow"
               >
                 <Phone size={18} /> +51 915 049 850
               </a>

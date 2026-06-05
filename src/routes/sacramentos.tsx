@@ -71,7 +71,8 @@ const sacramentos = [
       "Examen de conciencia, arrepentimiento y propósito de enmienda.",
     ],
     horario:
-      "Antes o después de cada misa. También puede coordinarse presencialmente en secretaría con el sacristán o sacristía.",
+      "Antes o después de cada misa. También puede coordinarse directamente con el sacristán.",
+
   },
   {
     id: "uncion",

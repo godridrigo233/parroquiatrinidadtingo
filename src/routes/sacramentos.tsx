@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Droplets, Cookie, Flame, HeartHandshake, Heart, HandHeart, Cross, Mail, Phone, Clock, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Droplets, Cookie, HeartHandshake, Heart, HandHeart, Cross, Mail, Phone, Clock, ArrowRight, CheckCircle2, FileText } from "lucide-react";
 import { Navbar } from "@/components/site/Navbar";
 import { Reveal } from "@/components/site/Reveal";
 import { WhatsAppFab } from "@/components/site/WhatsAppFab";
@@ -14,6 +14,9 @@ import ogSacramentos from "@/assets/og-sacramentos.jpg";
 
 const SITE_URL = "https://parroquiatrinidadtingo.lovable.app";
 
+const NOTA_DOCUMENTACION =
+  "Todos los documentos se entregan únicamente de manera presencial en la secretaría parroquial.";
+
 const sacramentos = [
   {
     id: "bautismo",
@@ -21,14 +24,14 @@ const sacramentos = [
     title: "Bautismo",
     intro: "Puerta de entrada a la vida cristiana. Por el agua y el Espíritu nacemos a la fe.",
     requisitos: [
-      "Partida de nacimiento original del niño/a (o DNI si es adulto).",
-      "Copia de DNI de los padres.",
-      "Padrinos confirmados (que hayan recibido los sacramentos de Bautismo, Comunión y Confirmación).",
-      "Si los padrinos están casados, presentar partida de matrimonio religioso.",
+      "Copia de DNI.",
+      "Recibo de agua y recibo de luz (ambos obligatorios).",
+      "Padrinos casados por la Iglesia, o padrinos solteros confirmados.",
+      "Si son padrinos solteros, presentar constancia de confirmación.",
       "Asistir a la charla pre-bautismal (padres y padrinos).",
     ],
-    horario: "Solicitar fecha en secretaría con al menos 15 días de anticipación.",
-    nota: "Para bautismo de adultos se requiere un período previo de catequesis (catecumenado).",
+    horario: "Solicitar con un mínimo de 1 mes de anticipación.",
+    nota: "Para bautismos de mayores de 8 años se requiere asistir a catequesis.",
   },
   {
     id: "primera-comunion",
@@ -36,27 +39,12 @@ const sacramentos = [
     title: "Primera Comunión",
     intro: "Encuentro con el Señor presente en la Eucaristía. Pan de vida para el camino.",
     requisitos: [
-      "Edad mínima: 8 años cumplidos (niños).",
-      "Estar bautizado (presentar partida de bautismo).",
-      "Catequesis preparatoria de dos años en la parroquia.",
-      "Copia de DNI del niño/a y de los padres.",
-      "Para adultos: inscripción en catequesis para adultos.",
+      "Edad mínima: 9 años.",
+      "Catequesis de 1 año.",
+      "Pago de inscripción.",
+      "Presentar la documentación requerida por secretaría.",
     ],
-    horario: "Inscripciones en catequesis: marzo de cada año, en secretaría.",
-  },
-  {
-    id: "confirmacion",
-    icon: Flame,
-    title: "Confirmación",
-    intro: "El Espíritu Santo nos sella y fortalece para ser testigos de Cristo en el mundo.",
-    requisitos: [
-      "Edad mínima: 14 años.",
-      "Partida de bautismo y de primera comunión.",
-      "Catequesis preparatoria de confirmación.",
-      "Padrino o madrina confirmado, practicante, mayor de 16 años.",
-      "Copia de DNI del candidato.",
-    ],
-    horario: "Catequesis: sábados o domingos según grupo. Inscripciones en secretaría.",
+    horario: "Inscripciones en secretaría parroquial.",
   },
   {
     id: "matrimonio",
@@ -65,7 +53,7 @@ const sacramentos = [
     intro: "Alianza de amor entre un varón y una mujer, signo del amor de Cristo por su Iglesia.",
     requisitos: [
       "Solicitar fecha con al menos 3 meses de anticipación.",
-      "Partidas de bautismo y confirmación recientes (no mayor a 6 meses) de ambos contrayentes.",
+      "Partidas recientes de bautismo (no mayor a 6 meses) de ambos contrayentes.",
       "Copia de DNI de novios y de dos testigos.",
       "Constancia de soltería.",
       "Curso prematrimonial completo (lo realiza la parroquia o el arzobispado).",
@@ -82,7 +70,8 @@ const sacramentos = [
       "No requiere inscripción previa.",
       "Examen de conciencia, arrepentimiento y propósito de enmienda.",
     ],
-    horario: "Antes de cada misa o solicitando con un sacerdote en secretaría.",
+    horario:
+      "Antes o después de cada misa. También puede coordinarse presencialmente en secretaría con el sacristán o sacristía.",
   },
   {
     id: "uncion",
@@ -115,7 +104,7 @@ export const Route = createFileRoute("/sacramentos")({
       {
         name: "description",
         content:
-          "Requisitos completos para Bautismo, Primera Comunión, Confirmación, Matrimonio, Confesión, Unción y Orden en la Parroquia Santísima Trinidad de Tingo, Arequipa.",
+          "Requisitos para Bautismo, Primera Comunión, Matrimonio, Confesión, Unción y Orden en la Parroquia Santísima Trinidad de Tingo, Arequipa.",
       },
       { property: "og:title", content: "Sacramentos · Parroquia Santísima Trinidad" },
       {
@@ -180,12 +169,25 @@ function SacramentosPage() {
       {/* SACRAMENTOS GRID */}
       <section className="py-20 md:py-24 px-5 lg:px-8">
         <div className="max-w-5xl mx-auto">
-          <Reveal className="text-center max-w-2xl mx-auto mb-14">
+          <Reveal className="text-center max-w-2xl mx-auto mb-10">
             <p className="text-gold uppercase tracking-[0.25em] text-xs font-semibold">Requisitos</p>
             <h2 className="mt-3 font-display text-3xl md:text-4xl font-medium">
               Pulsa cada sacramento para ver los detalles
             </h2>
           </Reveal>
+
+          <Reveal>
+            <div className="mb-8 flex items-start gap-3 rounded-2xl border border-gold/40 bg-gold/10 p-5 shadow-card">
+              <span className="h-10 w-10 rounded-lg bg-gradient-gold text-primary-foreground flex items-center justify-center shrink-0">
+                <FileText size={18} />
+              </span>
+              <div>
+                <p className="font-semibold text-foreground">Entrega de documentos</p>
+                <p className="text-sm text-foreground/80 mt-0.5">{NOTA_DOCUMENTACION}</p>
+              </div>
+            </div>
+          </Reveal>
+
 
           <Reveal>
             <Accordion type="single" collapsible className="space-y-4">
@@ -225,6 +227,10 @@ function SacramentosPage() {
                         <div className="flex items-start gap-2.5 text-sm bg-secondary/60 rounded-lg p-4">
                           <Clock size={16} className="text-gold mt-0.5 shrink-0" />
                           <p className="text-foreground/85">{s.horario}</p>
+                        </div>
+                        <div className="flex items-start gap-2.5 text-sm bg-gold/10 border border-gold/30 rounded-lg p-4">
+                          <FileText size={16} className="text-gold mt-0.5 shrink-0" />
+                          <p className="text-foreground/85">{NOTA_DOCUMENTACION}</p>
                         </div>
                         {s.nota && (
                           <p className="text-xs italic text-muted-foreground border-l-2 border-gold pl-3">

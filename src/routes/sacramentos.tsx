@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Droplets, Cookie, Flame, HeartHandshake, Heart, HandHeart, Cross, Mail, Phone, Clock, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Droplets, Cookie, HeartHandshake, Heart, HandHeart, Cross, Mail, Phone, Clock, ArrowRight, CheckCircle2, FileText } from "lucide-react";
 import { Navbar } from "@/components/site/Navbar";
 import { Reveal } from "@/components/site/Reveal";
 import { WhatsAppFab } from "@/components/site/WhatsAppFab";
@@ -14,6 +14,9 @@ import ogSacramentos from "@/assets/og-sacramentos.jpg";
 
 const SITE_URL = "https://parroquiatrinidadtingo.lovable.app";
 
+const NOTA_DOCUMENTACION =
+  "Todos los documentos se entregan únicamente de manera presencial en la secretaría parroquial.";
+
 const sacramentos = [
   {
     id: "bautismo",
@@ -21,14 +24,14 @@ const sacramentos = [
     title: "Bautismo",
     intro: "Puerta de entrada a la vida cristiana. Por el agua y el Espíritu nacemos a la fe.",
     requisitos: [
-      "Partida de nacimiento original del niño/a (o DNI si es adulto).",
-      "Copia de DNI de los padres.",
-      "Padrinos confirmados (que hayan recibido los sacramentos de Bautismo, Comunión y Confirmación).",
-      "Si los padrinos están casados, presentar partida de matrimonio religioso.",
+      "Copia de DNI.",
+      "Recibo de agua y recibo de luz (ambos obligatorios).",
+      "Padrinos casados por la Iglesia, o padrinos solteros confirmados.",
+      "Si son padrinos solteros, presentar constancia de confirmación.",
       "Asistir a la charla pre-bautismal (padres y padrinos).",
     ],
-    horario: "Solicitar fecha en secretaría con al menos 15 días de anticipación.",
-    nota: "Para bautismo de adultos se requiere un período previo de catequesis (catecumenado).",
+    horario: "Solicitar con un mínimo de 1 mes de anticipación.",
+    nota: "Para bautismos de mayores de 8 años se requiere asistir a catequesis.",
   },
   {
     id: "primera-comunion",
@@ -36,27 +39,12 @@ const sacramentos = [
     title: "Primera Comunión",
     intro: "Encuentro con el Señor presente en la Eucaristía. Pan de vida para el camino.",
     requisitos: [
-      "Edad mínima: 8 años cumplidos (niños).",
-      "Estar bautizado (presentar partida de bautismo).",
-      "Catequesis preparatoria de dos años en la parroquia.",
-      "Copia de DNI del niño/a y de los padres.",
-      "Para adultos: inscripción en catequesis para adultos.",
+      "Edad mínima: 9 años.",
+      "Catequesis de 1 año.",
+      "Pago de inscripción.",
+      "Presentar la documentación requerida por secretaría.",
     ],
-    horario: "Inscripciones en catequesis: marzo de cada año, en secretaría.",
-  },
-  {
-    id: "confirmacion",
-    icon: Flame,
-    title: "Confirmación",
-    intro: "El Espíritu Santo nos sella y fortalece para ser testigos de Cristo en el mundo.",
-    requisitos: [
-      "Edad mínima: 14 años.",
-      "Partida de bautismo y de primera comunión.",
-      "Catequesis preparatoria de confirmación.",
-      "Padrino o madrina confirmado, practicante, mayor de 16 años.",
-      "Copia de DNI del candidato.",
-    ],
-    horario: "Catequesis: sábados o domingos según grupo. Inscripciones en secretaría.",
+    horario: "Inscripciones en secretaría parroquial.",
   },
   {
     id: "matrimonio",
@@ -65,7 +53,7 @@ const sacramentos = [
     intro: "Alianza de amor entre un varón y una mujer, signo del amor de Cristo por su Iglesia.",
     requisitos: [
       "Solicitar fecha con al menos 3 meses de anticipación.",
-      "Partidas de bautismo y confirmación recientes (no mayor a 6 meses) de ambos contrayentes.",
+      "Partidas recientes de bautismo (no mayor a 6 meses) de ambos contrayentes.",
       "Copia de DNI de novios y de dos testigos.",
       "Constancia de soltería.",
       "Curso prematrimonial completo (lo realiza la parroquia o el arzobispado).",
@@ -82,7 +70,8 @@ const sacramentos = [
       "No requiere inscripción previa.",
       "Examen de conciencia, arrepentimiento y propósito de enmienda.",
     ],
-    horario: "Antes de cada misa o solicitando con un sacerdote en secretaría.",
+    horario:
+      "Antes o después de cada misa. También puede coordinarse presencialmente en secretaría con el sacristán o sacristía.",
   },
   {
     id: "uncion",

@@ -104,7 +104,7 @@ export const Route = createFileRoute("/sacramentos")({
       {
         name: "description",
         content:
-          "Requisitos completos para Bautismo, Primera Comunión, Confirmación, Matrimonio, Confesión, Unción y Orden en la Parroquia Santísima Trinidad de Tingo, Arequipa.",
+          "Requisitos para Bautismo, Primera Comunión, Matrimonio, Confesión, Unción y Orden en la Parroquia Santísima Trinidad de Tingo, Arequipa.",
       },
       { property: "og:title", content: "Sacramentos · Parroquia Santísima Trinidad" },
       {

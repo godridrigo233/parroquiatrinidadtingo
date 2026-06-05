@@ -92,13 +92,13 @@ const galleryImgs = [
 const sacerdotes = [
   {
     img: padreTommy,
-    name: "Padre Tommy Varghese",
+    name: "Padre Tommy Varghese, CMI",
     role: "Párroco",
     desc: "Pastor de la comunidad, dedicado a la celebración de los sacramentos, la formación de los fieles y el acompañamiento espiritual de la familia parroquial.",
   },
   {
     img: padreManesh,
-    name: "Padre Manesh Joseph",
+    name: "Padre Manesh Joseph, CMI",
     role: "Vicario parroquial",
     desc: "Colabora en la vida pastoral de la parroquia, animando los ministerios, la catequesis y la cercanía con los jóvenes y las familias.",
   },

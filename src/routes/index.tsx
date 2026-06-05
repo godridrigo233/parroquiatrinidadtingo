@@ -380,15 +380,38 @@ function Home() {
               const Icon = ministryIcons[i % ministryIcons.length];
               return (
                 <Reveal key={m.id} delay={i * 80}>
-                  <div className="h-full bg-card rounded-2xl p-7 border border-border shadow-card hover:shadow-elegant hover:-translate-y-1 transition-all">
-                    <Icon size={32} className="text-gold" />
-                    <h3 className="mt-4 font-display text-2xl text-primary">{m.name}</h3>
-                    <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{m.description}</p>
-                    <div className="mt-5 pt-5 border-t border-border space-y-1.5 text-sm">
-                      {m.leader && <p className="text-foreground"><span className="text-muted-foreground">Encargado:</span> {m.leader}</p>}
-                      {m.schedule && <p className="text-foreground flex items-center gap-1.5"><Clock size={14} className="text-gold" /> {m.schedule}</p>}
+                  <article className="group h-full flex flex-col bg-card rounded-2xl border border-border shadow-card hover:shadow-elegant hover:-translate-y-1 transition-all overflow-hidden">
+                    <div className="relative aspect-[16/10] overflow-hidden bg-secondary">
+                      {m.image_url ? (
+                        <img
+                          src={m.image_url}
+                          alt={m.name}
+                          loading="lazy"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                        />
+                      ) : (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-secondary to-primary/10 text-muted-foreground">
+                          <Icon size={32} className="text-gold/70" />
+                          <span className="text-xs uppercase tracking-[0.25em] font-semibold">Próximamente</span>
+                        </div>
+                      )}
+                      <span className="absolute top-3 left-3 h-9 w-9 rounded-lg bg-card/95 backdrop-blur flex items-center justify-center shadow-card">
+                        <Icon size={16} className="text-gold" />
+                      </span>
                     </div>
-                  </div>
+                    <div className="p-6 flex-1 flex flex-col">
+                      <h3 className="font-display text-2xl text-primary">{m.name}</h3>
+                      {m.description && (
+                        <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{m.description}</p>
+                      )}
+                      {(m.leader || m.schedule) && (
+                        <div className="mt-5 pt-5 border-t border-border space-y-1.5 text-sm">
+                          {m.leader && <p className="text-foreground"><span className="text-muted-foreground">Encargado:</span> {m.leader}</p>}
+                          {m.schedule && <p className="text-foreground flex items-center gap-1.5"><Clock size={14} className="text-gold" /> {m.schedule}</p>}
+                        </div>
+                      )}
+                    </div>
+                  </article>
                 </Reveal>
               );
             })}

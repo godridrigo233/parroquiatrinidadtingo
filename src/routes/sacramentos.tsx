@@ -169,12 +169,25 @@ function SacramentosPage() {
       {/* SACRAMENTOS GRID */}
       <section className="py-20 md:py-24 px-5 lg:px-8">
         <div className="max-w-5xl mx-auto">
-          <Reveal className="text-center max-w-2xl mx-auto mb-14">
+          <Reveal className="text-center max-w-2xl mx-auto mb-10">
             <p className="text-gold uppercase tracking-[0.25em] text-xs font-semibold">Requisitos</p>
             <h2 className="mt-3 font-display text-3xl md:text-4xl font-medium">
               Pulsa cada sacramento para ver los detalles
             </h2>
           </Reveal>
+
+          <Reveal>
+            <div className="mb-8 flex items-start gap-3 rounded-2xl border border-gold/40 bg-gold/10 p-5 shadow-card">
+              <span className="h-10 w-10 rounded-lg bg-gradient-gold text-primary-foreground flex items-center justify-center shrink-0">
+                <FileText size={18} />
+              </span>
+              <div>
+                <p className="font-semibold text-foreground">Entrega de documentos</p>
+                <p className="text-sm text-foreground/80 mt-0.5">{NOTA_DOCUMENTACION}</p>
+              </div>
+            </div>
+          </Reveal>
+
 
           <Reveal>
             <Accordion type="single" collapsible className="space-y-4">

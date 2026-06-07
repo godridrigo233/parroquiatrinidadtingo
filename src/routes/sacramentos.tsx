@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Droplets, Cookie, HeartHandshake, Heart, HandHeart, Cross, Mail, Phone, Clock, ArrowRight, CheckCircle2, FileText } from "lucide-react";
+import { Droplets, Cookie, HeartHandshake, Heart, HandHeart, Cross, Phone, Clock, ArrowRight, CheckCircle2 } from "lucide-react";
 import { Navbar } from "@/components/site/Navbar";
 import { Reveal } from "@/components/site/Reveal";
 import { WhatsAppFab } from "@/components/site/WhatsAppFab";
@@ -13,9 +13,6 @@ import logo from "@/assets/logo.png";
 import ogSacramentos from "@/assets/og-sacramentos.jpg";
 
 const SITE_URL = "https://parroquiatrinidadtingo.lovable.app";
-
-const NOTA_DOCUMENTACION =
-  "Todos los documentos se entregan únicamente de manera presencial en la secretaría parroquial.";
 
 const sacramentos = [
   {
@@ -52,14 +49,20 @@ const sacramentos = [
     title: "Matrimonio",
     intro: "Alianza de amor entre un varón y una mujer, signo del amor de Cristo por su Iglesia.",
     requisitos: [
-      "Solicitar fecha con al menos 3 meses de anticipación.",
-      "Partidas recientes de bautismo (no mayor a 6 meses) de ambos contrayentes.",
-      "Copia de DNI de novios y de dos testigos.",
-      "Constancia de soltería.",
-      "Curso prematrimonial completo (lo realiza la parroquia o el arzobispado).",
-      "Expediente matrimonial llenado en secretaría.",
+      "Partida de Bautismo de los novios (original y actualizada).",
+      "Constancia de Confirmación.",
+      "Partida de Nacimiento de los contrayentes.",
+      "Partida de Matrimonio Civil o edicto.",
+      "Charla de Matrimonio para los novios o certificado de charlas, firmado por el párroco y con sello de la parroquia.",
+      "Dos testigos que no sean sus parientes (uno para cada cónyuge) y entrevista de los testigos con el sacerdote.",
+      "Copia nítida de DNI de los novios y de los testigos.",
+      "Fotos de novios: una de cada uno, tamaño carné.",
+      "Padrinos casados por la Iglesia y partida de matrimonio religioso de los padrinos.",
+      "Dos entrevistas de novios con el sacerdote.",
+      "Inscripción con anticipación de 90 días (3 meses).",
+      "Abonar el derecho parroquial.",
     ],
-    horario: "Atención para preparación: secretaría, lunes a sábado de 3:00 a 6:00 PM.",
+    horario: "Atención para preparación: lunes a sábado de 3:00 a 6:00 PM.",
   },
   {
     id: "reconciliacion",
@@ -70,8 +73,7 @@ const sacramentos = [
       "No requiere inscripción previa.",
       "Examen de conciencia, arrepentimiento y propósito de enmienda.",
     ],
-    horario:
-      "Antes o después de cada misa. También puede coordinarse directamente con el sacristán.",
+    horario: "Antes o después de misa.",
 
   },
   {
@@ -218,10 +220,6 @@ function SacramentosPage() {
                           <Clock size={16} className="text-gold mt-0.5 shrink-0" />
                           <p className="text-foreground/85">{s.horario}</p>
                         </div>
-                        <div className="flex items-start gap-2.5 text-sm bg-gold/10 border border-gold/30 rounded-lg p-4">
-                          <FileText size={16} className="text-gold mt-0.5 shrink-0" />
-                          <p className="text-foreground/85">{NOTA_DOCUMENTACION}</p>
-                        </div>
                         {s.nota && (
                           <p className="text-xs italic text-muted-foreground border-l-2 border-gold pl-3">
                             {s.nota}
@@ -239,7 +237,7 @@ function SacramentosPage() {
                             href="tel:+51915049850"
                             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-border text-sm font-semibold text-foreground hover:bg-secondary transition-colors"
                           >
-                            <Phone size={14} /> Llamar a secretaría
+                            <Phone size={14} /> Llamar
                           </a>
                         </div>
                       </div>
@@ -261,7 +259,7 @@ function SacramentosPage() {
               Conversa con nosotros
             </h2>
             <p className="mt-4 text-muted-foreground max-w-xl mx-auto">
-              Las puertas de la parroquia están abiertas. Llámanos o acércate a la secretaría para acompañarte en este paso de fe.
+              Las puertas de la parroquia están abiertas. Llámanos o acércate para acompañarte en este paso de fe.
             </p>
             <div className="mt-8 flex flex-wrap gap-3 justify-center">
               <a

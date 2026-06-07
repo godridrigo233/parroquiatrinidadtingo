@@ -25,6 +25,12 @@ import gPeregrinos from "@/assets/gallery-peregrinos-esperanza.jpg";
 import gAlasDeFe from "@/assets/gallery-alas-de-fe.jpg";
 import gSiervosDeLuz from "@/assets/gallery-siervos-de-luz.jpg";
 import gHermandadDolores from "@/assets/gallery-hermandad-dolores.jpg";
+import alasDeFeAsset from "@/assets/ministries/alas-de-fe.png.asset.json";
+import senorDeLosMilagrosAsset from "@/assets/ministries/senor-de-los-milagros.png.asset.json";
+import siervosDeLuzAsset from "@/assets/ministries/siervos-de-luz.png.asset.json";
+import acolitosAsset from "@/assets/ministries/acolitos.png.asset.json";
+import catequistasAsset from "@/assets/ministries/catequistas.png.asset.json";
+import virgenDeLosDoloresAsset from "@/assets/ministries/virgen-de-los-dolores.png.asset.json";
 
 const SITE_URL = "https://parroquiatrinidadtingo.lovable.app";
 const HOME_OG_IMAGE =
@@ -69,6 +75,14 @@ const categoryMeta: Record<string, { label: string; icon: typeof Church }> = {
 };
 
 const ministryIcons = [Music, BookOpen, Users, Sparkles, Heart, GraduationCap];
+const ministryPhotos = [
+  alasDeFeAsset.url,
+  senorDeLosMilagrosAsset.url,
+  siervosDeLuzAsset.url,
+  acolitosAsset.url,
+  catequistasAsset.url,
+  virgenDeLosDoloresAsset.url,
+];
 
 const testimonios = [
   { text: "La parroquia es mi segundo hogar. Aquí encuentro paz y comunidad.", author: "María C." },
@@ -378,22 +392,18 @@ function Home() {
           <div className="mt-16 grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {ministries.map((m, i) => {
               const Icon = ministryIcons[i % ministryIcons.length];
+              const ministryImage = ministryPhotos[i] ?? m.image_url;
               return (
                 <Reveal key={m.id} delay={i * 80}>
                   <article className="group h-full flex flex-col bg-card rounded-2xl border border-border shadow-card hover:shadow-elegant hover:-translate-y-1 transition-all overflow-hidden">
                     <div className="relative aspect-[16/10] overflow-hidden bg-secondary">
-                      {m.image_url ? (
+                      {ministryImage && (
                         <img
-                          src={m.image_url}
+                          src={ministryImage}
                           alt={m.name}
                           loading="lazy"
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                         />
-                      ) : (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-secondary to-primary/10 text-muted-foreground">
-                          <Icon size={32} className="text-gold/70" />
-                          <span className="text-xs uppercase tracking-[0.25em] font-semibold">Próximamente</span>
-                        </div>
                       )}
                       <span className="absolute top-3 left-3 h-9 w-9 rounded-lg bg-card/95 backdrop-blur flex items-center justify-center shadow-card">
                         <Icon size={16} className="text-gold" />

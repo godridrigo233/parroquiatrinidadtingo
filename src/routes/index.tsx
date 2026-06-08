@@ -78,9 +78,9 @@ const ministryIcons = [Music, BookOpen, Users, Sparkles, Heart, GraduationCap];
 // DB order: Alas de Fé, Siervos de Luz, Acólitos, Señor de los Milagros, Virgen Dolorosa, Legión de María
 const ministryPhotos = [
   alasDeFeAsset.url,
+  siervosDeLuzAsset.url,
   acolitosAsset.url,
   senorDeLosMilagrosAsset.url,
-  siervosDeLuzAsset.url,
   virgenDeLosDoloresAsset.url,
   null,
 ];

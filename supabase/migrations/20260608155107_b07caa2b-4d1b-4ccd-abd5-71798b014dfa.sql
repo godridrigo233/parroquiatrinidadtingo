@@ -1,0 +1,2 @@
+UPDATE public.ministries SET description = 'Ministerio de música que anima las celebraciones litúrgicas con alabanza, canto y servicio juvenil.' WHERE name = 'Alas de Fé';
+UPDATE public.ministries SET description = 'Ministerio de música al servicio de la liturgia, llevando la luz de Cristo a través del canto y la alabanza.' WHERE name = 'Siervos de Luz';

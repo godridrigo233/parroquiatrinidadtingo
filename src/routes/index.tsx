@@ -81,8 +81,8 @@ const ministryPhotos = [
   siervosDeLuzAsset.url,
   acolitosAsset.url,
   senorDeLosMilagrosAsset.url,
-  null,
   virgenDeLosDoloresAsset.url,
+  null,
 ];
 
 const testimonios = [

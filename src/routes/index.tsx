@@ -75,13 +75,14 @@ const categoryMeta: Record<string, { label: string; icon: typeof Church }> = {
 };
 
 const ministryIcons = [Music, BookOpen, Users, Sparkles, Heart, GraduationCap];
+// DB order: Alas de Fé, Siervos de Luz, Acólitos, Señor de los Milagros, Virgen Dolorosa, Legión de María
 const ministryPhotos = [
   alasDeFeAsset.url,
+  acolitosAsset.url,
   senorDeLosMilagrosAsset.url,
   siervosDeLuzAsset.url,
-  acolitosAsset.url,
-  catequistasAsset.url,
   virgenDeLosDoloresAsset.url,
+  null,
 ];
 
 const testimonios = [

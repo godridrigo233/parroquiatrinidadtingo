@@ -446,6 +446,45 @@ function Home() {
         </div>
       </section>
 
+      {/* NOTICIAS */}
+      <section id="noticias" className="py-24 px-5 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <Reveal className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+            <div>
+              <p className="text-gold uppercase tracking-[0.25em] text-xs font-semibold">Vida parroquial</p>
+              <h2 className="mt-3 font-display text-4xl md:text-5xl font-medium">Noticias y avisos</h2>
+            </div>
+
+            <a href="https://www.facebook.com/parroquiasantisimatrinidadtingo/" target="_blank" rel="noopener noreferrer" className="text-primary font-semibold inline-flex items-center gap-2 hover:text-gold transition-colors">
+              <Facebook size={18} /> Síguenos en Facebook
+            </a>
+          </Reveal>
+
+          {events.length > 0 && (
+            <Reveal className="mt-10">
+              <div className="rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground p-8 shadow-elegant">
+                <p className="uppercase tracking-[0.2em] text-xs text-gold font-semibold">Próximos eventos</p>
+                <div className="mt-5 grid md:grid-cols-3 gap-6">
+                  {events.map((e) => (
+                    <div key={e.id} className="border-l-2 border-gold pl-4">
+                      <p className="font-display text-xl">{e.title}</p>
+                      <p className="text-sm text-primary-foreground/80 mt-1 flex items-center gap-1.5">
+                        <Calendar size={14} /> {new Date(e.event_date).toLocaleDateString("es-PE", { day: "numeric", month: "long" })}
+                      </p>
+                      {e.description && <p className="text-sm text-primary-foreground/70 mt-2 line-clamp-2">{e.description}</p>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </Reveal>
+          )}
+
+          <Reveal className="mt-12">
+            <FacebookFeed />
+          </Reveal>
+        </div>
+      </section>
+
       {/* TESTIMONIOS */}
       <section className="py-24 px-5 lg:px-8">
         <div className="max-w-6xl mx-auto">

@@ -7,9 +7,10 @@ import { useTheme } from "@/hooks/use-theme";
 const links = [
   { href: "/#inicio", label: "Inicio" },
   { href: "/#parroquia", label: "Parroquia" },
-  { href: "/#horarios", label: "Horarios" },
   { href: "/sacramentos", label: "Sacramentos", route: true },
+  { href: "/#devociones", label: "Devociones" },
   { href: "/#ministerios", label: "Ministerios" },
+  { href: "/#horarios", label: "Horarios" },
   { href: "/#galeria", label: "Galería" },
   { href: "/#noticias", label: "Noticias" },
   { href: "/#contacto", label: "Contacto" },

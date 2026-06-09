@@ -225,21 +225,6 @@ function SacramentosPage() {
                             {s.nota}
                           </p>
                         )}
-                        <div className="flex flex-wrap gap-3 pt-2">
-                          <Link
-                            to="/"
-                            hash="contacto"
-                            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-gold text-primary-foreground text-sm font-semibold shadow-card hover:shadow-elegant transition-shadow"
-                          >
-                            Solicitar información <ArrowRight size={14} />
-                          </Link>
-                          <a
-                            href="tel:+51915049850"
-                            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-border text-sm font-semibold text-foreground hover:bg-secondary transition-colors"
-                          >
-                            <Phone size={14} /> Llamar
-                          </a>
-                        </div>
                       </div>
                     </AccordionContent>
                   </AccordionItem>

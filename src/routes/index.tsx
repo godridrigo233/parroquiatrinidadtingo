@@ -31,6 +31,7 @@ import siervosDeLuzAsset from "@/assets/ministries/siervos-de-luz.png.asset.json
 import acolitosAsset from "@/assets/ministries/acolitos.png.asset.json";
 import catequistasAsset from "@/assets/ministries/catequistas.png.asset.json";
 import virgenDeLosDoloresAsset from "@/assets/ministries/virgen-de-los-dolores.png.asset.json";
+import legionDeMariaAsset from "@/assets/ministries/legion-de-maria.png.asset.json";
 
 const SITE_URL = "https://parroquiatrinidadtingo.lovable.app";
 const HOME_OG_IMAGE =
@@ -81,7 +82,7 @@ const ministryPhotos = [
   siervosDeLuzAsset.url,
   acolitosAsset.url,
   senorDeLosMilagrosAsset.url,
-  virgenDeLosDoloresAsset.url,
+  legionDeMariaAsset.url,
   null,
 ];
 

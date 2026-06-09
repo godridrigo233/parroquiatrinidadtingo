@@ -291,60 +291,33 @@ function Home() {
         </div>
       </section>
 
-      {/* HORARIOS */}
-      <section id="horarios" className="py-24 px-5 lg:px-8 bg-secondary/50">
-        <div className="max-w-7xl mx-auto">
+      {/* DEVOCIONES */}
+      <section id="devociones" className="py-24 px-5 lg:px-8">
+        <div className="max-w-6xl mx-auto">
           <Reveal className="text-center max-w-2xl mx-auto">
-            <p className="text-gold uppercase tracking-[0.25em] text-xs font-semibold">Vida sacramental</p>
-            <h2 className="mt-3 font-display text-4xl md:text-5xl font-medium">Horarios parroquiales</h2>
-            <p className="mt-4 text-muted-foreground">Te esperamos para celebrar juntos la fe.</p>
+            <p className="text-gold uppercase tracking-[0.25em] text-xs font-semibold">Devociones</p>
+            <h2 className="mt-3 font-display text-4xl md:text-5xl font-medium">Nuestra fe y espiritualidad</h2>
           </Reveal>
 
-          <div className="mt-16 flex flex-wrap justify-center gap-6">
-            {Object.entries(groupedSchedules)
-              .filter(([cat]) => cat !== "catequesis")
-              .map(([cat, items], i) => {
-              const meta = categoryMeta[cat] ?? { label: cat, icon: Church };
-              const Icon = meta.icon;
-              return (
-                <Reveal key={cat} delay={i * 80} className="w-full sm:w-[calc(50%-12px)] lg:w-[calc(25%-18px)]">
-                  <div className="h-full bg-card rounded-2xl p-7 border border-border shadow-card hover:shadow-elegant transition-shadow group">
-                    <div className="h-14 w-14 rounded-xl bg-gradient-gold flex items-center justify-center text-primary-foreground shadow-card group-hover:scale-110 transition-transform">
-                      <Icon size={26} />
-                    </div>
-                    <h3 className="mt-5 font-display text-2xl text-primary">{meta.label}</h3>
-                    <ul className="mt-4 space-y-3">
-                      {items.map((it) => (
-                        <li key={it.id} className="border-l-2 border-gold pl-3">
-                          <p className="text-sm font-semibold text-foreground">{it.day_label}</p>
-                          <p className="text-sm text-muted-foreground">{it.time_label}</p>
-                          {it.notes && <p className="text-xs text-muted-foreground/80 italic mt-0.5">{it.notes}</p>}
-                        </li>
-                      ))}
-                    </ul>
+          <div className="mt-16 grid md:grid-cols-2 gap-8">
+            {[
+              { img: virgenImg, title: "Nuestra Señora de los Dolores", text: "Madre fiel que acompaña al pie de la cruz. La parroquia mantiene viva esta devoción mariana con el rezo del rosario y celebraciones especiales." },
+              { img: trinidadImg, title: "Santísima Trinidad", text: "Misterio central de nuestra fe: Padre, Hijo y Espíritu Santo. Bajo su nombre celebramos cada eucaristía y vivimos como comunidad." },
+            ].map((d, i) => (
+              <Reveal key={d.title} delay={i * 100}>
+                <div className="group relative rounded-2xl overflow-hidden shadow-elegant aspect-[4/5]">
+                  <img src={d.img} alt={d.title} loading="lazy" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-primary via-primary/60 to-transparent" />
+                  <div className="absolute bottom-0 inset-x-0 p-8 text-primary-foreground">
+                    <h3 className="font-display text-3xl text-white">{d.title}</h3>
+                    <p className="mt-3 text-sm text-white/85 leading-relaxed">{d.text}</p>
                   </div>
-                </Reveal>
-              );
-            })}
+                </div>
+              </Reveal>
+            ))}
           </div>
-
-          <Reveal className="mt-14 text-center">
-            <Link
-              to="/sacramentos"
-              className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-gradient-gold text-primary-foreground font-semibold shadow-card hover:shadow-elegant transition-shadow"
-            >
-              Ver requisitos de sacramentos <ArrowRight size={18} />
-            </Link>
-            <p className="mt-3 text-sm text-muted-foreground">
-              Bautismo, Primera Comunión, Matrimonio, Confesión y más.
-            </p>
-          </Reveal>
         </div>
       </section>
-
-
-
-
 
       {/* MINISTERIOS */}
       <section id="ministerios" className="py-24 px-5 lg:px-8 bg-secondary/50">
@@ -395,31 +368,54 @@ function Home() {
         </div>
       </section>
 
-      {/* DEVOCIONES */}
-      <section id="devociones" className="py-24 px-5 lg:px-8">
-        <div className="max-w-6xl mx-auto">
+      {/* HORARIOS */}
+      <section id="horarios" className="py-24 px-5 lg:px-8">
+        <div className="max-w-7xl mx-auto">
           <Reveal className="text-center max-w-2xl mx-auto">
-            <p className="text-gold uppercase tracking-[0.25em] text-xs font-semibold">Devociones</p>
-            <h2 className="mt-3 font-display text-4xl md:text-5xl font-medium">Nuestra fe y espiritualidad</h2>
+            <p className="text-gold uppercase tracking-[0.25em] text-xs font-semibold">Vida sacramental</p>
+            <h2 className="mt-3 font-display text-4xl md:text-5xl font-medium">Horarios parroquiales</h2>
+            <p className="mt-4 text-muted-foreground">Te esperamos para celebrar juntos la fe.</p>
           </Reveal>
 
-          <div className="mt-16 grid md:grid-cols-2 gap-8">
-            {[
-              { img: virgenImg, title: "Nuestra Señora de los Dolores", text: "Madre fiel que acompaña al pie de la cruz. La parroquia mantiene viva esta devoción mariana con el rezo del rosario y celebraciones especiales." },
-              { img: trinidadImg, title: "Santísima Trinidad", text: "Misterio central de nuestra fe: Padre, Hijo y Espíritu Santo. Bajo su nombre celebramos cada eucaristía y vivimos como comunidad." },
-            ].map((d, i) => (
-              <Reveal key={d.title} delay={i * 100}>
-                <div className="group relative rounded-2xl overflow-hidden shadow-elegant aspect-[4/5]">
-                  <img src={d.img} alt={d.title} loading="lazy" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-primary via-primary/60 to-transparent" />
-                  <div className="absolute bottom-0 inset-x-0 p-8 text-primary-foreground">
-                    <h3 className="font-display text-3xl text-white">{d.title}</h3>
-                    <p className="mt-3 text-sm text-white/85 leading-relaxed">{d.text}</p>
+          <div className="mt-16 flex flex-wrap justify-center gap-6">
+            {Object.entries(groupedSchedules)
+              .filter(([cat]) => cat !== "catequesis")
+              .map(([cat, items], i) => {
+              const meta = categoryMeta[cat] ?? { label: cat, icon: Church };
+              const Icon = meta.icon;
+              return (
+                <Reveal key={cat} delay={i * 80} className="w-full sm:w-[calc(50%-12px)] lg:w-[calc(25%-18px)]">
+                  <div className="h-full bg-card rounded-2xl p-7 border border-border shadow-card hover:shadow-elegant transition-shadow group">
+                    <div className="h-14 w-14 rounded-xl bg-gradient-gold flex items-center justify-center text-primary-foreground shadow-card group-hover:scale-110 transition-transform">
+                      <Icon size={26} />
+                    </div>
+                    <h3 className="mt-5 font-display text-2xl text-primary">{meta.label}</h3>
+                    <ul className="mt-4 space-y-3">
+                      {items.map((it) => (
+                        <li key={it.id} className="border-l-2 border-gold pl-3">
+                          <p className="text-sm font-semibold text-foreground">{it.day_label}</p>
+                          <p className="text-sm text-muted-foreground">{it.time_label}</p>
+                          {it.notes && <p className="text-xs text-muted-foreground/80 italic mt-0.5">{it.notes}</p>}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
-                </div>
-              </Reveal>
-            ))}
+                </Reveal>
+              );
+            })}
           </div>
+
+          <Reveal className="mt-14 text-center">
+            <Link
+              to="/sacramentos"
+              className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-gradient-gold text-primary-foreground font-semibold shadow-card hover:shadow-elegant transition-shadow"
+            >
+              Ver requisitos de sacramentos <ArrowRight size={18} />
+            </Link>
+            <p className="mt-3 text-sm text-muted-foreground">
+              Bautismo, Primera Comunión, Matrimonio, Confesión y más.
+            </p>
+          </Reveal>
         </div>
       </section>
 

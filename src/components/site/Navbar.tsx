@@ -9,9 +9,9 @@ const links = [
   { href: "/#parroquia", label: "Parroquia" },
   { href: "/#horarios", label: "Horarios" },
   { href: "/sacramentos", label: "Sacramentos", route: true },
-  { href: "/#noticias", label: "Noticias" },
   { href: "/#ministerios", label: "Ministerios" },
   { href: "/#galeria", label: "Galería" },
+  { href: "/#noticias", label: "Noticias" },
   { href: "/#contacto", label: "Contacto" },
 ];
 

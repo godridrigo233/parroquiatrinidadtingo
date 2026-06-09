@@ -1,5 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { Droplets, Cookie, HeartHandshake, Heart, HandHeart, Cross, Phone, Clock, ArrowRight, CheckCircle2 } from "lucide-react";
+import { createFileRoute } from "@tanstack/react-router";
+import { Droplets, Cookie, HeartHandshake, Heart, HandHeart, Cross, Phone, Clock, CheckCircle2 } from "lucide-react";
 import { Navbar } from "@/components/site/Navbar";
 import { Reveal } from "@/components/site/Reveal";
 import { WhatsAppFab } from "@/components/site/WhatsAppFab";

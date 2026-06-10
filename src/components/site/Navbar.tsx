@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Menu, X, Sun, Moon } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import logo from "@/assets/logo.png";
-import { useTheme } from "@/hooks/use-theme";
 
 const links = [
   { href: "/#inicio", label: "Inicio" },
@@ -12,7 +11,6 @@ const links = [
   { href: "/#ministerios", label: "Ministerios" },
   { href: "/#horarios", label: "Horarios" },
   { href: "/#galeria", label: "Galería" },
-  { href: "/#noticias", label: "Noticias" },
   { href: "/#contacto", label: "Contacto" },
 ];
 
@@ -22,7 +20,6 @@ export function Navbar() {
   const clicks = useRef(0);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navigate = useNavigate();
-  const { theme, toggle } = useTheme();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -83,15 +80,6 @@ export function Navbar() {
               </a>
             ),
           )}
-          <button
-            onClick={toggle}
-            aria-label="Cambiar tema"
-            className={`p-2 rounded-full transition-colors ${
-              scrolled ? "hover:bg-secondary text-foreground" : "hover:bg-white/10 text-white"
-            }`}
-          >
-            {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
-          </button>
           <Link
             to="/"
             hash="contacto"
@@ -102,13 +90,6 @@ export function Navbar() {
         </nav>
 
         <div className="lg:hidden flex items-center gap-1">
-          <button
-            onClick={toggle}
-            aria-label="Cambiar tema"
-            className={`p-2 ${scrolled ? "text-foreground" : "text-white"}`}
-          >
-            {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
-          </button>
           <button
             onClick={() => setOpen(!open)}
             className={`p-2 ${scrolled ? "text-foreground" : "text-white"}`}

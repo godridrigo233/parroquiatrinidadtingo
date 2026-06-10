@@ -207,7 +207,7 @@ function Home() {
               <Clock size={18} /> Ver horarios
             </a>
             <a href="#noticias" className="px-7 py-3.5 rounded-full bg-white/10 border border-white/30 backdrop-blur text-white font-semibold hover:bg-white/20 transition-colors">
-              Noticias
+              Eventos
             </a>
             <a href="#contacto" className="px-7 py-3.5 rounded-full bg-white text-foreground font-semibold hover:bg-white/90 transition-colors flex items-center gap-2">
               Contacto <ArrowRight size={18} />

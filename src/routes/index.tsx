@@ -63,10 +63,10 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-type News = { id: string; title: string; excerpt: string | null; content: string; image_url: string | null; published_at: string };
 type Schedule = { id: string; category: string; day_label: string; time_label: string; notes: string | null; sort_order: number };
 type Ministry = { id: string; name: string; description: string | null; leader: string | null; schedule: string | null; image_url: string | null };
 type Eventt = { id: string; title: string; description: string | null; event_date: string; location: string | null };
+type GalleryImage = { id: string; title: string | null; category: string | null; image_url: string; sort_order: number };
 
 const categoryMeta: Record<string, { label: string; icon: typeof Church }> = {
   misa: { label: "Santa Misa", icon: Church },

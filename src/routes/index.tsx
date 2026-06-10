@@ -2,13 +2,15 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
   Church, Clock, BookOpen, Flame, Heart, Users, Music, GraduationCap,
-  Sparkles, MapPin, Phone, Facebook, Instagram, Mail, Calendar, ArrowRight, Quote, Briefcase,
+  Sparkles, MapPin, Phone, Facebook, Instagram, Mail, Calendar, ArrowRight, Quote, Briefcase, ChevronLeft, ChevronRight, X,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/site/Navbar";
 import { Reveal } from "@/components/site/Reveal";
 import { WhatsAppFab } from "@/components/site/WhatsAppFab";
 import { FacebookFeed } from "@/components/site/FacebookFeed";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import logo from "@/assets/logo.png";
 import heroImg from "@/assets/hero-church.jpg";
 import interiorImg from "@/assets/church-interior.jpg";

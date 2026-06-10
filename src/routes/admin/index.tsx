@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { LogOut, Plus, Trash2, Newspaper, Calendar, Clock, Users, Image as ImageIcon } from "lucide-react";
+import { LogOut, Plus, Trash2, Pencil, X, Calendar, Clock, Users, Image as ImageIcon, Save } from "lucide-react";
 import logo from "@/assets/logo.png";
 
 export const Route = createFileRoute("/admin/")({
@@ -9,10 +9,9 @@ export const Route = createFileRoute("/admin/")({
   component: AdminDashboard,
 });
 
-type Tab = "news" | "events" | "schedules" | "ministries" | "gallery";
+type Tab = "events" | "schedules" | "ministries" | "gallery";
 
-const tabs: { id: Tab; label: string; icon: typeof Newspaper }[] = [
-  { id: "news", label: "Noticias", icon: Newspaper },
+const tabs: { id: Tab; label: string; icon: typeof Calendar }[] = [
   { id: "events", label: "Eventos", icon: Calendar },
   { id: "schedules", label: "Horarios", icon: Clock },
   { id: "ministries", label: "Ministerios", icon: Users },
@@ -24,7 +23,7 @@ function AdminDashboard() {
   const [ready, setReady] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [email, setEmail] = useState("");
-  const [tab, setTab] = useState<Tab>("news");
+  const [tab, setTab] = useState<Tab>("events");
 
   useEffect(() => {
     (async () => {
@@ -57,11 +56,7 @@ function AdminDashboard() {
           <h1 className="font-display text-2xl text-primary">Acceso restringido</h1>
           <p className="mt-3 text-sm text-muted-foreground">
             Tu cuenta <strong>{email}</strong> no tiene rol de administrador asignado.
-            Pide a un administrador que ejecute en la base de datos:
           </p>
-          <pre className="mt-4 text-xs bg-secondary p-3 rounded-lg overflow-auto text-left">
-            {`INSERT INTO user_roles (user_id, role)\nSELECT id, 'admin' FROM auth.users\nWHERE email = '${email}';`}
-          </pre>
           <button onClick={logout} className="mt-6 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm">
             Cerrar sesión
           </button>
@@ -104,7 +99,6 @@ function AdminDashboard() {
       </header>
 
       <main className="max-w-7xl mx-auto p-5 lg:p-8">
-        {tab === "news" && <NewsManager />}
         {tab === "events" && <EventsManager />}
         {tab === "schedules" && <SchedulesManager />}
         {tab === "ministries" && <MinistriesManager />}
@@ -142,54 +136,50 @@ function useTable<T extends { id: string }>(table: string, orderBy: string, asce
   return { items, load, remove };
 }
 
-function NewsManager() {
-  const { items, load, remove } = useTable<{ id: string; title: string; excerpt: string | null; content: string; image_url: string | null; published_at: string }>("news", "published_at");
-  const [form, setForm] = useState({ title: "", excerpt: "", content: "", image_url: "" });
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    await supabase.from("news").insert({ ...form, image_url: form.image_url || null });
-    setForm({ title: "", excerpt: "", content: "", image_url: "" });
-    load();
-  };
+function EditModal({ open, onClose, title, children }: { open: boolean; onClose: () => void; title: string; children: React.ReactNode }) {
+  if (!open) return null;
   return (
-    <div className="grid lg:grid-cols-3 gap-6">
-      <div className="lg:col-span-1">
-        <Card>
-          <h2 className="font-display text-xl text-primary">Nueva noticia</h2>
-          <form onSubmit={submit} className="mt-4 space-y-3">
-            <Input required placeholder="Título" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
-            <Input placeholder="URL de imagen (opcional)" value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} />
-            <Textarea placeholder="Resumen breve" rows={2} value={form.excerpt} onChange={(e) => setForm({ ...form, excerpt: e.target.value })} />
-            <Textarea required placeholder="Contenido completo" rows={5} value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} />
-            <PrimaryBtn type="submit"><Plus size={16} /> Publicar</PrimaryBtn>
-          </form>
-        </Card>
-      </div>
-      <div className="lg:col-span-2 space-y-3">
-        {items.map((n) => (
-          <div key={n.id} className="bg-card rounded-xl p-5 border border-border flex gap-4">
-            {n.image_url && <img src={n.image_url} alt="" className="h-20 w-20 rounded-lg object-cover" />}
-            <div className="flex-1">
-              <p className="text-xs text-gold uppercase tracking-widest">{new Date(n.published_at).toLocaleDateString("es-PE")}</p>
-              <p className="font-display text-lg text-primary">{n.title}</p>
-              <p className="text-sm text-muted-foreground line-clamp-2 mt-1">{n.excerpt}</p>
-            </div>
-            <button onClick={() => remove(n.id)} className="text-destructive hover:bg-destructive/10 p-2 rounded-lg h-fit"><Trash2 size={16} /></button>
-          </div>
-        ))}
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto" onClick={onClose}>
+      <div className="bg-card rounded-2xl shadow-elegant border border-border w-full max-w-lg my-8" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between p-5 border-b border-border">
+          <h3 className="font-display text-xl text-primary">{title}</h3>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-secondary"><X size={18} /></button>
+        </div>
+        <div className="p-5">{children}</div>
       </div>
     </div>
   );
 }
 
+// ---- EVENTS ----
+type EventRow = { id: string; title: string; description: string | null; event_date: string; location: string | null };
 function EventsManager() {
-  const { items, load, remove } = useTable<{ id: string; title: string; description: string | null; event_date: string; location: string | null }>("events", "event_date", true);
-  const [form, setForm] = useState({ title: "", description: "", event_date: "", location: "" });
+  const { items, load, remove } = useTable<EventRow>("events", "event_date", true);
+  const empty = { title: "", description: "", event_date: "", location: "" };
+  const [form, setForm] = useState(empty);
+  const [editing, setEditing] = useState<EventRow | null>(null);
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     await supabase.from("events").insert({ ...form, event_date: new Date(form.event_date).toISOString() });
-    setForm({ title: "", description: "", event_date: "", location: "" });
+    setForm(empty);
     load();
+  };
+  const saveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editing) return;
+    await supabase.from("events").update({
+      title: editing.title,
+      description: editing.description,
+      location: editing.location,
+      event_date: new Date(editing.event_date).toISOString(),
+    }).eq("id", editing.id);
+    setEditing(null);
+    load();
+  };
+  const toLocalInput = (iso: string) => {
+    const d = new Date(iso);
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   };
   return (
     <div className="grid lg:grid-cols-3 gap-6">
@@ -206,71 +196,140 @@ function EventsManager() {
       <div className="lg:col-span-2 space-y-3">
         {items.map((e) => (
           <div key={e.id} className="bg-card rounded-xl p-5 border border-border flex justify-between gap-3">
-            <div>
+            <div className="flex-1 min-w-0">
               <p className="text-xs text-gold uppercase tracking-widest">{new Date(e.event_date).toLocaleString("es-PE")}</p>
               <p className="font-display text-lg text-primary">{e.title}</p>
               {e.location && <p className="text-xs text-muted-foreground mt-1">📍 {e.location}</p>}
-              <p className="text-sm text-muted-foreground mt-1">{e.description}</p>
+              {e.description && <p className="text-sm text-muted-foreground mt-1">{e.description}</p>}
             </div>
-            <button onClick={() => remove(e.id)} className="text-destructive hover:bg-destructive/10 p-2 rounded-lg h-fit"><Trash2 size={16} /></button>
+            <div className="flex flex-col gap-1">
+              <button onClick={() => setEditing({ ...e, event_date: toLocalInput(e.event_date) })} className="text-primary hover:bg-secondary p-2 rounded-lg"><Pencil size={16} /></button>
+              <button onClick={() => remove(e.id)} className="text-destructive hover:bg-destructive/10 p-2 rounded-lg"><Trash2 size={16} /></button>
+            </div>
           </div>
         ))}
       </div>
+      <EditModal open={!!editing} onClose={() => setEditing(null)} title="Editar evento">
+        {editing && (
+          <form onSubmit={saveEdit} className="space-y-3">
+            <Input required value={editing.title} onChange={(e) => setEditing({ ...editing, title: e.target.value })} />
+            <Input required type="datetime-local" value={editing.event_date} onChange={(e) => setEditing({ ...editing, event_date: e.target.value })} />
+            <Input placeholder="Ubicación" value={editing.location ?? ""} onChange={(e) => setEditing({ ...editing, location: e.target.value })} />
+            <Textarea placeholder="Descripción" rows={3} value={editing.description ?? ""} onChange={(e) => setEditing({ ...editing, description: e.target.value })} />
+            <PrimaryBtn type="submit"><Save size={16} /> Guardar</PrimaryBtn>
+          </form>
+        )}
+      </EditModal>
     </div>
   );
 }
 
+// ---- SCHEDULES ----
+type ScheduleRow = { id: string; category: string; day_label: string; time_label: string; notes: string | null; sort_order: number };
 function SchedulesManager() {
-  const { items, load, remove } = useTable<{ id: string; category: string; day_label: string; time_label: string; notes: string | null; sort_order: number }>("schedules", "sort_order", true);
-  const [form, setForm] = useState({ category: "misa", day_label: "", time_label: "", notes: "", sort_order: 0 });
+  const { items, load, remove } = useTable<ScheduleRow>("schedules", "sort_order", true);
+  const empty = { category: "misa", day_label: "", time_label: "", notes: "", sort_order: 0 };
+  const [form, setForm] = useState(empty);
+  const [editing, setEditing] = useState<ScheduleRow | null>(null);
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await supabase.from("schedules").insert(form);
-    setForm({ category: "misa", day_label: "", time_label: "", notes: "", sort_order: 0 });
+    const nextOrder = items.length ? Math.max(...items.map((i) => i.sort_order)) + 10 : 10;
+    await supabase.from("schedules").insert({ ...form, sort_order: form.sort_order || nextOrder });
+    setForm(empty);
     load();
   };
+  const saveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editing) return;
+    await supabase.from("schedules").update({
+      category: editing.category,
+      day_label: editing.day_label,
+      time_label: editing.time_label,
+      notes: editing.notes,
+      sort_order: editing.sort_order,
+    }).eq("id", editing.id);
+    setEditing(null);
+    load();
+  };
+  const CategorySelect = ({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
+    <select required value={value} onChange={(e) => onChange(e.target.value)}
+      className="w-full px-3 py-2.5 rounded-lg border border-input bg-background text-sm">
+      <option value="misa">Santa Misa</option>
+      <option value="confesion">Confesiones</option>
+      <option value="catequesis">Catequesis</option>
+      <option value="adoracion">Adoración</option>
+      <option value="pastoral">Pastoral</option>
+      <option value="secretaria">Secretaría</option>
+    </select>
+  );
   return (
     <div className="grid lg:grid-cols-3 gap-6">
       <Card>
         <h2 className="font-display text-xl text-primary">Nuevo horario</h2>
         <form onSubmit={submit} className="mt-4 space-y-3">
-          <select required value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}
-            className="w-full px-3 py-2.5 rounded-lg border border-input bg-background text-sm">
-            <option value="misa">Santa Misa</option>
-            <option value="confesion">Confesiones</option>
-            <option value="catequesis">Catequesis</option>
-            <option value="adoracion">Adoración</option>
-            <option value="pastoral">Pastoral</option>
-          </select>
+          <CategorySelect value={form.category} onChange={(v) => setForm({ ...form, category: v })} />
           <Input required placeholder="Día (ej: Domingos)" value={form.day_label} onChange={(e) => setForm({ ...form, day_label: e.target.value })} />
           <Input required placeholder="Hora (ej: 10:00 AM)" value={form.time_label} onChange={(e) => setForm({ ...form, time_label: e.target.value })} />
           <Input placeholder="Notas (opcional)" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+          <Input type="number" placeholder="Orden (opcional)" value={form.sort_order || ""} onChange={(e) => setForm({ ...form, sort_order: Number(e.target.value) || 0 })} />
           <PrimaryBtn type="submit"><Plus size={16} /> Agregar</PrimaryBtn>
         </form>
       </Card>
       <div className="lg:col-span-2 space-y-2">
         {items.map((s) => (
-          <div key={s.id} className="bg-card rounded-xl p-4 border border-border flex justify-between items-center">
-            <div className="flex-1">
-              <p className="text-xs text-gold uppercase">{s.category}</p>
+          <div key={s.id} className="bg-card rounded-xl p-4 border border-border flex justify-between items-center gap-2">
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-gold uppercase">{s.category} · #{s.sort_order}</p>
               <p className="text-sm font-semibold">{s.day_label} · <span className="text-muted-foreground">{s.time_label}</span></p>
               {s.notes && <p className="text-xs text-muted-foreground italic">{s.notes}</p>}
             </div>
-            <button onClick={() => remove(s.id)} className="text-destructive hover:bg-destructive/10 p-2 rounded-lg"><Trash2 size={16} /></button>
+            <div className="flex gap-1">
+              <button onClick={() => setEditing({ ...s, notes: s.notes ?? "" })} className="text-primary hover:bg-secondary p-2 rounded-lg"><Pencil size={16} /></button>
+              <button onClick={() => remove(s.id)} className="text-destructive hover:bg-destructive/10 p-2 rounded-lg"><Trash2 size={16} /></button>
+            </div>
           </div>
         ))}
       </div>
+      <EditModal open={!!editing} onClose={() => setEditing(null)} title="Editar horario">
+        {editing && (
+          <form onSubmit={saveEdit} className="space-y-3">
+            <CategorySelect value={editing.category} onChange={(v) => setEditing({ ...editing, category: v })} />
+            <Input required value={editing.day_label} onChange={(e) => setEditing({ ...editing, day_label: e.target.value })} />
+            <Input required value={editing.time_label} onChange={(e) => setEditing({ ...editing, time_label: e.target.value })} />
+            <Input placeholder="Notas" value={editing.notes ?? ""} onChange={(e) => setEditing({ ...editing, notes: e.target.value })} />
+            <Input type="number" value={editing.sort_order} onChange={(e) => setEditing({ ...editing, sort_order: Number(e.target.value) })} />
+            <PrimaryBtn type="submit"><Save size={16} /> Guardar</PrimaryBtn>
+          </form>
+        )}
+      </EditModal>
     </div>
   );
 }
 
+// ---- MINISTRIES ----
+type MinistryRow = { id: string; name: string; description: string | null; leader: string | null; schedule: string | null; image_url: string | null };
 function MinistriesManager() {
-  const { items, load, remove } = useTable<{ id: string; name: string; description: string | null; leader: string | null; schedule: string | null; image_url: string | null }>("ministries", "created_at", true);
-  const [form, setForm] = useState({ name: "", description: "", leader: "", schedule: "", image_url: "" });
+  const { items, load, remove } = useTable<MinistryRow>("ministries", "created_at", true);
+  const empty = { name: "", description: "", leader: "", schedule: "", image_url: "" };
+  const [form, setForm] = useState(empty);
+  const [editing, setEditing] = useState<MinistryRow | null>(null);
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     await supabase.from("ministries").insert({ ...form, image_url: form.image_url || null });
-    setForm({ name: "", description: "", leader: "", schedule: "", image_url: "" });
+    setForm(empty);
+    load();
+  };
+  const saveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editing) return;
+    await supabase.from("ministries").update({
+      name: editing.name,
+      description: editing.description,
+      leader: editing.leader,
+      schedule: editing.schedule,
+      image_url: editing.image_url || null,
+    }).eq("id", editing.id);
+    setEditing(null);
     load();
   };
   return (
@@ -289,26 +348,94 @@ function MinistriesManager() {
       <div className="lg:col-span-2 space-y-3">
         {items.map((m) => (
           <div key={m.id} className="bg-card rounded-xl p-5 border border-border flex justify-between gap-3">
-            <div>
+            <div className="flex-1 min-w-0">
               <p className="font-display text-lg text-primary">{m.name}</p>
               <p className="text-xs text-muted-foreground">{m.leader} · {m.schedule}</p>
-              <p className="text-sm text-muted-foreground mt-1">{m.description}</p>
+              {m.description && <p className="text-sm text-muted-foreground mt-1">{m.description}</p>}
             </div>
-            <button onClick={() => remove(m.id)} className="text-destructive hover:bg-destructive/10 p-2 rounded-lg h-fit"><Trash2 size={16} /></button>
+            <div className="flex flex-col gap-1">
+              <button onClick={() => setEditing(m)} className="text-primary hover:bg-secondary p-2 rounded-lg"><Pencil size={16} /></button>
+              <button onClick={() => remove(m.id)} className="text-destructive hover:bg-destructive/10 p-2 rounded-lg"><Trash2 size={16} /></button>
+            </div>
           </div>
         ))}
       </div>
+      <EditModal open={!!editing} onClose={() => setEditing(null)} title="Editar ministerio">
+        {editing && (
+          <form onSubmit={saveEdit} className="space-y-3">
+            <Input required value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} />
+            <Input placeholder="Encargado" value={editing.leader ?? ""} onChange={(e) => setEditing({ ...editing, leader: e.target.value })} />
+            <Input placeholder="Horario" value={editing.schedule ?? ""} onChange={(e) => setEditing({ ...editing, schedule: e.target.value })} />
+            <Input placeholder="URL de imagen" value={editing.image_url ?? ""} onChange={(e) => setEditing({ ...editing, image_url: e.target.value })} />
+            <Textarea placeholder="Descripción" rows={3} value={editing.description ?? ""} onChange={(e) => setEditing({ ...editing, description: e.target.value })} />
+            <PrimaryBtn type="submit"><Save size={16} /> Guardar</PrimaryBtn>
+          </form>
+        )}
+      </EditModal>
     </div>
   );
 }
 
+// ---- GALLERY ----
+type GalleryRow = { id: string; title: string | null; category: string | null; image_url: string; sort_order: number };
 function GalleryManager() {
-  const { items, load, remove } = useTable<{ id: string; title: string | null; category: string | null; image_url: string; sort_order: number }>("gallery_images", "sort_order", true);
-  const [form, setForm] = useState({ title: "", category: "", image_url: "", sort_order: 0 });
+  const { items, load, remove } = useTable<GalleryRow>("gallery_images", "sort_order", true);
+  const empty = { title: "", category: "", image_url: "", sort_order: 0 };
+  const [form, setForm] = useState(empty);
+  const [editing, setEditing] = useState<GalleryRow | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  const validateImage = (url: string) =>
+    new Promise<boolean>((resolve) => {
+      if (!url.trim()) return resolve(false);
+      const img = new Image();
+      img.onload = () => resolve(true);
+      img.onerror = () => resolve(false);
+      img.src = url;
+    });
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await supabase.from("gallery_images").insert(form);
-    setForm({ title: "", category: "", image_url: "", sort_order: 0 });
+    setError(null);
+    setSaving(true);
+    const ok = await validateImage(form.image_url);
+    if (!ok) {
+      setError("La imagen no se pudo cargar. Verifica la URL.");
+      setSaving(false);
+      return;
+    }
+    const nextOrder = items.length ? Math.max(...items.map((i) => i.sort_order)) + 10 : 10;
+    const { error: dbErr } = await supabase.from("gallery_images").insert({
+      ...form,
+      title: form.title || null,
+      category: form.category || null,
+      sort_order: form.sort_order || nextOrder,
+    });
+    setSaving(false);
+    if (dbErr) {
+      setError(dbErr.message);
+      return;
+    }
+    setForm(empty);
+    load();
+  };
+  const saveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editing) return;
+    setError(null);
+    const ok = await validateImage(editing.image_url);
+    if (!ok) {
+      setError("La imagen no se pudo cargar. Verifica la URL.");
+      return;
+    }
+    await supabase.from("gallery_images").update({
+      title: editing.title,
+      category: editing.category,
+      image_url: editing.image_url,
+      sort_order: editing.sort_order,
+    }).eq("id", editing.id);
+    setEditing(null);
     load();
   };
   return (
@@ -319,19 +446,37 @@ function GalleryManager() {
           <Input required placeholder="URL de imagen" value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} />
           <Input placeholder="Título" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
           <Input placeholder="Categoría (misas, procesiones…)" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} />
-          <PrimaryBtn type="submit"><Plus size={16} /> Subir</PrimaryBtn>
+          <Input type="number" placeholder="Orden (opcional)" value={form.sort_order || ""} onChange={(e) => setForm({ ...form, sort_order: Number(e.target.value) || 0 })} />
+          {error && <p className="text-xs text-destructive">{error}</p>}
+          <PrimaryBtn type="submit" disabled={saving}><Plus size={16} /> {saving ? "Verificando…" : "Subir"}</PrimaryBtn>
         </form>
       </Card>
       <div className="lg:col-span-2 grid sm:grid-cols-2 md:grid-cols-3 gap-3">
         {items.map((g) => (
-          <div key={g.id} className="relative group rounded-xl overflow-hidden border border-border aspect-square">
-            <img src={g.image_url} alt={g.title ?? ""} className="w-full h-full object-cover" />
-            <button onClick={() => remove(g.id)} className="absolute top-2 right-2 bg-destructive text-destructive-foreground p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition">
-              <Trash2 size={14} />
-            </button>
+          <div key={g.id} className="relative group rounded-xl overflow-hidden border border-border aspect-square bg-secondary">
+            <img src={g.image_url} alt={g.title ?? ""} className="w-full h-full object-cover" onError={(e) => { (e.currentTarget as HTMLImageElement).style.opacity = "0.2"; }} />
+            <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/80 to-transparent text-white text-xs">
+              {g.title || "(sin título)"}
+            </div>
+            <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition">
+              <button onClick={() => setEditing(g)} className="bg-card text-primary p-1.5 rounded-lg shadow"><Pencil size={14} /></button>
+              <button onClick={() => remove(g.id)} className="bg-destructive text-destructive-foreground p-1.5 rounded-lg shadow"><Trash2 size={14} /></button>
+            </div>
           </div>
         ))}
       </div>
+      <EditModal open={!!editing} onClose={() => { setEditing(null); setError(null); }} title="Editar imagen">
+        {editing && (
+          <form onSubmit={saveEdit} className="space-y-3">
+            <Input required value={editing.image_url} onChange={(e) => setEditing({ ...editing, image_url: e.target.value })} />
+            <Input placeholder="Título" value={editing.title ?? ""} onChange={(e) => setEditing({ ...editing, title: e.target.value })} />
+            <Input placeholder="Categoría" value={editing.category ?? ""} onChange={(e) => setEditing({ ...editing, category: e.target.value })} />
+            <Input type="number" value={editing.sort_order} onChange={(e) => setEditing({ ...editing, sort_order: Number(e.target.value) })} />
+            {error && <p className="text-xs text-destructive">{error}</p>}
+            <PrimaryBtn type="submit"><Save size={16} /> Guardar</PrimaryBtn>
+          </form>
+        )}
+      </EditModal>
     </div>
   );
 }

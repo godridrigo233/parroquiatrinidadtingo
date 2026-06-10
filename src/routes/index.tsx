@@ -9,6 +9,8 @@ import { Navbar } from "@/components/site/Navbar";
 import { Reveal } from "@/components/site/Reveal";
 import { WhatsAppFab } from "@/components/site/WhatsAppFab";
 import { FacebookFeed } from "@/components/site/FacebookFeed";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import logo from "@/assets/logo.png";
 import heroImg from "@/assets/hero-church.jpg";
 import interiorImg from "@/assets/church-interior.jpg";
@@ -61,10 +63,10 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-type News = { id: string; title: string; excerpt: string | null; content: string; image_url: string | null; published_at: string };
 type Schedule = { id: string; category: string; day_label: string; time_label: string; notes: string | null; sort_order: number };
 type Ministry = { id: string; name: string; description: string | null; leader: string | null; schedule: string | null; image_url: string | null };
 type Eventt = { id: string; title: string; description: string | null; event_date: string; location: string | null };
+type GalleryImage = { id: string; title: string | null; category: string | null; image_url: string; sort_order: number };
 
 const categoryMeta: Record<string, { label: string; icon: typeof Church }> = {
   misa: { label: "Santa Misa", icon: Church },
@@ -121,10 +123,11 @@ const sacerdotes = [
 ];
 
 function Home() {
-  const [, setNews] = useState<News[]>([]);
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [ministries, setMinistries] = useState<Ministry[]>([]);
   const [events, setEvents] = useState<Eventt[]>([]);
+  const [gallery, setGallery] = useState<GalleryImage[]>([]);
+  const [lightbox, setLightbox] = useState<{ url: string; title?: string | null } | null>(null);
   const [scrollY, setScrollY] = useState(0);
 
   useEffect(() => {
@@ -135,16 +138,16 @@ function Home() {
 
   useEffect(() => {
     (async () => {
-      const [n, s, m, e] = await Promise.all([
-        supabase.from("news").select("*").order("published_at", { ascending: false }).limit(6),
+      const [s, m, e, g] = await Promise.all([
         supabase.from("schedules").select("*").order("sort_order"),
         supabase.from("ministries").select("*").order("created_at"),
-        supabase.from("events").select("*").gte("event_date", new Date().toISOString()).order("event_date").limit(3),
+        supabase.from("events").select("*").gte("event_date", new Date().toISOString()).order("event_date").limit(6),
+        supabase.from("gallery_images").select("*").order("sort_order"),
       ]);
-      if (n.data) setNews(n.data as News[]);
       if (s.data) setSchedules(s.data as Schedule[]);
       if (m.data) setMinistries(m.data as Ministry[]);
       if (e.data) setEvents(e.data as Eventt[]);
+      if (g.data) setGallery(g.data as GalleryImage[]);
     })();
   }, []);
 
@@ -204,7 +207,7 @@ function Home() {
               <Clock size={18} /> Ver horarios
             </a>
             <a href="#noticias" className="px-7 py-3.5 rounded-full bg-white/10 border border-white/30 backdrop-blur text-white font-semibold hover:bg-white/20 transition-colors">
-              Noticias
+              Eventos
             </a>
             <a href="#contacto" className="px-7 py-3.5 rounded-full bg-white text-foreground font-semibold hover:bg-white/90 transition-colors flex items-center gap-2">
               Contacto <ArrowRight size={18} />
@@ -425,22 +428,73 @@ function Home() {
           <Reveal className="text-center max-w-2xl mx-auto">
             <p className="text-gold uppercase tracking-[0.25em] text-xs font-semibold">Comunidad en imágenes</p>
             <h2 className="mt-3 font-display text-4xl md:text-5xl font-medium">Galería</h2>
+            <p className="mt-4 text-muted-foreground">Momentos vividos en familia parroquial.</p>
           </Reveal>
 
-          <div className="mt-14 columns-1 sm:columns-2 lg:columns-3 gap-5 space-y-5">
-            {galleryImgs.map((g, i) => (
-              <Reveal key={i} delay={i * 50}>
-                <figure className="relative break-inside-avoid rounded-2xl overflow-hidden shadow-card group">
-                  <img src={g.src} alt={g.label} loading="lazy" className={`w-full object-cover transition-transform duration-700 group-hover:scale-105 ${i % 2 ? "aspect-[4/5]" : "aspect-square"}`} />
-                  <figcaption className="absolute inset-0 bg-gradient-to-t from-primary/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-5">
-                    <span className="text-white font-display text-xl">{g.label}</span>
-                  </figcaption>
-                </figure>
-              </Reveal>
-            ))}
-          </div>
+          <Reveal className="mt-12">
+            {(() => {
+              const items = gallery.length
+                ? gallery.map((g) => ({ id: g.id, src: g.image_url, label: g.title }))
+                : galleryImgs.map((g, i) => ({ id: String(i), src: g.src, label: g.label }));
+              if (!items.length) return null;
+              return (
+                <Carousel opts={{ align: "start", loop: true }} className="relative px-10 sm:px-12">
+                  <CarouselContent className="-ml-4">
+                    {items.map((g) => (
+                      <CarouselItem
+                        key={g.id}
+                        className="pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5"
+                      >
+                        <button
+                          type="button"
+                          onClick={() => setLightbox({ url: g.src, title: g.label })}
+                          className="group relative block w-full aspect-square overflow-hidden rounded-2xl shadow-card focus:outline-none focus:ring-2 focus:ring-gold"
+                        >
+                          <img
+                            src={g.src}
+                            alt={g.label ?? ""}
+                            loading="lazy"
+                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                            onError={(ev) => {
+                              (ev.currentTarget as HTMLImageElement).style.display = "none";
+                            }}
+                          />
+                          {g.label && (
+                            <span className="absolute inset-x-0 bottom-0 p-3 text-white text-sm font-medium bg-gradient-to-t from-primary/90 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                              {g.label}
+                            </span>
+                          )}
+                        </button>
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                  <CarouselPrevious className="left-0 bg-card shadow-card border-border" />
+                  <CarouselNext className="right-0 bg-card shadow-card border-border" />
+                </Carousel>
+              );
+            })()}
+          </Reveal>
         </div>
+
+        <Dialog open={!!lightbox} onOpenChange={(o) => !o && setLightbox(null)}>
+          <DialogContent className="max-w-5xl p-0 bg-transparent border-0 shadow-none">
+            {lightbox && (
+              <div className="relative">
+                <img
+                  src={lightbox.url}
+                  alt={lightbox.title ?? ""}
+                  className="w-full max-h-[85vh] object-contain rounded-2xl bg-black"
+                />
+                {lightbox.title && (
+                  <p className="mt-3 text-center text-white font-display text-xl drop-shadow">{lightbox.title}</p>
+                )}
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </section>
+
+
 
       {/* NOTICIAS */}
       <section id="noticias" className="py-24 px-5 lg:px-8">
@@ -448,7 +502,7 @@ function Home() {
           <Reveal className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
             <div>
               <p className="text-gold uppercase tracking-[0.25em] text-xs font-semibold">Vida parroquial</p>
-              <h2 className="mt-3 font-display text-4xl md:text-5xl font-medium">Noticias y avisos</h2>
+              <h2 className="mt-3 font-display text-4xl md:text-5xl font-medium">Eventos y avisos</h2>
             </div>
 
             <a href="https://www.facebook.com/parroquiasantisimatrinidadtingo/" target="_blank" rel="noopener noreferrer" className="text-primary font-semibold inline-flex items-center gap-2 hover:text-gold transition-colors">
@@ -460,16 +514,26 @@ function Home() {
             <Reveal className="mt-10">
               <div className="rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground p-8 shadow-elegant">
                 <p className="uppercase tracking-[0.2em] text-xs text-gold font-semibold">Próximos eventos</p>
-                <div className="mt-5 grid md:grid-cols-3 gap-6">
-                  {events.map((e) => (
-                    <div key={e.id} className="border-l-2 border-gold pl-4">
-                      <p className="font-display text-xl">{e.title}</p>
-                      <p className="text-sm text-primary-foreground/80 mt-1 flex items-center gap-1.5">
-                        <Calendar size={14} /> {new Date(e.event_date).toLocaleDateString("es-PE", { day: "numeric", month: "long" })}
-                      </p>
-                      {e.description && <p className="text-sm text-primary-foreground/70 mt-2 line-clamp-2">{e.description}</p>}
-                    </div>
-                  ))}
+                <div className="mt-5 grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {events.map((e) => {
+                    const d = new Date(e.event_date);
+                    return (
+                      <div key={e.id} className="border-l-2 border-gold pl-4">
+                        <p className="font-display text-xl">{e.title}</p>
+                        <p className="text-sm text-primary-foreground/80 mt-1 flex items-center gap-1.5">
+                          <Calendar size={14} /> {d.toLocaleDateString("es-PE", { day: "numeric", month: "long" })}
+                          <span className="opacity-60">·</span>
+                          <Clock size={14} /> {d.toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" })}
+                        </p>
+                        {e.location && (
+                          <p className="text-sm text-primary-foreground/80 mt-1 flex items-center gap-1.5">
+                            <MapPin size={14} /> {e.location}
+                          </p>
+                        )}
+                        {e.description && <p className="text-sm text-primary-foreground/70 mt-2">{e.description}</p>}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </Reveal>

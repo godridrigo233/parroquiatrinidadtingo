@@ -78,29 +78,7 @@
   --shadow-card: 0 8px 30px -12px oklch(0.34 0.09 265 / 0.18);
 }
 
-.dark {
-  --background: oklch(0.16 0.025 265);
-  --foreground: oklch(0.97 0.008 85);
-  --card: oklch(0.21 0.035 265);
-  --card-foreground: oklch(0.97 0.008 85);
-  --popover: oklch(0.21 0.035 265);
-  --popover-foreground: oklch(0.97 0.008 85);
-  --primary: oklch(0.78 0.13 80);                  /* dorado como acento principal */
-  --primary-foreground: oklch(0.18 0.03 265);
-  --secondary: oklch(0.26 0.035 265);
-  --secondary-foreground: oklch(0.97 0.008 85);
-  --muted: oklch(0.24 0.03 265);
-  --muted-foreground: oklch(0.78 0.02 85);          /* mejor lectura en oscuro */
-  --accent: oklch(0.38 0.09 265);
-  --accent-foreground: oklch(0.97 0.008 85);
-  --border: oklch(1 0 0 / 14%);
-  --input: oklch(1 0 0 / 16%);
-  --ring: oklch(0.78 0.13 80);
-  --gold: oklch(0.82 0.14 82);                      /* dorado más brillante en oscuro */
-  --gold-soft: oklch(0.72 0.1 80);
-  --shadow-elegant: 0 20px 60px -25px oklch(0 0 0 / 0.6);
-  --shadow-card: 0 8px 30px -12px oklch(0 0 0 / 0.4);
-}
+/* Dark mode deshabilitado — modo claro únicamente */
 
 
 @layer base {

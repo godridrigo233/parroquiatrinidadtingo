@@ -502,7 +502,7 @@ function Home() {
           <Reveal className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
             <div>
               <p className="text-gold uppercase tracking-[0.25em] text-xs font-semibold">Vida parroquial</p>
-              <h2 className="mt-3 font-display text-4xl md:text-5xl font-medium">Noticias y avisos</h2>
+              <h2 className="mt-3 font-display text-4xl md:text-5xl font-medium">Eventos y avisos</h2>
             </div>
 
             <a href="https://www.facebook.com/parroquiasantisimatrinidadtingo/" target="_blank" rel="noopener noreferrer" className="text-primary font-semibold inline-flex items-center gap-2 hover:text-gold transition-colors">

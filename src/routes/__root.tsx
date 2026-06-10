@@ -142,7 +142,6 @@ function RootShell({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es" suppressHydrationWarning>
       <head>
-        <ScriptOnce>{THEME_INIT_SCRIPT}</ScriptOnce>
         <HeadContent />
       </head>
       <body>

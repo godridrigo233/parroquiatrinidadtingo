@@ -428,22 +428,73 @@ function Home() {
           <Reveal className="text-center max-w-2xl mx-auto">
             <p className="text-gold uppercase tracking-[0.25em] text-xs font-semibold">Comunidad en imágenes</p>
             <h2 className="mt-3 font-display text-4xl md:text-5xl font-medium">Galería</h2>
+            <p className="mt-4 text-muted-foreground">Momentos vividos en familia parroquial.</p>
           </Reveal>
 
-          <div className="mt-14 columns-1 sm:columns-2 lg:columns-3 gap-5 space-y-5">
-            {galleryImgs.map((g, i) => (
-              <Reveal key={i} delay={i * 50}>
-                <figure className="relative break-inside-avoid rounded-2xl overflow-hidden shadow-card group">
-                  <img src={g.src} alt={g.label} loading="lazy" className={`w-full object-cover transition-transform duration-700 group-hover:scale-105 ${i % 2 ? "aspect-[4/5]" : "aspect-square"}`} />
-                  <figcaption className="absolute inset-0 bg-gradient-to-t from-primary/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-5">
-                    <span className="text-white font-display text-xl">{g.label}</span>
-                  </figcaption>
-                </figure>
-              </Reveal>
-            ))}
-          </div>
+          <Reveal className="mt-12">
+            {(() => {
+              const items = gallery.length
+                ? gallery.map((g) => ({ id: g.id, src: g.image_url, label: g.title }))
+                : galleryImgs.map((g, i) => ({ id: String(i), src: g.src, label: g.label }));
+              if (!items.length) return null;
+              return (
+                <Carousel opts={{ align: "start", loop: true }} className="relative px-10 sm:px-12">
+                  <CarouselContent className="-ml-4">
+                    {items.map((g) => (
+                      <CarouselItem
+                        key={g.id}
+                        className="pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5"
+                      >
+                        <button
+                          type="button"
+                          onClick={() => setLightbox({ url: g.src, title: g.label })}
+                          className="group relative block w-full aspect-square overflow-hidden rounded-2xl shadow-card focus:outline-none focus:ring-2 focus:ring-gold"
+                        >
+                          <img
+                            src={g.src}
+                            alt={g.label ?? ""}
+                            loading="lazy"
+                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                            onError={(ev) => {
+                              (ev.currentTarget as HTMLImageElement).style.display = "none";
+                            }}
+                          />
+                          {g.label && (
+                            <span className="absolute inset-x-0 bottom-0 p-3 text-white text-sm font-medium bg-gradient-to-t from-primary/90 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                              {g.label}
+                            </span>
+                          )}
+                        </button>
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                  <CarouselPrevious className="left-0 bg-card shadow-card border-border" />
+                  <CarouselNext className="right-0 bg-card shadow-card border-border" />
+                </Carousel>
+              );
+            })()}
+          </Reveal>
         </div>
+
+        <Dialog open={!!lightbox} onOpenChange={(o) => !o && setLightbox(null)}>
+          <DialogContent className="max-w-5xl p-0 bg-transparent border-0 shadow-none">
+            {lightbox && (
+              <div className="relative">
+                <img
+                  src={lightbox.url}
+                  alt={lightbox.title ?? ""}
+                  className="w-full max-h-[85vh] object-contain rounded-2xl bg-black"
+                />
+                {lightbox.title && (
+                  <p className="mt-3 text-center text-white font-display text-xl drop-shadow">{lightbox.title}</p>
+                )}
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </section>
+
+
 
       {/* NOTICIAS */}
       <section id="noticias" className="py-24 px-5 lg:px-8">

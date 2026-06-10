@@ -514,16 +514,26 @@ function Home() {
             <Reveal className="mt-10">
               <div className="rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground p-8 shadow-elegant">
                 <p className="uppercase tracking-[0.2em] text-xs text-gold font-semibold">Próximos eventos</p>
-                <div className="mt-5 grid md:grid-cols-3 gap-6">
-                  {events.map((e) => (
-                    <div key={e.id} className="border-l-2 border-gold pl-4">
-                      <p className="font-display text-xl">{e.title}</p>
-                      <p className="text-sm text-primary-foreground/80 mt-1 flex items-center gap-1.5">
-                        <Calendar size={14} /> {new Date(e.event_date).toLocaleDateString("es-PE", { day: "numeric", month: "long" })}
-                      </p>
-                      {e.description && <p className="text-sm text-primary-foreground/70 mt-2 line-clamp-2">{e.description}</p>}
-                    </div>
-                  ))}
+                <div className="mt-5 grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {events.map((e) => {
+                    const d = new Date(e.event_date);
+                    return (
+                      <div key={e.id} className="border-l-2 border-gold pl-4">
+                        <p className="font-display text-xl">{e.title}</p>
+                        <p className="text-sm text-primary-foreground/80 mt-1 flex items-center gap-1.5">
+                          <Calendar size={14} /> {d.toLocaleDateString("es-PE", { day: "numeric", month: "long" })}
+                          <span className="opacity-60">·</span>
+                          <Clock size={14} /> {d.toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" })}
+                        </p>
+                        {e.location && (
+                          <p className="text-sm text-primary-foreground/80 mt-1 flex items-center gap-1.5">
+                            <MapPin size={14} /> {e.location}
+                          </p>
+                        )}
+                        {e.description && <p className="text-sm text-primary-foreground/70 mt-2">{e.description}</p>}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </Reveal>

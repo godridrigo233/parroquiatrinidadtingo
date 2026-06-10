@@ -123,10 +123,11 @@ const sacerdotes = [
 ];
 
 function Home() {
-  const [, setNews] = useState<News[]>([]);
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [ministries, setMinistries] = useState<Ministry[]>([]);
   const [events, setEvents] = useState<Eventt[]>([]);
+  const [gallery, setGallery] = useState<GalleryImage[]>([]);
+  const [lightbox, setLightbox] = useState<{ url: string; title?: string | null } | null>(null);
   const [scrollY, setScrollY] = useState(0);
 
   useEffect(() => {
@@ -137,16 +138,16 @@ function Home() {
 
   useEffect(() => {
     (async () => {
-      const [n, s, m, e] = await Promise.all([
-        supabase.from("news").select("*").order("published_at", { ascending: false }).limit(6),
+      const [s, m, e, g] = await Promise.all([
         supabase.from("schedules").select("*").order("sort_order"),
         supabase.from("ministries").select("*").order("created_at"),
-        supabase.from("events").select("*").gte("event_date", new Date().toISOString()).order("event_date").limit(3),
+        supabase.from("events").select("*").gte("event_date", new Date().toISOString()).order("event_date").limit(6),
+        supabase.from("gallery_images").select("*").order("sort_order"),
       ]);
-      if (n.data) setNews(n.data as News[]);
       if (s.data) setSchedules(s.data as Schedule[]);
       if (m.data) setMinistries(m.data as Ministry[]);
       if (e.data) setEvents(e.data as Eventt[]);
+      if (g.data) setGallery(g.data as GalleryImage[]);
     })();
   }, []);
 

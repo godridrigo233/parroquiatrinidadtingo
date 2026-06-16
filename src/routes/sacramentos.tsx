@@ -9,7 +9,8 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import ogSacramentos from "@/assets/og-sacramentos.jpg";
+
+// NOTA: Se eliminó la importación de ogSacramentos aquí
 
 const SITE_URL = "https://parroquiatrinidadtingo.lovable.app";
 
@@ -73,7 +74,6 @@ const sacramentos = [
       "Examen de conciencia, arrepentimiento y propósito de enmienda.",
     ],
     horario: "Antes o después de misa.",
-
   },
   {
     id: "uncion",
@@ -116,9 +116,10 @@ export const Route = createFileRoute("/sacramentos")({
       },
       { property: "og:url", content: `${SITE_URL}/sacramentos` },
       { property: "og:type", content: "article" },
-      { property: "og:image", content: `${SITE_URL}${ogSacramentos}` },
+      // NOTA: Se actualizó la variable a la ruta de texto directo en las dos líneas siguientes:
+      { property: "og:image", content: `${SITE_URL}/assets/og-sacramentos.jpg` },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:image", content: `${SITE_URL}${ogSacramentos}` },
+      { name: "twitter:image", content: `${SITE_URL}/assets/og-sacramentos.jpg` },
     ],
     links: [{ rel: "canonical", href: `${SITE_URL}/sacramentos` }],
     scripts: [
@@ -177,8 +178,6 @@ function SacramentosPage() {
               Pulsa cada sacramento para ver los detalles
             </h2>
           </Reveal>
-
-
 
           <Reveal>
             <Accordion type="single" collapsible className="space-y-4">

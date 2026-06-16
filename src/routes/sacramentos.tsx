@@ -242,7 +242,7 @@ function SacramentosPage() {
               Conversa con nosotros
             </h2>
             <p className="mt-4 text-muted-foreground max-w-xl mx-auto">
-              Las puertas de la parroquia están abiertas. Llámanos o acércate para acompañarte en este paso de fe.
+              Las puertas de la parroquia están abiertas. Llámanos o acércate a acompañarte en este paso de fe.
             </p>
             <div className="mt-8 flex flex-wrap gap-3 justify-center">
               <a

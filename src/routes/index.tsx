@@ -11,23 +11,8 @@ import { WhatsAppFab } from "@/components/site/WhatsAppFab";
 import { FacebookFeed } from "@/components/site/FacebookFeed";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import heroImg from "@/assets/hero-church.jpg";
-import interiorImg from "@/assets/church-interior.jpg";
-import virgenImg from "@/assets/virgen-dolorosa.jpg";
-import trinidadImg from "@/assets/trinidad.jpg";
-import padreTommy from "@/assets/padre-tommy.jpg";
-import padreManesh from "@/assets/padre-manesh.jpg";
-import gPrimeraComunionMisa from "@/assets/gallery-primera-comunion-misa.jpg";
-import gNinosPrimeraComunion from "@/assets/gallery-ninos-primera-comunion.jpg";
-import gBendicionNinos from "@/assets/gallery-bendicion-ninos.jpg";
-import gComunidadOracion from "@/assets/gallery-comunidad-oracion.jpg";
-import gConfirmacionJovenes from "@/assets/gallery-confirmacion-jovenes.jpg";
-import gPeregrinos from "@/assets/gallery-peregrinos-esperanza.jpg";
-import gAlasDeFe from "@/assets/gallery-alas-de-fe.jpg";
-import gSiervosDeLuz from "@/assets/gallery-siervos-de-luz.jpg";
-import gHermandadDolores from "@/assets/gallery-hermandad-dolores.jpg";
 
-// NOTA: Se eliminaron las importaciones .asset.json de los ministerios
+// NOTA: Se eliminaron TODAS las importaciones de imágenes desde '@/assets/...'
 
 const SITE_URL = "https://parroquiatrinidadtingo.lovable.app";
 const HOME_OG_IMAGE =
@@ -73,8 +58,7 @@ const categoryMeta: Record<string, { label: string; icon: typeof Church }> = {
 
 const ministryIcons = [Music, BookOpen, Users, Sparkles, Heart, GraduationCap];
 
-// NOTA: Se actualizaron las variables por las rutas directas como cadenas de texto
-// DB order: Alas de Fé, Siervos de Luz, Acólitos, Señor de los Milagros, Virgen Dolorosa, Legión de María
+// Rutas directas actualizadas
 const ministryPhotos = [
   "/assets/ministries/alas-de-fe.png",
   "/assets/ministries/siervos-de-luz.png",
@@ -91,27 +75,29 @@ const testimonios = [
   { text: "Hermosa parroquia, muy bien ubicada. Excelente lugar para acercarse a Dios.", author: "José A." },
 ];
 
+// Rutas directas actualizadas para la galería
 const galleryImgs = [
-  { src: gPrimeraComunionMisa, label: "Primera Comunión" },
-  { src: gNinosPrimeraComunion, label: "Niños de Primera Comunión" },
-  { src: gBendicionNinos, label: "Bendición de los niños" },
-  { src: gComunidadOracion, label: "Comunidad en oración" },
-  { src: gConfirmacionJovenes, label: "Catequistas" },
-  { src: gPeregrinos, label: "Peregrinos de Esperanza · Jubileo 2025" },
-  { src: gAlasDeFe, label: "Ministerio Alas de Fe" },
-  { src: gSiervosDeLuz, label: "Ministerio Siervos de Luz" },
-  { src: gHermandadDolores, label: "Hermandad Virgen de los Dolores" },
+  { src: "/assets/gallery-primera-comunion-misa.jpg", label: "Primera Comunión" },
+  { src: "/assets/gallery-ninos-primera-comunion.jpg", label: "Niños de Primera Comunión" },
+  { src: "/assets/gallery-bendicion-ninos.jpg", label: "Bendición de los niños" },
+  { src: "/assets/gallery-comunidad-oracion.jpg", label: "Comunidad en oración" },
+  { src: "/assets/gallery-confirmacion-jovenes.jpg", label: "Catequistas" },
+  { src: "/assets/gallery-peregrinos-esperanza.jpg", label: "Peregrinos de Esperanza · Jubileo 2025" },
+  { src: "/assets/gallery-alas-de-fe.jpg", label: "Ministerio Alas de Fe" },
+  { src: "/assets/gallery-siervos-de-luz.jpg", label: "Ministerio Siervos de Luz" },
+  { src: "/assets/gallery-hermandad-dolores.jpg", label: "Hermandad Virgen de los Dolores" },
 ];
 
+// Rutas directas actualizadas para los sacerdotes
 const sacerdotes = [
   {
-    img: padreTommy,
+    img: "/assets/padre-tommy.jpg",
     name: "Padre Tommy Varghese, CMI",
     role: "Párroco",
     desc: "Pastor de la comunidad, dedicado a la celebración de los sacramentos, la formación de los fieles y el acompañamiento espiritual de la familia parroquial.",
   },
   {
-    img: padreManesh,
+    img: "/assets/padre-manesh.jpg",
     name: "Padre Manesh Joseph, CMI",
     role: "Vicario parroquial",
     desc: "Colabora en la vida pastoral de la parroquia, animando los ministerios, la catequesis y la cercanía con los jóvenes y las familias.",
@@ -163,8 +149,9 @@ function Home() {
           className="absolute inset-0 will-change-transform"
           style={{ transform: `translate3d(0, ${scrollY * 0.35}px, 0)` }}
         >
+          {/* Ruta directa para heroImg */}
           <img
-            src={heroImg}
+            src="/assets/hero-church.jpg"
             alt="Parroquia Santísima Trinidad"
             className="ken-burns absolute inset-0 h-[115%] w-full object-cover"
           />
@@ -223,7 +210,8 @@ function Home() {
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
           <Reveal>
             <div className="relative">
-              <img src={interiorImg} alt="Interior de la parroquia" loading="lazy" className="rounded-2xl shadow-elegant w-full aspect-[4/5] object-cover" />
+              {/* Ruta directa para interiorImg */}
+              <img src="/assets/church-interior.jpg" alt="Interior de la parroquia" loading="lazy" className="rounded-2xl shadow-elegant w-full aspect-[4/5] object-cover" />
               <div className="absolute -bottom-8 -right-8 hidden md:block bg-card rounded-2xl shadow-card p-6 max-w-[220px] border border-border">
                 <p className="font-display text-3xl text-gold">+50</p>
                 <p className="text-sm text-muted-foreground mt-1">Años sembrando fe en Tingo</p>
@@ -299,9 +287,10 @@ function Home() {
           </Reveal>
 
           <div className="mt-16 grid md:grid-cols-2 gap-8">
+            {/* Rutas directas para devociones actualizadas aquí */}
             {[
-              { img: virgenImg, title: "Nuestra Señora de los Dolores", text: "Madre fiel que acompaña al pie de la cruz. La parroquia mantiene viva esta devoción mariana con el rezo del rosario y celebraciones especiales." },
-              { img: trinidadImg, title: "Santísima Trinidad", text: "Misterio central de nuestra fe: Padre, Hijo y Espíritu Santo. Bajo su nombre celebramos cada eucaristía y vivimos como comunidad." },
+              { img: "/assets/virgen-dolorosa.jpg", title: "Nuestra Señora de los Dolores", text: "Madre fiel que acompaña al pie de la cruz. La parroquia mantiene viva esta devoción mariana con el rezo del rosario y celebraciones especiales." },
+              { img: "/assets/trinidad.jpg", title: "Santísima Trinidad", text: "Misterio central de nuestra fe: Padre, Hijo y Espíritu Santo. Bajo su nombre celebramos cada eucaristía y vivimos como comunidad." },
             ].map((d, i) => (
               <Reveal key={d.title} delay={i * 100}>
                 <div className="group relative rounded-2xl overflow-hidden shadow-elegant aspect-[4/5]">
@@ -527,7 +516,9 @@ function Home() {
                         {e.description && <p className="text-sm text-primary-foreground/70 mt-2">{e.description}</p>}
                       </div>
                     );
-                  })}
+                    }
+                  )
+                }
                 </div>
               </div>
             </Reveal>

@@ -5,13 +5,12 @@ import { Menu, X } from "lucide-react";
 const links = [
   { href: "/#inicio", label: "Inicio" },
   { href: "/#parroquia", label: "Parroquia" },
-  { href: "/#sacerdote", label: "Sacerdotes" },
+  { href: "/#sacerdotes", label: "Sacerdotes" },
   { href: "/#devociones", label: "Devociones" },
   { href: "/#ministerios", label: "Ministerios" },
   { href: "/#horarios", label: "Horarios" },
   { href: "/#galeria", label: "Galería" },
   { href: "/sacramentos", label: "Sacramentos", route: true },
-  { href: "/#contacto", label: "Contacto" },
 ];
 
 export function Navbar() {

@@ -2,7 +2,6 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Lock } from "lucide-react";
-import logo from "@/assets/logo.png";
 
 export const Route = createFileRoute("/admin/login")({
   head: () => ({ meta: [{ title: "Acceso administrador · Parroquia" }, { name: "robots", content: "noindex" }] }),
@@ -52,7 +51,8 @@ function AdminLogin() {
     <div className="min-h-screen bg-gradient-to-br from-primary via-primary to-primary/80 flex items-center justify-center p-5">
       <div className="w-full max-w-md bg-card rounded-2xl shadow-elegant p-8 border border-border">
         <div className="flex flex-col items-center text-center">
-          <img src={logo} alt="" className="h-16 w-16" />
+          {/* AQUÍ ESTÁ LA LÍNEA CORREGIDA */}
+          <img src="/assets/logo.png" alt="" className="h-16 w-16" />
           <h1 className="mt-4 font-display text-2xl text-primary flex items-center gap-2">
             <Lock size={20} /> Panel administrador
           </h1>

@@ -12,4 +12,6 @@ export default defineConfig({
   tanstackStart: {
     server: { entry: "server" },
   },
+  // AÑADE ESTA LÍNEA 👇
+  nitro: true 
 });

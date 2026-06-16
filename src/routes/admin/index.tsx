@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { LogOut, Plus, Trash2, Pencil, X, Calendar, Clock, Users, Image as ImageIcon, Save } from "lucide-react";
-import logo from "@/assets/logo.png";
+
 
 export const Route = createFileRoute("/admin/")({
   head: () => ({ meta: [{ title: "Panel administrador · Parroquia" }, { name: "robots", content: "noindex" }] }),
@@ -70,7 +70,7 @@ function AdminDashboard() {
       <header className="bg-card border-b border-border sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-5 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3">
-            <img src={logo} alt="" className="h-9 w-9" />
+            <img src="/assets/logo.png" alt="" className="h-9 w-9" />
             <div className="leading-tight">
               <p className="font-display text-base text-primary">Panel administrador</p>
               <p className="text-[11px] text-muted-foreground">Parroquia Santísima Trinidad</p>

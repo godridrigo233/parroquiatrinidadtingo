@@ -11,7 +11,6 @@ import { WhatsAppFab } from "@/components/site/WhatsAppFab";
 import { FacebookFeed } from "@/components/site/FacebookFeed";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import logo from "@assets/logo.png";
 import heroImg from "@/assets/hero-church.jpg";
 import interiorImg from "@/assets/church-interior.jpg";
 import virgenImg from "@/assets/virgen-dolorosa.jpg";
@@ -670,7 +669,7 @@ function Home() {
         <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-10">
           <div>
             <div className="flex items-center gap-3">
-              <img src={logo} alt="" className="h-12 w-12" />
+              <img src="/assets/logo.png" alt="" className="h-12 w-12" />
               <div>
                 <p className="font-display text-lg text-white">Santísima Trinidad</p>
                 <p className="text-xs text-white/60 uppercase tracking-widest">Tingo · Arequipa</p>

@@ -11,7 +11,7 @@ import { WhatsAppFab } from "@/components/site/WhatsAppFab";
 import { FacebookFeed } from "@/components/site/FacebookFeed";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import logo from "@/assets/logo.png";
+import logo from "@assets/logo.png";
 import heroImg from "@/assets/hero-church.jpg";
 import interiorImg from "@/assets/church-interior.jpg";
 import virgenImg from "@/assets/virgen-dolorosa.jpg";
@@ -27,13 +27,8 @@ import gPeregrinos from "@/assets/gallery-peregrinos-esperanza.jpg";
 import gAlasDeFe from "@/assets/gallery-alas-de-fe.jpg";
 import gSiervosDeLuz from "@/assets/gallery-siervos-de-luz.jpg";
 import gHermandadDolores from "@/assets/gallery-hermandad-dolores.jpg";
-import alasDeFeAsset from "@/assets/ministries/alas-de-fe.png.asset.json";
-import senorDeLosMilagrosAsset from "@/assets/ministries/senor-de-los-milagros.png.asset.json";
-import siervosDeLuzAsset from "@/assets/ministries/siervos-de-luz.png.asset.json";
-import acolitosAsset from "@/assets/ministries/acolitos.png.asset.json";
-import catequistasAsset from "@/assets/ministries/catequistas.png.asset.json";
-import virgenDeLosDoloresAsset from "@/assets/ministries/virgen-de-los-dolores.png.asset.json";
-import legionDeMariaAsset from "@/assets/ministries/legion-de-maria.png.asset.json";
+
+// NOTA: Se eliminaron las importaciones .asset.json de los ministerios
 
 const SITE_URL = "https://parroquiatrinidadtingo.lovable.app";
 const HOME_OG_IMAGE =
@@ -78,13 +73,15 @@ const categoryMeta: Record<string, { label: string; icon: typeof Church }> = {
 };
 
 const ministryIcons = [Music, BookOpen, Users, Sparkles, Heart, GraduationCap];
+
+// NOTA: Se actualizaron las variables por las rutas directas como cadenas de texto
 // DB order: Alas de Fé, Siervos de Luz, Acólitos, Señor de los Milagros, Virgen Dolorosa, Legión de María
 const ministryPhotos = [
-  alasDeFeAsset.url,
-  siervosDeLuzAsset.url,
-  acolitosAsset.url,
-  senorDeLosMilagrosAsset.url,
-  legionDeMariaAsset.url,
+  "/assets/ministries/alas-de-fe.png",
+  "/assets/ministries/siervos-de-luz.png",
+  "/assets/ministries/acolitos.png",
+  "/assets/ministries/senor-de-los-milagros.png",
+  "/assets/ministries/legion-de-maria.png",
   null,
 ];
 
@@ -476,7 +473,7 @@ function Home() {
           </Reveal>
         </div>
 
-        <Dialog open={!!lightbox} onOpenChange={(o) => !o && setLightbox(null)}>
+        <Dialog open={!!lightbox} onOpenChange={(o: boolean) => !o && setLightbox(null)}>
           <DialogContent className="max-w-5xl p-0 bg-transparent border-0 shadow-none">
             {lightbox && (
               <div className="relative">
@@ -493,8 +490,6 @@ function Home() {
           </DialogContent>
         </Dialog>
       </section>
-
-
 
       {/* NOTICIAS */}
       <section id="noticias" className="py-24 px-5 lg:px-8">

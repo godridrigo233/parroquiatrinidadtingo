@@ -380,75 +380,134 @@ function MinistriesManager() {
 type GalleryRow = { id: string; title: string | null; category: string | null; image_url: string; sort_order: number };
 function GalleryManager() {
   const { items, load, remove } = useTable<GalleryRow>("gallery_images", "sort_order", true);
-  const empty = { title: "", category: "", image_url: "", sort_order: 0 };
+  const empty = { title: "", category: "", sort_order: 0 };
   const [form, setForm] = useState(empty);
+  const [file, setFile] = useState<File | null>(null); // Nuevo estado para el archivo
   const [editing, setEditing] = useState<GalleryRow | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  const validateImage = (url: string) =>
-    new Promise<boolean>((resolve) => {
-      if (!url.trim()) return resolve(false);
-      const img = new Image();
-      img.onload = () => resolve(true);
-      img.onerror = () => resolve(false);
-      img.src = url;
-    });
+  // Función para subir a Supabase Storage
+  const uploadImageToSupabase = async (fileToUpload: File) => {
+    const fileExt = fileToUpload.name.split('.').pop();
+    const fileName = `${Math.random()}.${fileExt}`;
+    const filePath = `galeria/${fileName}`; // Se guardará dentro de una carpeta 'galeria' en el bucket
+
+    // IMPORTANTE: Asegúrate de que el bucket se llame "parroquia-images" o cambia este nombre
+    const { error: uploadError } = await supabase.storage
+      .from('parroquia-images') 
+      .upload(filePath, fileToUpload);
+
+    if (uploadError) {
+      throw uploadError;
+    }
+
+    // Obtener la URL pública de la imagen recién subida
+    const { data: { publicUrl } } = supabase.storage
+      .from('parroquia-images')
+      .getPublicUrl(filePath);
+
+    return publicUrl;
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!file) {
+      setError("Debes seleccionar una imagen para subir.");
+      return;
+    }
+
     setError(null);
     setSaving(true);
-    const ok = await validateImage(form.image_url);
-    if (!ok) {
-      setError("La imagen no se pudo cargar. Verifica la URL.");
+
+    try {
+      // 1. Primero subimos la imagen al Storage
+      const uploadedUrl = await uploadImageToSupabase(file);
+
+      // 2. Luego guardamos los datos en la base de datos (tabla gallery_images)
+      const nextOrder = items.length ? Math.max(...items.map((i) => i.sort_order)) + 10 : 10;
+      const { error: dbErr } = await supabase.from("gallery_images").insert({
+        title: form.title || null,
+        category: form.category || null,
+        sort_order: form.sort_order || nextOrder,
+        image_url: uploadedUrl, // Usamos la URL pública que nos dio Supabase
+      });
+
+      if (dbErr) throw dbErr;
+
+      // Limpiar formulario si todo sale bien
+      setForm(empty);
+      setFile(null);
+      // Resetear el input file visualmente
+      const fileInput = document.getElementById("file-upload") as HTMLInputElement;
+      if(fileInput) fileInput.value = "";
+      
+      load();
+    } catch (err: any) {
+      setError(err.message || "Hubo un error al subir la imagen.");
+    } finally {
       setSaving(false);
-      return;
     }
-    const nextOrder = items.length ? Math.max(...items.map((i) => i.sort_order)) + 10 : 10;
-    const { error: dbErr } = await supabase.from("gallery_images").insert({
-      ...form,
-      title: form.title || null,
-      category: form.category || null,
-      sort_order: form.sort_order || nextOrder,
-    });
-    setSaving(false);
-    if (dbErr) {
-      setError(dbErr.message);
-      return;
-    }
-    setForm(empty);
-    load();
   };
+
   const saveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editing) return;
     setError(null);
-    const ok = await validateImage(editing.image_url);
-    if (!ok) {
-      setError("La imagen no se pudo cargar. Verifica la URL.");
-      return;
+    setSaving(true);
+
+    try {
+      let finalUrl = editing.image_url;
+
+      // Si el usuario seleccionó un nuevo archivo en el modo de edición, lo subimos
+      if (file) {
+        finalUrl = await uploadImageToSupabase(file);
+      }
+
+      await supabase.from("gallery_images").update({
+        title: editing.title,
+        category: editing.category,
+        image_url: finalUrl,
+        sort_order: editing.sort_order,
+      }).eq("id", editing.id);
+
+      setEditing(null);
+      setFile(null);
+      load();
+    } catch (err: any) {
+      setError(err.message || "Error al actualizar la imagen");
+    } finally {
+      setSaving(false);
     }
-    await supabase.from("gallery_images").update({
-      title: editing.title,
-      category: editing.category,
-      image_url: editing.image_url,
-      sort_order: editing.sort_order,
-    }).eq("id", editing.id);
-    setEditing(null);
-    load();
   };
+
   return (
     <div className="grid lg:grid-cols-3 gap-6">
       <Card>
         <h2 className="font-display text-xl text-primary">Nueva imagen</h2>
         <form onSubmit={submit} className="mt-4 space-y-3">
-          <Input required placeholder="URL de imagen" value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} />
+          
+          {/* NUEVO INPUT PARA ARCHIVOS */}
+          <div className="border border-input rounded-lg p-2 bg-background">
+            <input 
+              id="file-upload"
+              required 
+              type="file" 
+              accept="image/*"
+              className="w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-secondary file:text-primary hover:file:bg-secondary/80"
+              onChange={(e) => {
+                if (e.target.files && e.target.files[0]) {
+                  setFile(e.target.files[0]);
+                }
+              }} 
+            />
+          </div>
+
           <Input placeholder="Título" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
           <Input placeholder="Categoría (misas, procesiones…)" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} />
           <Input type="number" placeholder="Orden (opcional)" value={form.sort_order || ""} onChange={(e) => setForm({ ...form, sort_order: Number(e.target.value) || 0 })} />
           {error && <p className="text-xs text-destructive">{error}</p>}
-          <PrimaryBtn type="submit" disabled={saving}><Plus size={16} /> {saving ? "Verificando…" : "Subir"}</PrimaryBtn>
+          <PrimaryBtn type="submit" disabled={saving}><Plus size={16} /> {saving ? "Subiendo…" : "Guardar foto"}</PrimaryBtn>
         </form>
       </Card>
       <div className="lg:col-span-2 grid sm:grid-cols-2 md:grid-cols-3 gap-3">
@@ -459,21 +518,36 @@ function GalleryManager() {
               {g.title || "(sin título)"}
             </div>
             <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition">
-              <button onClick={() => setEditing(g)} className="bg-card text-primary p-1.5 rounded-lg shadow"><Pencil size={14} /></button>
+              <button onClick={() => { setEditing(g); setFile(null); }} className="bg-card text-primary p-1.5 rounded-lg shadow"><Pencil size={14} /></button>
               <button onClick={() => remove(g.id)} className="bg-destructive text-destructive-foreground p-1.5 rounded-lg shadow"><Trash2 size={14} /></button>
             </div>
           </div>
         ))}
       </div>
-      <EditModal open={!!editing} onClose={() => { setEditing(null); setError(null); }} title="Editar imagen">
+      <EditModal open={!!editing} onClose={() => { setEditing(null); setError(null); setFile(null); }} title="Editar imagen">
         {editing && (
           <form onSubmit={saveEdit} className="space-y-3">
-            <Input required value={editing.image_url} onChange={(e) => setEditing({ ...editing, image_url: e.target.value })} />
+            
+            {/* INPUT DE ARCHIVO OPCIONAL AL EDITAR */}
+            <div className="border border-input rounded-lg p-2 bg-background">
+              <p className="text-xs text-muted-foreground mb-2">Reemplazar foto (opcional):</p>
+              <input 
+                type="file" 
+                accept="image/*"
+                className="w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-secondary file:text-primary hover:file:bg-secondary/80"
+                onChange={(e) => {
+                  if (e.target.files && e.target.files[0]) {
+                    setFile(e.target.files[0]);
+                  }
+                }} 
+              />
+            </div>
+
             <Input placeholder="Título" value={editing.title ?? ""} onChange={(e) => setEditing({ ...editing, title: e.target.value })} />
             <Input placeholder="Categoría" value={editing.category ?? ""} onChange={(e) => setEditing({ ...editing, category: e.target.value })} />
             <Input type="number" value={editing.sort_order} onChange={(e) => setEditing({ ...editing, sort_order: Number(e.target.value) })} />
             {error && <p className="text-xs text-destructive">{error}</p>}
-            <PrimaryBtn type="submit"><Save size={16} /> Guardar</PrimaryBtn>
+            <PrimaryBtn type="submit" disabled={saving}><Save size={16} /> {saving ? "Actualizando..." : "Guardar cambios"}</PrimaryBtn>
           </form>
         )}
       </EditModal>

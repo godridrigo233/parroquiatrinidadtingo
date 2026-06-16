@@ -9,7 +9,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import logo from "@/assets/logo.png";
 import ogSacramentos from "@/assets/og-sacramentos.jpg";
 
 const SITE_URL = "https://parroquiatrinidadtingo.lovable.app";
@@ -262,7 +261,7 @@ function SacramentosPage() {
       <footer className="bg-primary text-primary-foreground py-10 px-5 lg:px-8">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <img src={logo} alt="" className="h-10 w-10" />
+            <img src="/assets/logo.png" alt="" className="h-9 w-9" />
             <div>
               <p className="font-display text-base text-white">Santísima Trinidad</p>
               <p className="text-[11px] text-white/60 uppercase tracking-widest">Tingo · Arequipa</p>

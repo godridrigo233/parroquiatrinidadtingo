@@ -6,13 +6,14 @@ import {
   Users, Image as ImageIcon, Save, AlertCircle, CheckCircle2, Heart 
 } from "lucide-react";
 import imageCompression from 'browser-image-compression';
+import { AttendanceScanner } from "@/routes/admin/AttendanceScanner";
 
 export const Route = createFileRoute("/admin/")({
   head: () => ({ meta: [{ title: "Panel administrador · Parroquia" }, { name: "robots", content: "noindex" }] }),
   component: AdminDashboard,
 });
 
-type Tab = "events" | "schedules" | "ministries" | "gallery" | "donations";
+type Tab = "events" | "schedules" | "ministries" | "gallery" | "donations" | "attendance";
 
 const tabs: { id: Tab; label: string; icon: typeof Calendar }[] = [
   { id: "events", label: "Eventos", icon: Calendar },
@@ -20,6 +21,7 @@ const tabs: { id: Tab; label: string; icon: typeof Calendar }[] = [
   { id: "ministries", label: "Ministerios", icon: Users },
   { id: "gallery", label: "Galería", icon: ImageIcon },
   { id: "donations", label: "Donaciones", icon: Heart },
+  { id: "attendance", label: "Asistencia", icon: Users },
 ];
 
 function AdminDashboard() {
@@ -114,6 +116,7 @@ function AdminDashboard() {
         {tab === "ministries" && <MinistriesManager showToast={showToast} />}
         {tab === "gallery" && <GalleryManager showToast={showToast} />}
         {tab === "donations" && <DonationsManager showToast={showToast} />}
+        {tab === "attendance" && <AttendanceScanner />}
       </main>
 
       {toast && (

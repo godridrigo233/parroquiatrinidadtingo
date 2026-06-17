@@ -414,7 +414,6 @@ function MinistriesManager() {
         <form onSubmit={submit} className="mt-4 space-y-3">
           <Input required placeholder="Nombre" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
           <Input placeholder="Encargado" value={form.leader} onChange={(e) => setForm({ ...form, leader: e.target.value })} />
-          <Input placeholder="Horario" value={form.schedule} onChange={(e) => setForm({ ...form, schedule: e.target.value })} />
           
           {/* Nuevo input de archivo para creación */}
           <div className="border border-input rounded-lg p-2 bg-background">
@@ -457,7 +456,7 @@ function MinistriesManager() {
           <form onSubmit={saveEdit} className="space-y-3">
             <Input required value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} />
             <Input placeholder="Encargado" value={editing.leader ?? ""} onChange={(e) => setEditing({ ...editing, leader: e.target.value })} />
-            <Input placeholder="Horario" value={editing.schedule ?? ""} onChange={(e) => setEditing({ ...editing, schedule: e.target.value })} />
+            
             
             {/* Nuevo input de archivo para edición */}
             <div className="border border-input rounded-lg p-2 bg-background">

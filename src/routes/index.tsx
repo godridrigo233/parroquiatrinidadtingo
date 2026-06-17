@@ -396,11 +396,10 @@ function Home() {
           <Reveal className="mt-14 text-center">
             <Link
               to="/sacramentos"
-              className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-gradient-gold text-primary-foreground font-semibold shadow-card hover:shadow-elegant transition-shadow"
-            >
+                className="inline-flex items-center gap-3 px-9 py-4 text-lg rounded-full bg-gradient-gold text-primary-foreground font-semibold shadow-card hover:shadow-elegant transition-shadow"            >
               Ver requisitos de sacramentos <ArrowRight size={18} />
             </Link>
-            <p className="mt-3 text-sm text-muted-foreground">
+            <p className="mt-3 text-base text-muted-foreground">
               Bautismo, Primera Comunión, Matrimonio, Confesión y más.
             </p>
           </Reveal>

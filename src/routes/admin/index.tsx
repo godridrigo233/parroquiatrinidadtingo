@@ -433,7 +433,6 @@ function MinistriesManager({ showToast }: { showToast: (m: string, t?: "success"
         <form onSubmit={submit} className="mt-4 space-y-3">
           <Input required placeholder="Nombre" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
           <Input placeholder="Encargado" value={form.leader} onChange={(e) => setForm({ ...form, leader: e.target.value })} />
-          <Input placeholder="Horario" value={form.schedule} onChange={(e) => setForm({ ...form, schedule: e.target.value })} />
           <div className="border border-input rounded-lg p-2 bg-background">
             <p className="text-xs text-muted-foreground mb-2">Imagen (opcional):</p>
             <input id="ministry-file-upload" type="file" accept="image/*"

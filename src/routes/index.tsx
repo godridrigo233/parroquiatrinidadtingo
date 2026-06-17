@@ -480,8 +480,8 @@ function Home() {
             )}
           </DialogContent>
         </Dialog>
-      </section>
-
+      </section>  
+      <DonacionesSection items={donations} />
       {/* NOTICIAS */}
       <section id="noticias" className="py-24 px-5 lg:px-8">
         <div className="max-w-7xl mx-auto">

@@ -313,25 +313,100 @@ function MinistriesManager() {
   const empty = { name: "", description: "", leader: "", schedule: "", image_url: "" };
   const [form, setForm] = useState(empty);
   const [editing, setEditing] = useState<MinistryRow | null>(null);
+  
+  // Nuevos estados para manejar el archivo de imagen
+  const [file, setFile] = useState<File | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  // Función para subir imagen a Supabase (igual que en Galería, pero en carpeta 'ministerios')
+  const uploadImageToSupabase = async (fileToUpload: File) => {
+    const fileExt = fileToUpload.name.split('.').pop();
+    const fileName = `${Math.random()}.${fileExt}`;
+    const filePath = `ministerios/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('parroquia-images') 
+      .upload(filePath, fileToUpload);
+
+    if (uploadError) throw uploadError;
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('parroquia-images')
+      .getPublicUrl(filePath);
+
+    return publicUrl;
+  };
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await supabase.from("ministries").insert({ ...form, image_url: form.image_url || null });
-    setForm(empty);
-    load();
+    setError(null);
+    setSaving(true);
+
+    try {
+      let uploadedUrl = null;
+      // Si seleccionó un archivo, lo subimos primero
+      if (file) {
+        uploadedUrl = await uploadImageToSupabase(file);
+      }
+
+      const { error: dbErr } = await supabase.from("ministries").insert({
+        name: form.name,
+        description: form.description || null,
+        leader: form.leader || null,
+        schedule: form.schedule || null,
+        image_url: uploadedUrl, // Guardamos el link público generado
+      });
+
+      if (dbErr) throw dbErr;
+
+      setForm(empty);
+      setFile(null);
+      const fileInput = document.getElementById("ministry-file-upload") as HTMLInputElement;
+      if(fileInput) fileInput.value = "";
+      
+      load();
+    } catch (err: any) {
+      setError(err.message || "Error al crear el ministerio.");
+    } finally {
+      setSaving(false);
+    }
   };
+
   const saveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editing) return;
-    await supabase.from("ministries").update({
-      name: editing.name,
-      description: editing.description,
-      leader: editing.leader,
-      schedule: editing.schedule,
-      image_url: editing.image_url || null,
-    }).eq("id", editing.id);
-    setEditing(null);
-    load();
+    setError(null);
+    setSaving(true);
+
+    try {
+      let finalUrl = editing.image_url;
+
+      // Si seleccionó un nuevo archivo al editar, lo subimos y reemplazamos el link
+      if (file) {
+        finalUrl = await uploadImageToSupabase(file);
+      }
+
+      const { error: dbErr } = await supabase.from("ministries").update({
+        name: editing.name,
+        description: editing.description || null,
+        leader: editing.leader || null,
+        schedule: editing.schedule || null,
+        image_url: finalUrl,
+      }).eq("id", editing.id);
+
+      if (dbErr) throw dbErr;
+
+      setEditing(null);
+      setFile(null);
+      load();
+    } catch (err: any) {
+      setError(err.message || "Error al actualizar el ministerio.");
+    } finally {
+      setSaving(false);
+    }
   };
+
   return (
     <div className="grid lg:grid-cols-3 gap-6">
       <Card>
@@ -340,9 +415,26 @@ function MinistriesManager() {
           <Input required placeholder="Nombre" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
           <Input placeholder="Encargado" value={form.leader} onChange={(e) => setForm({ ...form, leader: e.target.value })} />
           <Input placeholder="Horario" value={form.schedule} onChange={(e) => setForm({ ...form, schedule: e.target.value })} />
-          <Input placeholder="URL de imagen" value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} />
+          
+          {/* Nuevo input de archivo para creación */}
+          <div className="border border-input rounded-lg p-2 bg-background">
+            <p className="text-xs text-muted-foreground mb-2">Imagen (opcional):</p>
+            <input 
+              id="ministry-file-upload"
+              type="file" 
+              accept="image/*"
+              className="w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-secondary file:text-primary hover:file:bg-secondary/80"
+              onChange={(e) => {
+                if (e.target.files && e.target.files[0]) {
+                  setFile(e.target.files[0]);
+                }
+              }} 
+            />
+          </div>
+
           <Textarea placeholder="Descripción" rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-          <PrimaryBtn type="submit"><Plus size={16} /> Agregar</PrimaryBtn>
+          {error && <p className="text-xs text-destructive">{error}</p>}
+          <PrimaryBtn type="submit" disabled={saving}><Plus size={16} /> {saving ? "Guardando..." : "Agregar"}</PrimaryBtn>
         </form>
       </Card>
       <div className="lg:col-span-2 space-y-3">
@@ -354,21 +446,37 @@ function MinistriesManager() {
               {m.description && <p className="text-sm text-muted-foreground mt-1">{m.description}</p>}
             </div>
             <div className="flex flex-col gap-1">
-              <button onClick={() => setEditing(m)} className="text-primary hover:bg-secondary p-2 rounded-lg"><Pencil size={16} /></button>
+              <button onClick={() => { setEditing(m); setFile(null); }} className="text-primary hover:bg-secondary p-2 rounded-lg"><Pencil size={16} /></button>
               <button onClick={() => remove(m.id)} className="text-destructive hover:bg-destructive/10 p-2 rounded-lg"><Trash2 size={16} /></button>
             </div>
           </div>
         ))}
       </div>
-      <EditModal open={!!editing} onClose={() => setEditing(null)} title="Editar ministerio">
+      <EditModal open={!!editing} onClose={() => { setEditing(null); setError(null); setFile(null); }} title="Editar ministerio">
         {editing && (
           <form onSubmit={saveEdit} className="space-y-3">
             <Input required value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} />
             <Input placeholder="Encargado" value={editing.leader ?? ""} onChange={(e) => setEditing({ ...editing, leader: e.target.value })} />
             <Input placeholder="Horario" value={editing.schedule ?? ""} onChange={(e) => setEditing({ ...editing, schedule: e.target.value })} />
-            <Input placeholder="URL de imagen" value={editing.image_url ?? ""} onChange={(e) => setEditing({ ...editing, image_url: e.target.value })} />
+            
+            {/* Nuevo input de archivo para edición */}
+            <div className="border border-input rounded-lg p-2 bg-background">
+              <p className="text-xs text-muted-foreground mb-2">Reemplazar imagen (opcional):</p>
+              <input 
+                type="file" 
+                accept="image/*"
+                className="w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-secondary file:text-primary hover:file:bg-secondary/80"
+                onChange={(e) => {
+                  if (e.target.files && e.target.files[0]) {
+                    setFile(e.target.files[0]);
+                  }
+                }} 
+              />
+            </div>
+
             <Textarea placeholder="Descripción" rows={3} value={editing.description ?? ""} onChange={(e) => setEditing({ ...editing, description: e.target.value })} />
-            <PrimaryBtn type="submit"><Save size={16} /> Guardar</PrimaryBtn>
+            {error && <p className="text-xs text-destructive">{error}</p>}
+            <PrimaryBtn type="submit" disabled={saving}><Save size={16} /> {saving ? "Actualizando..." : "Guardar cambios"}</PrimaryBtn>
           </form>
         )}
       </EditModal>

@@ -319,7 +319,7 @@ function Home() {
           <div className="mt-16 grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {ministries.map((m, i) => {
               const Icon = ministryIcons[i % ministryIcons.length];
-              const ministryImage = ministryPhotos[i] ?? m.image_url;
+              const ministryImage = m.image_url || ministryPhotos[i];
               return (
                 <Reveal key={m.id} delay={i * 80}>
                   <article className="group h-full flex flex-col bg-card rounded-2xl border border-border shadow-card hover:shadow-elegant hover:-translate-y-1 transition-all overflow-hidden">

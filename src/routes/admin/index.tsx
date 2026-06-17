@@ -383,7 +383,6 @@ function MinistriesManager({ showToast }: { showToast: (m: string, t?: "success"
         <form onSubmit={submit} className="mt-4 space-y-3">
           <Input required placeholder="Nombre" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
           <Input placeholder="Encargado" value={form.leader} onChange={(e) => setForm({ ...form, leader: e.target.value })} />
-          <Input placeholder="Horario" value={form.schedule} onChange={(e) => setForm({ ...form, schedule: e.target.value })} />
           <div className="border border-input rounded-lg p-2 bg-background">
             <input type="file" accept="image/*" className="w-full text-sm text-muted-foreground file:mr-4 file:py-2" onChange={(e) => { if (e.target.files?.[0]) setFile(e.target.files[0]); }} />
           </div>
@@ -414,7 +413,6 @@ function MinistriesManager({ showToast }: { showToast: (m: string, t?: "success"
           <form onSubmit={saveEdit} className="space-y-3">
             <Input required value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} />
             <Input placeholder="Encargado" value={editing.leader ?? ""} onChange={(e) => setEditing({ ...editing, leader: e.target.value })} />
-            <Input placeholder="Horario" value={editing.schedule ?? ""} onChange={(e) => setEditing({ ...editing, schedule: e.target.value })} />
             <div className="border border-input rounded-lg p-2 bg-background">
               <input type="file" accept="image/*" className="w-full text-sm text-muted-foreground file:mr-4" onChange={(e) => { if (e.target.files?.[0]) setFile(e.target.files[0]); }} />
             </div>

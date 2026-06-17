@@ -28,7 +28,7 @@ export function DonacionesSection({ items }: { items: DonationRow[] }) {
           <p className="text-gold uppercase tracking-[0.25em] text-xs font-semibold">Generosidad</p>
           <h2 className="mt-3 font-display text-4xl md:text-5xl font-medium">Colabora con tu parroquia</h2>
           <p className="mt-5 text-muted-foreground text-lg">
-            Tu apoyo nos ayuda al mantenimiento del templo, obras de caridad y evangelización en Tingo.
+            Tu apoyo nos ayuda al mantenimiento del templo, obras de caridad y evangelización en nuestra Parroquia
           </p>
         </Reveal>
 

@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import imageCompression from 'browser-image-compression';
 import { LogOut, Plus, Trash2, Pencil, X, Calendar, Clock, Users, Image as ImageIcon, Save } from "lucide-react";
 
 

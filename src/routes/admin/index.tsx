@@ -369,6 +369,7 @@ function SchedulesManager({ showToast }: { showToast: (m: string, t?: "success"|
 }
 
 // ---- MINISTERIOS ----
+// ---- MINISTERIOS ----
 type MinistryRow = { id: string; name: string; description: string | null; leader: string | null; schedule: string | null; image_url: string | null };
 function MinistriesManager({ showToast }: { showToast: (m: string, t?: "success"|"error") => void }) {
   const confirm = useConfirm();
@@ -380,10 +381,14 @@ function MinistriesManager({ showToast }: { showToast: (m: string, t?: "success"
   const [saving, setSaving] = useState(false);
 
   const uploadImageToSupabase = async (fileToUpload: File) => {
-    const fileExt = fileToUpload.name.split('.').pop();
+    const options = { maxSizeMB: 0.8, maxWidthOrHeight: 1200, useWebWorker: true };
+    const compressedFile = await imageCompression(fileToUpload, options);
+    
+    const fileExt = compressedFile.name.split('.').pop() || 'jpg';
     const fileName = `${Math.random()}.${fileExt}`;
     const filePath = `ministerios/${fileName}`;
-    const { error: uploadError } = await supabase.storage.from('parroquia-images').upload(filePath, fileToUpload);
+    
+    const { error: uploadError } = await supabase.storage.from('parroquia-images').upload(filePath, compressedFile);
     if (uploadError) throw uploadError;
     const { data: { publicUrl } } = supabase.storage.from('parroquia-images').getPublicUrl(filePath);
     return publicUrl;
@@ -432,32 +437,51 @@ function MinistriesManager({ showToast }: { showToast: (m: string, t?: "success"
         <h2 className="font-display text-xl text-primary">Nuevo ministerio</h2>
         <form onSubmit={submit} className="mt-4 space-y-3">
           <Input required placeholder="Nombre" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-          <Input placeholder="Encargado" value={form.leader} onChange={(e) => setForm({ ...form, leader: e.target.value })} />
+          <Input placeholder="Encargado" value={form.leader ?? ""} onChange={(e) => setForm({ ...form, leader: e.target.value })} />
+          <Input placeholder="Horario" value={form.schedule ?? ""} onChange={(e) => setForm({ ...form, schedule: e.target.value })} />
           <div className="border border-input rounded-lg p-2 bg-background">
             <p className="text-xs text-muted-foreground mb-2">Imagen (opcional):</p>
             <input id="ministry-file-upload" type="file" accept="image/*"
               className="w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-secondary file:text-primary hover:file:bg-secondary/80"
               onChange={(e) => { if (e.target.files && e.target.files[0]) setFile(e.target.files[0]); }} />
           </div>
-          <Textarea placeholder="Descripción" rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+          <Textarea placeholder="Descripción" rows={3} value={form.description ?? ""} onChange={(e) => setForm({ ...form, description: e.target.value })} />
           <PrimaryBtn type="submit" disabled={saving}><Plus size={16} /> {saving ? "Guardando..." : "Agregar"}</PrimaryBtn>
         </form>
       </Card>
+      
       <div className="lg:col-span-2 space-y-3">
         {items.map((m) => (
-          <div key={m.id} className="bg-card rounded-xl p-5 border border-border flex justify-between gap-3 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex-1 min-w-0">
+          <div key={m.id} className="bg-card rounded-xl p-5 border border-border flex items-start gap-4 shadow-sm hover:shadow-md transition-shadow">
+            
+            {/* NUEVA MINIATURA DE IMAGEN */}
+            <div className="w-20 h-20 shrink-0 rounded-lg overflow-hidden bg-secondary border border-border flex items-center justify-center">
+              {m.image_url ? (
+                <img src={m.image_url} alt={m.name} className="w-full h-full object-cover" />
+              ) : (
+                <div className="text-center">
+                  <ImageIcon size={20} className="mx-auto text-muted-foreground/50 mb-1" />
+                  <span className="text-[10px] text-muted-foreground">Sin foto</span>
+                </div>
+              )}
+            </div>
+
+            {/* TEXTOS */}
+            <div className="flex-1 min-w-0 mt-1">
               <p className="font-display text-lg text-primary">{m.name}</p>
               <p className="text-xs text-muted-foreground">{m.leader} · {m.schedule}</p>
-              {m.description && <p className="text-sm text-muted-foreground mt-1">{m.description}</p>}
+              {m.description && <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{m.description}</p>}
             </div>
-            <div className="flex flex-col gap-1">
-              <button onClick={() => { setEditing(m); setFile(null); }} className="text-primary hover:bg-secondary p-2 rounded-lg transition-colors"><Pencil size={16} /></button>
-              <button onClick={async () => { const ok = await remove(m.id, confirm.ask); if (ok) showToast("Ministerio eliminado"); }} className="text-destructive hover:bg-destructive/10 p-2 rounded-lg transition-colors"><Trash2 size={16} /></button>
+
+            {/* BOTONES DE ACCIÓN */}
+            <div className="flex flex-col gap-1 shrink-0">
+              <button type="button" onClick={() => { setEditing(m); setFile(null); }} className="text-primary hover:bg-secondary p-2 rounded-lg transition-colors"><Pencil size={16} /></button>
+              <button type="button" onClick={async () => { const ok = await remove(m.id, confirm.ask); if (ok) showToast("Ministerio eliminado"); }} className="text-destructive hover:bg-destructive/10 p-2 rounded-lg transition-colors"><Trash2 size={16} /></button>
             </div>
           </div>
         ))}
       </div>
+
       <EditModal open={!!editing} onClose={() => { setEditing(null); setFile(null); }} title="Editar ministerio">
         {editing && (
           <form onSubmit={saveEdit} className="space-y-3">

@@ -322,19 +322,22 @@ function MinistriesManager() {
 
   // Función para subir imagen a Supabase (igual que en Galería, pero en carpeta 'ministerios')
   const uploadImageToSupabase = async (fileToUpload: File) => {
-    const fileExt = fileToUpload.name.split('.').pop();
+    const options = { maxSizeMB: 0.8, maxWidthOrHeight: 1200, useWebWorker: true };
+    
+    const compressedFile = await imageCompression(fileToUpload, options);
+
+    const fileExt = compressedFile.name.split('.').pop() || 'jpg';
     const fileName = `${Math.random()}.${fileExt}`;
     const filePath = `ministerios/${fileName}`;
 
     const { error: uploadError } = await supabase.storage
       .from('parroquia-images') 
-      .upload(filePath, fileToUpload);
+      .upload(filePath, compressedFile);
 
     if (uploadError) throw uploadError;
 
     const { data: { publicUrl } } = supabase.storage
-      .from('parroquia-images')
-      .getPublicUrl(filePath);
+      .from('parroquia-images').getPublicUrl(filePath);
 
     return publicUrl;
   };
@@ -497,23 +500,22 @@ function GalleryManager() {
 
   // Función para subir a Supabase Storage
   const uploadImageToSupabase = async (fileToUpload: File) => {
-    const fileExt = fileToUpload.name.split('.').pop();
-    const fileName = `${Math.random()}.${fileExt}`;
-    const filePath = `galeria/${fileName}`; // Se guardará dentro de una carpeta 'galeria' en el bucket
+    const options = { maxSizeMB: 0.8, maxWidthOrHeight: 1200, useWebWorker: true };
+    
+    const compressedFile = await imageCompression(fileToUpload, options);
 
-    // IMPORTANTE: Asegúrate de que el bucket se llame "parroquia-images" o cambia este nombre
+    const fileExt = compressedFile.name.split('.').pop() || 'jpg';
+    const fileName = `${Math.random()}.${fileExt}`;
+    const filePath = `galeria/${fileName}`;
+
     const { error: uploadError } = await supabase.storage
       .from('parroquia-images') 
-      .upload(filePath, fileToUpload);
+      .upload(filePath, compressedFile);
 
-    if (uploadError) {
-      throw uploadError;
-    }
+    if (uploadError) throw uploadError;
 
-    // Obtener la URL pública de la imagen recién subida
     const { data: { publicUrl } } = supabase.storage
-      .from('parroquia-images')
-      .getPublicUrl(filePath);
+      .from('parroquia-images').getPublicUrl(filePath);
 
     return publicUrl;
   };

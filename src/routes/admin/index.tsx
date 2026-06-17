@@ -487,7 +487,6 @@ function MinistriesManager({ showToast }: { showToast: (m: string, t?: "success"
           <form onSubmit={saveEdit} className="space-y-3">
             <Input required value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} />
             <Input placeholder="Encargado" value={editing.leader ?? ""} onChange={(e) => setEditing({ ...editing, leader: e.target.value })} />
-            <Input placeholder="Horario" value={editing.schedule ?? ""} onChange={(e) => setEditing({ ...editing, schedule: e.target.value })} />
             <div className="border border-input rounded-lg p-2 bg-background">
               <p className="text-xs text-muted-foreground mb-2">Reemplazar imagen (opcional):</p>
               <input type="file" accept="image/*"

@@ -12,6 +12,7 @@ import { FacebookFeed } from "@/components/site/FacebookFeed";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { DonacionesSection, DonationRow } from "@/components/site/DonacionesSection";
+import { AddToCalendar } from "@/components/site/AddToCalendar";
 
 // NOTA: Se eliminaron TODAS las importaciones de imágenes desde '@/assets/...'
 
@@ -53,7 +54,7 @@ const categoryMeta: Record<string, { label: string; icon: typeof Church }> = {
   confesion: { label: "Confesiones", icon: Heart },
   catequesis: { label: "Catequesis", icon: BookOpen },
   adoracion: { label: "Adoración", icon: Flame },
-  pastoral: { label: "Pastoral", icon: Users },
+  pastoral: { label: "Consejo Parroquial", icon: Users },
   secretaria: { label: "Secretaría", icon: Briefcase },
 };
 
@@ -497,35 +498,36 @@ function Home() {
           </Reveal>
 
           {events.length > 0 && (
-            <Reveal className="mt-10">
-              <div className="rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground p-8 shadow-elegant">
-                <p className="uppercase tracking-[0.2em] text-xs text-gold font-semibold">Próximos eventos</p>
-                <div className="mt-5 grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {events.map((e) => {
-                    const d = new Date(e.event_date);
-                    return (
-                      <div key={e.id} className="border-l-2 border-gold pl-4">
-                        <p className="font-display text-xl">{e.title}</p>
+          <Reveal className="mt-10">
+            <div className="rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground p-8 shadow-elegant">
+              <p className="uppercase tracking-[0.2em] text-xs text-gold font-semibold">Próximos eventos</p>
+              <div className="mt-5 grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {events.map((e) => {
+                  const d = new Date(e.event_date);
+                  return (
+                    <div key={e.id} className="border-l-2 border-gold pl-4">
+                      <p className="font-display text-xl">{e.title}</p>
+                      <p className="text-sm text-primary-foreground/80 mt-1 flex items-center gap-1.5">
+                        <Calendar size={14} /> {d.toLocaleDateString("es-PE", { day: "numeric", month: "long" })}
+                        <span className="opacity-60">·</span>
+                        <Clock size={14} /> {d.toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" })}
+                      </p>
+                      {e.location && (
                         <p className="text-sm text-primary-foreground/80 mt-1 flex items-center gap-1.5">
-                          <Calendar size={14} /> {d.toLocaleDateString("es-PE", { day: "numeric", month: "long" })}
-                          <span className="opacity-60">·</span>
-                          <Clock size={14} /> {d.toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" })}
+                          <MapPin size={14} /> {e.location}
                         </p>
-                        {e.location && (
-                          <p className="text-sm text-primary-foreground/80 mt-1 flex items-center gap-1.5">
-                            <MapPin size={14} /> {e.location}
-                          </p>
-                        )}
-                        {e.description && <p className="text-sm text-primary-foreground/70 mt-2">{e.description}</p>}
-                      </div>
-                    );
-                    }
-                  )
-                }
-                </div>
+                      )}
+                      {e.description && <p className="text-sm text-primary-foreground/70 mt-2">{e.description}</p>}
+                      
+                      <AddToCalendar event={e} />
+
+                    </div>
+                  );
+                })}
               </div>
-            </Reveal>
-          )}
+            </div>
+          </Reveal>
+        )}
 
           <Reveal className="mt-12">
             <FacebookFeed />

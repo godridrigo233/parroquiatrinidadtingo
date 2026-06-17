@@ -11,6 +11,7 @@ import { WhatsAppFab } from "@/components/site/WhatsAppFab";
 import { FacebookFeed } from "@/components/site/FacebookFeed";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { DonacionesSection, DonationRow } from "@/components/site/DonacionesSection";
 
 // NOTA: Se eliminaron TODAS las importaciones de imágenes desde '@/assets/...'
 
@@ -111,6 +112,7 @@ function Home() {
   const [gallery, setGallery] = useState<GalleryImage[]>([]);
   const [lightbox, setLightbox] = useState<{ url: string; title?: string | null } | null>(null);
   const [scrollY, setScrollY] = useState(0);
+  const [donations, setDonations] = useState<DonationRow[]>([]);
 
   useEffect(() => {
     const onScroll = () => setScrollY(window.scrollY);
@@ -120,16 +122,18 @@ function Home() {
 
   useEffect(() => {
     (async () => {
-      const [s, m, e, g] = await Promise.all([
+      const [s, m, e, g, d] = await Promise.all([
         supabase.from("schedules").select("*").order("sort_order"),
         supabase.from("ministries").select("*").order("created_at"),
         supabase.from("events").select("*").gte("event_date", new Date().toISOString()).order("event_date").limit(6),
         supabase.from("gallery_images").select("*").order("sort_order"),
+        supabase.from("donations_info" as any).select("*").order("sort_order"),
       ]);
       if (s.data) setSchedules(s.data as Schedule[]);
       if (m.data) setMinistries(m.data as Ministry[]);
       if (e.data) setEvents(e.data as Eventt[]);
       if (g.data) setGallery(g.data as GalleryImage[]);
+      if (d.data) setDonations(d.data as DonationRow[]);
     })();
   }, []);
 

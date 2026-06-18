@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Scanner } from "@yudiel/react-qr-scanner";
 import { CheckCircle2, XCircle, Calendar, Camera, Loader2, Plus, Trash2, ListTodo, Clock, CalendarPlus } from "lucide-react";
 import { AttendanceReport } from "./AttendanceReport";
-
+import { decryptQR } from "@/utils/crypto"; // Añade esta importación
 export function AttendanceScanner() {
   const [currentMeeting, setCurrentMeeting] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -49,14 +49,26 @@ export function AttendanceScanner() {
 
   const handleScan = async (scannedText: string) => {
     if (!currentMeeting) return;
+
+    // 1. Intentamos desencriptar el código que leyó la cámara
+    const decryptedId = decryptQR(scannedText);
+
+    // 2. Si es null, significa que es un QR falso, de otra app, o modificado
+    if (!decryptedId) {
+      setLastScan({ status: 'error', msg: "QR Inválido o Falso." });
+      setTimeout(() => setLastScan(null), 2000);
+      return;
+    }
+
+    // 3. Si todo está bien, registramos la asistencia con el ID real (CAT-01)
     const { error } = await supabase.from("attendance").insert({
       meeting_id: currentMeeting.id,
-      catechist_id: scannedText
+      catechist_id: decryptedId 
     });
 
     if (error) {
       if (error.code === '23505') setLastScan({ status: 'error', msg: "¡Ya registrado hoy!" });
-      else setLastScan({ status: 'error', msg: "Código inválido." });
+      else setLastScan({ status: 'error', msg: "Error de base de datos." });
     } else {
       new Audio("https://actions.google.com/sounds/v1/ui/beep_short_on.ogg").play().catch(() => {});
       setLastScan({ status: 'success', msg: "¡Asistencia registrada!" });

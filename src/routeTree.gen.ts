@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SacramentosRouteImport } from './routes/sacramentos'
+import { Route as CarnetRouteImport } from './routes/carnet'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
@@ -17,6 +18,11 @@ import { Route as AdminLoginRouteImport } from './routes/admin/login'
 const SacramentosRoute = SacramentosRouteImport.update({
   id: '/sacramentos',
   path: '/sacramentos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CarnetRoute = CarnetRouteImport.update({
+  id: '/carnet',
+  path: '/carnet',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -37,12 +43,14 @@ const AdminLoginRoute = AdminLoginRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/carnet': typeof CarnetRoute
   '/sacramentos': typeof SacramentosRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/': typeof AdminIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/carnet': typeof CarnetRoute
   '/sacramentos': typeof SacramentosRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin': typeof AdminIndexRoute
@@ -50,20 +58,22 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/carnet': typeof CarnetRoute
   '/sacramentos': typeof SacramentosRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/': typeof AdminIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/sacramentos' | '/admin/login' | '/admin/'
+  fullPaths: '/' | '/carnet' | '/sacramentos' | '/admin/login' | '/admin/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/sacramentos' | '/admin/login' | '/admin'
-  id: '__root__' | '/' | '/sacramentos' | '/admin/login' | '/admin/'
+  to: '/' | '/carnet' | '/sacramentos' | '/admin/login' | '/admin'
+  id: '__root__' | '/' | '/carnet' | '/sacramentos' | '/admin/login' | '/admin/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CarnetRoute: typeof CarnetRoute
   SacramentosRoute: typeof SacramentosRoute
   AdminLoginRoute: typeof AdminLoginRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -76,6 +86,13 @@ declare module '@tanstack/react-router' {
       path: '/sacramentos'
       fullPath: '/sacramentos'
       preLoaderRoute: typeof SacramentosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/carnet': {
+      id: '/carnet'
+      path: '/carnet'
+      fullPath: '/carnet'
+      preLoaderRoute: typeof CarnetRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -104,6 +121,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CarnetRoute: CarnetRoute,
   SacramentosRoute: SacramentosRoute,
   AdminLoginRoute: AdminLoginRoute,
   AdminIndexRoute: AdminIndexRoute,
@@ -111,3 +129,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

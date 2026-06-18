@@ -3,6 +3,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { QRCodeSVG } from "qrcode.react";
 import { User, Search, ShieldCheck } from "lucide-react";
+import { encryptQR } from "@/utils/crypto"; 
 
 export const Route = createFileRoute("/carnet")({
   component: CarnetDigital,
@@ -12,7 +13,7 @@ function CarnetDigital() {
   const [code, setCode] = useState("");
   const [catechist, setCatechist] = useState<{ id: string; full_name: string } | null>(null);
   const [error, setError] = useState("");
-
+  
   const buscarCarnet = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -52,14 +53,19 @@ function CarnetDigital() {
             <h2 className="font-display text-2xl text-primary mb-1">{catechist.full_name}</h2>
             <p className="text-xs font-mono text-muted-foreground uppercase mb-6">ID: {code.toUpperCase()}</p>
             
-            {/* El QR guarda el ID único del catequista */}
-            <div className="bg-white p-4 rounded-2xl inline-block border-4 border-secondary shadow-sm mb-6">
-              <QRCodeSVG value={catechist.id} size={200} level="H" />
+            {/* EL CAMBIO CLAVE: Aquí aplicamos la función encryptQR al ID */}
+            <div className="bg-white p-4 rounded-2xl inline-block border-4 border-secondary shadow-sm mb-4">
+              <QRCodeSVG value={encryptQR(catechist.id)} size={200} level="H" />
             </div>
             
-            <p className="text-sm text-muted-foreground mb-6">Toma una captura de pantalla a este código.</p>
+            <p className="text-sm text-muted-foreground mb-6 flex flex-col items-center gap-1.5">
+              <span className="flex items-center gap-1 text-green-600 font-semibold text-xs tracking-wide uppercase bg-green-50 px-3 py-1 rounded-full border border-green-100">
+                <ShieldCheck size={14} /> Código Encriptado
+              </span>
+              Toma una captura de pantalla a este código.
+            </p>
             
-            <button onClick={() => setCatechist(null)} className="text-sm text-muted-foreground underline">
+            <button onClick={() => setCatechist(null)} className="text-sm text-muted-foreground underline hover:text-foreground transition-colors">
               Salir
             </button>
           </div>

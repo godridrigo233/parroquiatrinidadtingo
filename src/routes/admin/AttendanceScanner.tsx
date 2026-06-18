@@ -26,21 +26,38 @@ export function AttendanceScanner() {
   const fetchData = async () => {
     setLoading(true);
     const hoy = new Date();
-    const offset = hoy.getTimezoneOffset();
-    const hoyPeru = new Date(hoy.getTime() - (offset * 60 * 1000)).toISOString().split('T')[0];
+    
+    // Obtenemos la fecha exacta (YYYY-MM-DD)
+    const year = hoy.getFullYear();
+    const month = String(hoy.getMonth() + 1).padStart(2, '0');
+    const day = String(hoy.getDate()).padStart(2, '0');
+    const dateStr = `${year}-${month}-${day}`;
 
+    // Obtenemos la hora actual (HH:MM:SS)
+    const hours = String(hoy.getHours()).padStart(2, '0');
+    const minutes = String(hoy.getMinutes()).padStart(2, '0');
+    const timeStr = `${hours}:${minutes}:00`;
+
+    // 1. Buscamos la reunión de hoy que AÚN NO HA TERMINADO
     const { data: hoyData } = await supabase
       .from("meetings")
       .select("*")
-      .eq("scheduled_date", hoyPeru)
-      .maybeSingle();
+      .eq("scheduled_date", dateStr)
+      .gte("scheduled_end_time", timeStr) // NUEVO: Filtra por la hora actual
+      .order("scheduled_time", { ascending: true })
+      .limit(1); // Tomamos la más próxima
       
-    if (hoyData) setCurrentMeeting(hoyData);
+    if (hoyData && hoyData.length > 0) {
+      setCurrentMeeting(hoyData[0]);
+    } else {
+      setCurrentMeeting(null); // Si ya pasó la hora, se oculta el escáner
+    }
 
+    // 2. Cargamos la agenda completa
     const { data: agendaData } = await supabase
       .from("meetings")
       .select("*")
-      .gte("scheduled_date", hoyPeru)
+      .gte("scheduled_date", dateStr)
       .order("scheduled_date", { ascending: true })
       .order("scheduled_time", { ascending: true }); 
       

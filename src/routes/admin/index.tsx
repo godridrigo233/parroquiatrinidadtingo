@@ -632,4 +632,4 @@ function DonationsManager({ showToast }: { showToast: (m: string, t?: "success"|
       <confirm.Dialog />
     </div>
   );
-}}
+}

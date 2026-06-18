@@ -23,7 +23,7 @@ export function DirectoryManager() {
     const { error } = await supabase.from("catechists").insert({
       full_name: nuevoNombre.toUpperCase(),
       code: nuevoCodigo.toUpperCase(),
-      dni: nuevoDni
+      DNI: nuevoDni
     });
     if (error) alert("Error: " + error.message);
     else {
@@ -62,7 +62,7 @@ export function DirectoryManager() {
             <div key={c.id} className="p-3 flex justify-between items-center border-b last:border-0">
               <div>
                 <p className="text-sm font-semibold text-primary">{c.full_name}</p>
-                <p className="text-[10px] text-muted-foreground uppercase">{c.code} • DNI: {c.dni}</p>
+                <p className="text-[10px] text-muted-foreground uppercase">{c.code} • DNI: {c.DNI}</p>
               </div>
               <button onClick={() => eliminarCatequista(c.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
                 <Trash2 size={16} />

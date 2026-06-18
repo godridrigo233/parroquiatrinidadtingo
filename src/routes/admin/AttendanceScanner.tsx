@@ -3,7 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Scanner } from "@yudiel/react-qr-scanner";
 import { CheckCircle2, XCircle, Calendar, Camera, Loader2, Plus, Trash2, ListTodo, Clock, CalendarPlus } from "lucide-react";
 import { AttendanceReport } from "./AttendanceReport";
-import { decryptQR } from "@/utils/crypto"; // Añade esta importación
+import { decryptQR } from "@/utils/crypto"; 
+
 export function AttendanceScanner() {
   const [currentMeeting, setCurrentMeeting] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -15,7 +16,7 @@ export function AttendanceScanner() {
   const [newTitle, setNewTitle] = useState("");
   const [newDate, setNewDate] = useState("");
   const [newTime, setNewTime] = useState("16:00"); 
-  const [newEndTime, setNewEndTime] = useState("18:00"); // Hora de fin por defecto
+  const [newEndTime, setNewEndTime] = useState("18:00"); 
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -50,21 +51,23 @@ export function AttendanceScanner() {
   const handleScan = async (scannedText: string) => {
     if (!currentMeeting) return;
 
+    // 1. DESENCRIPTAMOS EL CÓDIGO QR
     const decryptedId = decryptQR(scannedText);
 
     if (!decryptedId) {
-      setLastScan({ status: 'error', msg: "QR Inválido" });
+      setLastScan({ status: 'error', msg: "QR Inválido o Falso" });
       setTimeout(() => setLastScan(null), 2500);
       return;
     }
 
-    // NUEVO: Buscamos el nombre del catequista dueño de este QR
+    // 2. Buscamos el nombre para mostrarlo en pantalla (Filtro Humano)
     const { data: catData } = await supabase
       .from("catechists")
       .select("full_name")
       .eq("id", decryptedId)
       .maybeSingle();
 
+    // 3. Registramos la asistencia
     const { error } = await supabase.from("attendance").insert({
       meeting_id: currentMeeting.id,
       catechist_id: decryptedId 
@@ -75,11 +78,10 @@ export function AttendanceScanner() {
       else setLastScan({ status: 'error', msg: "Error al registrar." });
     } else {
       new Audio("https://actions.google.com/sounds/v1/ui/beep_short_on.ogg").play().catch(() => {});
-      // NUEVO: Mostramos el nombre de la persona en lugar del mensaje genérico
       setLastScan({ status: 'success', msg: catData?.full_name || "Asistencia Registrada" });
     }
     
-    setTimeout(() => setLastScan(null), 2500); // Le damos medio segundo más para que Jazmín lea el nombre
+    setTimeout(() => setLastScan(null), 2500);
   };
 
   const programarReunion = async (e: React.FormEvent) => {
@@ -89,7 +91,7 @@ export function AttendanceScanner() {
       title: newTitle,
       scheduled_date: newDate,
       scheduled_time: newTime,
-      scheduled_end_time: newEndTime // Guardamos la hora de fin
+      scheduled_end_time: newEndTime 
     });
     setSaving(false);
     
@@ -123,7 +125,6 @@ export function AttendanceScanner() {
     return d.toLocaleDateString("es-PE", { weekday: 'short', day: 'numeric', month: 'short' });
   };
 
-  // Modificado para usar la hora de fin real seleccionada
   const getGoogleCalendarUrl = (title: string, dateStr: string, startTimeStr: string, endTimeStr: string) => {
     const startDate = new Date(`${dateStr}T${startTimeStr}`);
     const endDate = new Date(`${dateStr}T${endTimeStr}`);
@@ -182,7 +183,6 @@ export function AttendanceScanner() {
                   className="w-full px-4 py-2.5 rounded-xl border border-input bg-background text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all" />
               </div>
               
-              {/* Layout de tres columnas: Fecha, Desde, Hasta */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="text-[11px] uppercase font-bold text-muted-foreground tracking-wider mb-1 block">Día</label>
@@ -229,7 +229,6 @@ export function AttendanceScanner() {
                       <p className="font-semibold text-sm text-primary mb-1">{m.title}</p>
                       <p className="text-xs text-muted-foreground flex items-center gap-1.5 font-medium">
                         <Clock size={12} className="text-gold" /> 
-                        {/* Muestra el rango de tiempo formateado */}
                         <span>{formatTime(m.scheduled_time)} - {formatTime(m.scheduled_end_time)}</span>
                       </p>
                     </div>
@@ -293,18 +292,25 @@ export function AttendanceScanner() {
               {view === 'scanner' ? (
                 <div className="rounded-3xl overflow-hidden border-8 border-secondary aspect-square relative shadow-lg bg-black">
                   <Scanner onResult={(text) => handleScan(text)} options={{ delayBetweenScanSuccess: 2000 }} />
-                  {lastScan.status === 'success' ? (
+                  {/* AQUÍ ESTABA EL ERROR: Agregamos el ? de seguridad (optional chaining) para evitar crasheos si lastScan es null */}
+                  {lastScan && (
+                    <div className={`absolute inset-0 flex flex-col items-center justify-center text-white backdrop-blur-md z-10 animate-in zoom-in-95 ${
+                      lastScan?.status === 'success' ? 'bg-green-600/95' : 'bg-red-600/95'
+                    }`}>
+                      {lastScan?.status === 'success' ? (
                         <>
                           <CheckCircle2 size={64} className="mb-3 drop-shadow-md" />
                           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-green-200 mb-1">¡Registrado!</p>
-                          <p className="font-display text-3xl px-6 text-center leading-tight shadow-black drop-shadow-md">{lastScan.msg}</p>
+                          <p className="font-display text-3xl px-6 text-center leading-tight shadow-black drop-shadow-md">{lastScan?.msg}</p>
                         </>
                       ) : (
                         <>
                           <XCircle size={64} className="mb-2" />
-                          <p className="font-display text-xl px-4 text-center">{lastScan.msg}</p>
+                          <p className="font-display text-xl px-4 text-center">{lastScan?.msg}</p>
                         </>
                       )}
+                    </div>
+                  )}
                 </div>
               ) : (
                 <AttendanceReport meetingId={currentMeeting.id} />

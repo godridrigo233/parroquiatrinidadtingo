@@ -462,6 +462,38 @@ function SchedulesManager({ showToast }: { showToast: (m: string, t?: "success" 
           </div>
         ))}
       </div>
+
+      <EditModal open={!!editing} onClose={() => setEditing(null)} title="Editar horario">
+        {editing && (
+          <form onSubmit={saveEdit} className="space-y-3">
+            <div>
+              <label className="text-[11px] uppercase font-bold text-muted-foreground tracking-wider mb-1 block">Categoría</label>
+              <select value={editing.category} onChange={e => setEditing({ ...editing, category: e.target.value })}
+                className="w-full px-3 py-2.5 rounded-lg border border-input bg-background text-sm outline-none focus:border-gold">
+                <option value="misa">Santa Misa</option>
+                <option value="confesion">Confesiones</option>
+                <option value="catequesis">Catequesis</option>
+                <option value="adoracion">Adoración</option>
+                <option value="pastoral">Pastoral</option>
+                <option value="secretaria">Secretaría</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-[11px] uppercase font-bold text-muted-foreground tracking-wider mb-1 block">Día</label>
+              <Input required value={editing.day_label} onChange={e => setEditing({ ...editing, day_label: e.target.value })} />
+            </div>
+            <div>
+              <label className="text-[11px] uppercase font-bold text-muted-foreground tracking-wider mb-1 block">Hora</label>
+              <Input required value={editing.time_label} onChange={e => setEditing({ ...editing, time_label: e.target.value })} />
+            </div>
+            <div>
+              <label className="text-[11px] uppercase font-bold text-muted-foreground tracking-wider mb-1 block">Nota (opcional)</label>
+              <Input value={editing.notes ?? ""} onChange={e => setEditing({ ...editing, notes: e.target.value })} />
+            </div>
+            <PrimaryBtn type="submit"><Save size={15} /> Guardar cambios</PrimaryBtn>
+          </form>
+        )}
+      </EditModal>
       <confirm.Dialog />
     </div>
   );
@@ -569,6 +601,7 @@ function GalleryManager({ showToast }: { showToast: (m: string, t?: "success" | 
   const { items, load, remove } = useTable<GalleryRow>("gallery_images", "sort_order", true);
   const empty = { title: "", category: "", sort_order: 0 };
   const [form, setForm] = useState(empty);
+  const [editing, setEditing] = useState<GalleryRow | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -587,6 +620,21 @@ function GalleryManager({ showToast }: { showToast: (m: string, t?: "success" | 
       const nextOrder = items.length ? Math.max(...items.map(i => i.sort_order)) + 10 : 10;
       await supabase.from("gallery_images").insert({ title: form.title || null, category: form.category || null, sort_order: nextOrder, image_url: url });
       setForm(empty); setFile(null); showToast("Foto publicada"); load();
+    } catch (err: any) { showToast(err.message, "error"); } finally { setSaving(false); }
+  };
+
+  const saveEdit = async (e: React.FormEvent) => {
+    e.preventDefault(); if (!editing) return; setSaving(true);
+    try {
+      let finalUrl = editing.image_url;
+      if (file) finalUrl = await uploadImage(file);
+      const { error } = await supabase.from("gallery_images").update({
+        title: editing.title || null,
+        category: editing.category || null,
+        image_url: finalUrl,
+      }).eq("id", editing.id);
+      if (error) throw error;
+      setEditing(null); setFile(null); showToast("Foto actualizada"); load();
     } catch (err: any) { showToast(err.message, "error"); } finally { setSaving(false); }
   };
 
@@ -615,13 +663,46 @@ function GalleryManager({ showToast }: { showToast: (m: string, t?: "success" | 
                 <p className="text-white text-[10px] font-medium truncate">{g.title}</p>
               </div>
             )}
-            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-2 transition-opacity">
+              <button onClick={() => { setEditing(g); setFile(null); }}
+                className="bg-white text-primary p-2 rounded-lg shadow hover:bg-secondary transition-colors">
+                <Pencil size={15} />
+              </button>
               <button onClick={async () => { const ok = await remove(g.id, confirm.ask); if (ok) showToast("Foto eliminada"); }}
-                className="bg-destructive text-white p-2 rounded-lg shadow"><Trash2 size={15} /></button>
+                className="bg-destructive text-white p-2 rounded-lg shadow">
+                <Trash2 size={15} />
+              </button>
             </div>
           </div>
         ))}
       </div>
+
+      <EditModal open={!!editing} onClose={() => { setEditing(null); setFile(null); }} title="Editar foto">
+        {editing && (
+          <form onSubmit={saveEdit} className="space-y-4">
+            <div className="aspect-video rounded-xl overflow-hidden bg-secondary border border-border">
+              <img src={editing.image_url} alt="" className="w-full h-full object-cover" />
+            </div>
+            <div>
+              <label className="text-[11px] uppercase font-bold text-muted-foreground tracking-wider mb-1 block">Reemplazar imagen (opcional)</label>
+              <div className="border border-input rounded-lg p-2.5 bg-background">
+                <input type="file" accept="image/*" className="w-full text-xs"
+                  onChange={e => { if (e.target.files?.[0]) setFile(e.target.files[0]); }} />
+                {file && <p className="text-xs text-green-600 mt-1 font-medium">✓ {file.name}</p>}
+              </div>
+            </div>
+            <div>
+              <label className="text-[11px] uppercase font-bold text-muted-foreground tracking-wider mb-1 block">Título</label>
+              <Input placeholder="Título (opcional)" value={editing.title ?? ""} onChange={e => setEditing({ ...editing, title: e.target.value })} />
+            </div>
+            <div>
+              <label className="text-[11px] uppercase font-bold text-muted-foreground tracking-wider mb-1 block">Categoría</label>
+              <Input placeholder="Categoría (opcional)" value={editing.category ?? ""} onChange={e => setEditing({ ...editing, category: e.target.value })} />
+            </div>
+            <PrimaryBtn type="submit" disabled={saving}><Save size={15} /> {saving ? "Guardando…" : "Guardar cambios"}</PrimaryBtn>
+          </form>
+        )}
+      </EditModal>
       <confirm.Dialog />
     </div>
   );

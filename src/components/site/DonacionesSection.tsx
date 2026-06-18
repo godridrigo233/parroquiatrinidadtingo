@@ -32,9 +32,9 @@ export function DonacionesSection({ items }: { items: DonationRow[] }) {
           </p>
         </Reveal>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="flex flex-wrap justify-center gap-8">
           {items.map((item) => (
-            <Reveal key={item.id} className="h-full">
+            <Reveal key={item.id} className="h-full w-full sm:w-[calc(50%-16px)] lg:w-[calc(33.333%-22px)] max-w-sm">
               <div className="h-full flex flex-col bg-card rounded-3xl border border-border shadow-card overflow-hidden hover:shadow-elegant transition-all">
                 <div className="p-6 pb-0 flex items-center justify-between">
                   <span className="px-3 py-1 rounded-full bg-secondary text-primary text-xs font-bold uppercase tracking-wider">

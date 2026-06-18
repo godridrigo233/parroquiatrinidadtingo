@@ -43,7 +43,7 @@ export function AttendanceScanner() {
       .from("meetings")
       .select("*")
       .eq("scheduled_date", dateStr)
-      .gte("scheduled_end_time", timeStr) // NUEVO: Filtra por la hora actual
+      .gte("scheduled_end_time", timeStr) // NUEVO: Filtra por la hora actuals
       .order("scheduled_time", { ascending: true })
       .limit(1); // Tomamos la más próxima
       

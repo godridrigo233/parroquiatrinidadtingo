@@ -6,7 +6,7 @@ import {
   Users, Image as ImageIcon, Save, AlertCircle, CheckCircle2, Heart 
 } from "lucide-react";
 import imageCompression from 'browser-image-compression';
-import { AttendanceScanner } from "@/routes/admin/AttendanceScanner";
+import { AttendanceScanner } from "@/components/admin/AttendanceScanner";
 
 export const Route = createFileRoute("/admin/")({
   head: () => ({ meta: [{ title: "Panel administrador · Parroquia" }, { name: "robots", content: "noindex" }] }),
@@ -27,8 +27,8 @@ const tabs: { id: Tab; label: string; icon: typeof Calendar }[] = [
 function AdminDashboard() {
   const navigate = useNavigate();
   const [ready, setReady] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [email, setEmail] = useState("");
+  const [userRole, setUserRole] = useState<"admin" | "editor" | null>(null);
+  const [userName, setUserName] = useState("");
   const [tab, setTab] = useState<Tab>("events");
 
   const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
@@ -44,12 +44,28 @@ function AdminDashboard() {
         navigate({ to: "/admin/login" });
         return;
       }
-      setEmail(data.session.user.email ?? "");
+      
+      // Obtener el nombre desde los metadatos o usar el correo como respaldo
+      const metaName = data.session.user.user_metadata?.full_name;
+      setUserName(metaName ? metaName.toUpperCase() : (data.session.user.email ?? ""));
+      
       const { data: roles } = await supabase
         .from("user_roles")
         .select("role")
         .eq("user_id", data.session.user.id);
-      setIsAdmin((roles ?? []).some((r) => r.role === "admin"));
+      
+      const rolesList = roles?.map(r => r.role) || [];
+
+      if (rolesList.includes("admin")) {
+        setUserRole("admin");
+        setTab("events");
+      } else if (rolesList.includes("editor")) {
+        setUserRole("editor");
+        setTab("attendance");
+      } else {
+        setUserRole(null);
+      }
+      
       setReady(true);
     })();
   }, [navigate]);
@@ -61,13 +77,13 @@ function AdminDashboard() {
 
   if (!ready) return <div className="min-h-screen bg-secondary/40 flex items-center justify-center text-muted-foreground">Cargando…</div>;
 
-  if (!isAdmin) {
+  if (!userRole) {
     return (
       <div className="min-h-screen bg-secondary/40 flex items-center justify-center p-6">
         <div className="max-w-md bg-card rounded-2xl p-8 shadow-card border border-border text-center">
           <h1 className="font-display text-2xl text-primary">Acceso restringido</h1>
           <p className="mt-3 text-sm text-muted-foreground">
-            Tu cuenta <strong>{email}</strong> no tiene rol de administrador asignado.
+            Tu cuenta no tiene un rol de administración o edición autorizado en el sistema.
           </p>
           <button onClick={logout} className="mt-6 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm">
             Cerrar sesión
@@ -77,6 +93,8 @@ function AdminDashboard() {
     );
   }
 
+  const tabsToShow = userRole === "admin" ? tabs : tabs.filter(t => t.id === "attendance");
+
   return (
     <div className="min-h-screen bg-secondary/40 relative">
       <header className="bg-card border-b border-border sticky top-0 z-10 shadow-sm">
@@ -84,19 +102,22 @@ function AdminDashboard() {
           <Link to="/" className="flex items-center gap-3">
             <img src="/assets/logo.png" alt="" className="h-9 w-9" />
             <div className="leading-tight">
-              <p className="font-display text-base text-primary">Panel administrador</p>
+              <p className="font-display text-base text-primary">
+                {userRole === "admin" ? "Panel Administrador" : "Panel de Asistencia"}
+              </p>
               <p className="text-[11px] text-muted-foreground">Parroquia Santísima Trinidad</p>
             </div>
           </Link>
           <div className="flex items-center gap-3">
-            <span className="text-xs text-muted-foreground hidden sm:block">{email}</span>
+            <span className="text-xs text-muted-foreground hidden sm:block font-semibold tracking-wider">{userName}</span>
             <button onClick={logout} className="px-3 py-1.5 rounded-lg bg-secondary text-secondary-foreground text-sm flex items-center gap-1.5 hover:bg-border transition-colors">
               <LogOut size={14} /> Salir
             </button>
           </div>
         </div>
+        
         <nav className="max-w-7xl mx-auto px-5 flex gap-1 overflow-x-auto">
-          {tabs.map((t) => {
+          {tabsToShow.map((t) => {
             const Icon = t.icon;
             return (
               <button key={t.id} onClick={() => setTab(t.id)}
@@ -111,11 +132,12 @@ function AdminDashboard() {
       </header>
 
       <main className="max-w-7xl mx-auto p-5 lg:p-8">
-        {tab === "events" && <EventsManager showToast={showToast} />}
-        {tab === "schedules" && <SchedulesManager showToast={showToast} />}
-        {tab === "ministries" && <MinistriesManager showToast={showToast} />}
-        {tab === "gallery" && <GalleryManager showToast={showToast} />}
-        {tab === "donations" && <DonationsManager showToast={showToast} />}
+        {tab === "events" && userRole === "admin" && <EventsManager showToast={showToast} />}
+        {tab === "schedules" && userRole === "admin" && <SchedulesManager showToast={showToast} />}
+        {tab === "ministries" && userRole === "admin" && <MinistriesManager showToast={showToast} />}
+        {tab === "gallery" && userRole === "admin" && <GalleryManager showToast={showToast} />}
+        {tab === "donations" && userRole === "admin" && <DonationsManager showToast={showToast} />}
+        
         {tab === "attendance" && <AttendanceScanner />}
       </main>
 

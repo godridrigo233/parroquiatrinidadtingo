@@ -1,91 +1,123 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Lock } from "lucide-react";
+import { Lock, Mail, User, AlertCircle, Link } from "lucide-react";
 
 export const Route = createFileRoute("/admin/login")({
-  head: () => ({ meta: [{ title: "Acceso administrador · Parroquia" }, { name: "robots", content: "noindex" }] }),
-  component: AdminLogin,
+  component: LoginInterface,
 });
 
-function AdminLogin() {
+function LoginInterface() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [fullName, setFullName] = useState("");
+  const [isLoginMode, setIsLoginMode] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/admin" });
-    });
-  }, [navigate]);
-
-  const submit = async (e: React.FormEvent) => {
+  const handleAuthentication = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    setErrorMessage("");
     setLoading(true);
-    try {
-      if (mode === "login") {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        navigate({ to: "/admin" });
+
+    if (isLoginMode) {
+      // Proceso de Inicio de Sesión
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        setErrorMessage("Credenciales incorrectas. Verifica tu correo y contraseña.");
+        setLoading(false);
       } else {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { emailRedirectTo: `${window.location.origin}/admin` },
-        });
-        if (error) throw error;
-        setError("Cuenta creada. Pide a un administrador que te asigne el rol 'admin' para acceder.");
+        navigate({ to: "/admin" });
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Error de autenticación");
-    } finally {
-      setLoading(false);
+    } else {
+      // Proceso de Registro (Crear Cuenta)
+      if (!fullName.trim()) {
+        setErrorMessage("El nombre completo es obligatorio.");
+        setLoading(false);
+        return;
+      }
+
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName.trim().toUpperCase(), // Forzamos mayúsculas siempre
+          },
+        },
+      });
+
+      if (error) {
+        setErrorMessage(error.message);
+        setLoading(false);
+      } else {
+        alert("¡Cuenta creada con éxito! Ahora inicia sesión.");
+        setIsLoginMode(true);
+        setLoading(false);
+      }
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary via-primary to-primary/80 flex items-center justify-center p-5">
-      <div className="w-full max-w-md bg-card rounded-2xl shadow-elegant p-8 border border-border">
-        <div className="flex flex-col items-center text-center">
-          {/* AQUÍ ESTÁ LA LÍNEA CORREGIDA */}
-          <img src="/assets/logo.png" alt="" className="h-16 w-16" />
-          <h1 className="mt-4 font-display text-2xl text-primary flex items-center gap-2">
-            <Lock size={20} /> Panel administrador
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">Parroquia Santísima Trinidad</p>
-        </div>
+    <div className="min-h-screen bg-primary flex items-center justify-center p-4">
+      <div className="max-w-md w-full bg-card rounded-3xl p-8 shadow-elegant border border-border text-center">
+        <img src="/assets/logo.png" alt="Logo Parroquia" className="h-16 w-16 mx-auto mb-4" />
+        <h2 className="font-display text-2xl text-primary flex items-center justify-center gap-2 mb-1">
+          <Lock size={20} /> {isLoginMode ? "Panel administrador" : "Crear cuenta administrativa"}
+        </h2>
+        <p className="text-xs text-muted-foreground mb-6">Parroquia Santísima Trinidad</p>
 
-        <form onSubmit={submit} className="mt-8 space-y-4">
-          <div>
-            <label className="text-xs uppercase tracking-widest text-muted-foreground">Correo</label>
-            <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 w-full px-4 py-3 rounded-lg border border-input bg-background outline-none focus:border-gold" />
+        {errorMessage && (
+          <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-xl text-xs flex items-center gap-2 text-left border border-red-100">
+            <AlertCircle size={16} className="shrink-0" />
+            <span>{errorMessage}</span>
           </div>
+        )}
+
+        <form onSubmit={handleAuthentication} className="space-y-4 text-left">
+          {!isLoginMode && (
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Nombre Completo</label>
+              <div className="relative mt-1">
+                <User className="absolute left-3 top-3.5 text-muted-foreground/50" size={16} />
+                <input required type="text" value={fullName} onChange={(e) => setFullName(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-input bg-secondary/20 text-sm outline-none focus:border-gold uppercase"
+                  placeholder="Ej: RODRIGO GOMEZ" />
+              </div>
+            </div>
+          )}
+
           <div>
-            <label className="text-xs uppercase tracking-widest text-muted-foreground">Contraseña</label>
-            <input required type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-              minLength={6}
-              className="mt-1 w-full px-4 py-3 rounded-lg border border-input bg-background outline-none focus:border-gold" />
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Correo</label>
+            <div className="relative mt-1">
+              <Mail className="absolute left-3 top-3.5 text-muted-foreground/50" size={16} />
+              <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 rounded-xl border border-input bg-secondary/20 text-sm outline-none focus:border-gold"
+                placeholder="correo@ejemplo.com" />
+            </div>
           </div>
 
-          {error && <p className="text-sm text-destructive bg-destructive/10 p-3 rounded-lg">{error}</p>}
+          <div>
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Contraseña</label>
+            <div className="relative mt-1">
+              <Lock className="absolute left-3 top-3.5 text-muted-foreground/50" size={16} />
+              <input required type="password" value={password} onChange={(e) => setPassword(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 rounded-xl border border-input bg-secondary/20 text-sm outline-none focus:border-gold"
+                placeholder="********" />
+            </div>
+          </div>
 
-          <button disabled={loading} type="submit"
-            className="w-full py-3 rounded-lg bg-gradient-gold text-primary font-semibold shadow-card hover:shadow-elegant disabled:opacity-50 transition">
-            {loading ? "Procesando..." : mode === "login" ? "Iniciar sesión" : "Crear cuenta"}
-          </button>
-
-          <button type="button" onClick={() => setMode(mode === "login" ? "signup" : "login")}
-            className="w-full text-sm text-muted-foreground hover:text-primary">
-            {mode === "login" ? "¿No tienes cuenta? Crear una" : "¿Ya tienes cuenta? Inicia sesión"}
+          <button type="submit" disabled={loading} className="w-full py-3 mt-2 rounded-xl bg-gradient-gold text-primary font-semibold text-sm transition-opacity disabled:opacity-50">
+            {loading ? "Procesando..." : isLoginMode ? "Iniciar Sesión" : "Registrar Cuenta"}
           </button>
         </form>
 
-        <Link to="/" className="block mt-6 text-center text-xs text-muted-foreground hover:text-primary">
+        <button onClick={() => { setIsLoginMode(!isLoginMode); setErrorMessage(""); }} className="mt-5 text-xs text-primary font-medium hover:underline block mx-auto">
+          {isLoginMode ? "¿No tienes cuenta? Crea una aquí" : "¿Ya tienes cuenta? Inicia sesión"}
+        </button>
+
+        <Link to="/" className="mt-6 text-xs text-muted-foreground block hover:text-foreground">
           ← Volver al sitio público
         </Link>
       </div>

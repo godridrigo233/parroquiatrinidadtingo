@@ -50,17 +50,21 @@ export function AttendanceScanner() {
   const handleScan = async (scannedText: string) => {
     if (!currentMeeting) return;
 
-    // 1. Intentamos desencriptar el código que leyó la cámara
     const decryptedId = decryptQR(scannedText);
 
-    // 2. Si es null, significa que es un QR falso, de otra app, o modificado
     if (!decryptedId) {
-      setLastScan({ status: 'error', msg: "QR Inválido o Falso." });
-      setTimeout(() => setLastScan(null), 2000);
+      setLastScan({ status: 'error', msg: "QR Inválido" });
+      setTimeout(() => setLastScan(null), 2500);
       return;
     }
 
-    // 3. Si todo está bien, registramos la asistencia con el ID real (CAT-01)
+    // NUEVO: Buscamos el nombre del catequista dueño de este QR
+    const { data: catData } = await supabase
+      .from("catechists")
+      .select("full_name")
+      .eq("id", decryptedId)
+      .maybeSingle();
+
     const { error } = await supabase.from("attendance").insert({
       meeting_id: currentMeeting.id,
       catechist_id: decryptedId 
@@ -68,12 +72,14 @@ export function AttendanceScanner() {
 
     if (error) {
       if (error.code === '23505') setLastScan({ status: 'error', msg: "¡Ya registrado hoy!" });
-      else setLastScan({ status: 'error', msg: "Error de base de datos." });
+      else setLastScan({ status: 'error', msg: "Error al registrar." });
     } else {
       new Audio("https://actions.google.com/sounds/v1/ui/beep_short_on.ogg").play().catch(() => {});
-      setLastScan({ status: 'success', msg: "¡Asistencia registrada!" });
+      // NUEVO: Mostramos el nombre de la persona en lugar del mensaje genérico
+      setLastScan({ status: 'success', msg: catData?.full_name || "Asistencia Registrada" });
     }
-    setTimeout(() => setLastScan(null), 2000);
+    
+    setTimeout(() => setLastScan(null), 2500); // Le damos medio segundo más para que Jazmín lea el nombre
   };
 
   const programarReunion = async (e: React.FormEvent) => {
@@ -287,14 +293,18 @@ export function AttendanceScanner() {
               {view === 'scanner' ? (
                 <div className="rounded-3xl overflow-hidden border-8 border-secondary aspect-square relative shadow-lg bg-black">
                   <Scanner onResult={(text) => handleScan(text)} options={{ delayBetweenScanSuccess: 2000 }} />
-                  {lastScan && (
-                    <div className={`absolute inset-0 flex flex-col items-center justify-center text-white backdrop-blur-md z-10 animate-in zoom-in-95 ${
-                      lastScan.status === 'success' ? 'bg-green-600/95' : 'bg-red-600/95'
-                    }`}>
-                      {lastScan.status === 'success' ? <CheckCircle2 size={64} className="mb-2" /> : <XCircle size={64} className="mb-2" />}
-                      <p className="font-display text-xl px-4 text-center">{lastScan.msg}</p>
-                    </div>
-                  )}
+                  {lastScan.status === 'success' ? (
+                        <>
+                          <CheckCircle2 size={64} className="mb-3 drop-shadow-md" />
+                          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-green-200 mb-1">¡Registrado!</p>
+                          <p className="font-display text-3xl px-6 text-center leading-tight shadow-black drop-shadow-md">{lastScan.msg}</p>
+                        </>
+                      ) : (
+                        <>
+                          <XCircle size={64} className="mb-2" />
+                          <p className="font-display text-xl px-4 text-center">{lastScan.msg}</p>
+                        </>
+                      )}
                 </div>
               ) : (
                 <AttendanceReport meetingId={currentMeeting.id} />

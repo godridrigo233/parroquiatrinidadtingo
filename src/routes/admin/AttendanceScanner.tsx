@@ -1,29 +1,31 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Scanner } from "@yudiel/react-qr-scanner";
-import { CheckCircle2, XCircle, Calendar, Camera, Loader2, Plus, Trash2, ListTodo, Clock, CalendarPlus, History, FileText } from "lucide-react";
+import { CheckCircle2, XCircle, Calendar, Camera, Loader2, Plus, Trash2, ListTodo, Clock, CalendarPlus, History, FileText, UserPlus } from "lucide-react";
 import { AttendanceReport } from "./AttendanceReport";
-import { decryptQR } from "@/utils/crypto"; 
+import { decryptQR } from "@/utils/crypto";
+import { DirectoryManager } from "./DirectoryManager";
 
 export function AttendanceScanner() {
   const [loading, setLoading] = useState(true);
-  
+
   // ESTADOS DE VISTA Y REPORTES
-  const [view, setView] = useState<'scanner' | 'agenda' | 'history' | 'report'>('scanner');
+  const [view, setView] = useState<'scanner' | 'agenda' | 'history' | 'report' | 'directory'>('scanner');
   const [reportId, setReportId] = useState<string | null>(null);
   const [reportReturnView, setReportReturnView] = useState<'scanner' | 'history'>('scanner');
-  
+  const [userRole, setUserRole] = useState<string>('admin'); // Cambia a 'editor' si no es admin
+
   // ESTADOS DE REUNIONES
   const [currentMeeting, setCurrentMeeting] = useState<any>(null);
   const [meetings, setMeetings] = useState<any[]>([]);
   const [pastMeetings, setPastMeetings] = useState<any[]>([]);
   const [lastScan, setLastScan] = useState<{ status: 'success' | 'error', msg: string } | null>(null);
-  
+
   // ESTADOS DEL FORMULARIO
   const [newTitle, setNewTitle] = useState("");
   const [newDate, setNewDate] = useState("");
-  const [newTime, setNewTime] = useState("16:00"); 
-  const [newEndTime, setNewEndTime] = useState("18:00"); 
+  const [newTime, setNewTime] = useState("16:00");
+  const [newEndTime, setNewEndTime] = useState("18:00");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -33,7 +35,7 @@ export function AttendanceScanner() {
   const fetchData = async () => {
     setLoading(true);
     const hoy = new Date();
-    
+
     const year = hoy.getFullYear();
     const month = String(hoy.getMonth() + 1).padStart(2, '0');
     const day = String(hoy.getDate()).padStart(2, '0');
@@ -43,26 +45,20 @@ export function AttendanceScanner() {
     const minutes = String(hoy.getMinutes()).padStart(2, '0');
     const timeStr = `${hours}:${minutes}:00`;
 
-    // Obtenemos TODAS las reuniones para clasificarlas
     const { data: allMeetings } = await supabase.from("meetings").select("*");
 
     if (allMeetings) {
-      // Ordenamos todo por fecha y hora (ascendente)
       const sorted = [...allMeetings].sort((a, b) => {
         if (a.scheduled_date === b.scheduled_date) return a.scheduled_time.localeCompare(b.scheduled_time);
         return a.scheduled_date.localeCompare(b.scheduled_date);
       });
 
-      // 1. LA REUNIÓN ACTIVA (Hoy, que aún no termina)
       const active = sorted.find(m => m.scheduled_date === dateStr && m.scheduled_end_time >= timeStr);
       setCurrentMeeting(active || null);
 
-      // 2. LA AGENDA (Futuras, o de hoy que no han terminado)
       const upcoming = sorted.filter(m => m.scheduled_date > dateStr || (m.scheduled_date === dateStr && m.scheduled_end_time >= timeStr));
       setMeetings(upcoming);
 
-      // 3. EL HISTORIAL (Ayer para atrás, o de hoy que YA terminaron)
-      // Usamos .reverse() para que las más recientes salgan primero en la lista
       const past = sorted.filter(m => m.scheduled_date < dateStr || (m.scheduled_date === dateStr && m.scheduled_end_time < timeStr)).reverse();
       setPastMeetings(past);
     }
@@ -88,7 +84,7 @@ export function AttendanceScanner() {
 
     const { error } = await supabase.from("attendance").insert({
       meeting_id: currentMeeting.id,
-      catechist_id: decryptedId 
+      catechist_id: decryptedId
     });
 
     if (error) {
@@ -98,7 +94,7 @@ export function AttendanceScanner() {
       new Audio("https://actions.google.com/sounds/v1/ui/beep_short_on.ogg").play().catch(() => {});
       setLastScan({ status: 'success', msg: catData?.full_name || "Asistencia Registrada" });
     }
-    
+
     setTimeout(() => setLastScan(null), 2500);
   };
 
@@ -109,10 +105,10 @@ export function AttendanceScanner() {
       title: newTitle,
       scheduled_date: newDate,
       scheduled_time: newTime,
-      scheduled_end_time: newEndTime 
+      scheduled_end_time: newEndTime
     });
     setSaving(false);
-    
+
     if (error) {
       alert("Error al programar la reunión");
     } else {
@@ -120,7 +116,7 @@ export function AttendanceScanner() {
       setNewDate("");
       setNewTime("16:00");
       setNewEndTime("18:00");
-      fetchData(); 
+      fetchData();
     }
   };
 
@@ -148,7 +144,7 @@ export function AttendanceScanner() {
     const startDate = new Date(`${dateStr}T${startTimeStr}`);
     const endDate = new Date(`${dateStr}T${endTimeStr}`);
     const formatToUTC = (date: Date) => date.toISOString().replace(/-|:|\.\d\d\d/g, "");
-    
+
     const url = new URL('https://calendar.google.com/calendar/render');
     url.searchParams.append('action', 'TEMPLATE');
     url.searchParams.append('text', title);
@@ -168,7 +164,7 @@ export function AttendanceScanner() {
 
   return (
     <div className="bg-card rounded-3xl p-6 border border-border shadow-card max-w-lg mx-auto">
-      
+
       {/* MENÚ DE NAVEGACIÓN SUPERIOR */}
       <div className="flex gap-2 mb-6 bg-secondary/50 p-1.5 rounded-2xl overflow-x-auto">
         <button onClick={() => setView('scanner')} className={`flex-1 py-2.5 px-3 whitespace-nowrap rounded-xl text-xs font-semibold transition-all duration-200 ${view === 'scanner' ? 'bg-card text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
@@ -180,9 +176,14 @@ export function AttendanceScanner() {
         <button onClick={() => setView('history')} className={`flex-1 py-2.5 px-3 whitespace-nowrap rounded-xl text-xs font-semibold transition-all duration-200 ${view === 'history' || view === 'report' ? 'bg-card text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
           <History size={14} className="inline mr-1.5" /> Historial
         </button>
+        {userRole === 'admin' && (
+          <button onClick={() => setView('directory')} className={`flex-1 py-2.5 px-3 whitespace-nowrap rounded-xl text-xs font-semibold transition-all duration-200 ${view === 'directory' ? 'bg-card text-primary shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
+            <UserPlus size={14} className="inline mr-1.5" /> Directorio
+          </button>
+        )}
       </div>
 
-      {/* PESTAÑA 1: AGENDA (Programación de reuniones) */}
+      {/* PESTAÑA 1: AGENDA */}
       {view === 'agenda' && (
         <div className="animate-in fade-in">
           <div className="bg-blue-50/50 border border-blue-100 rounded-2xl p-5 mb-8">
@@ -221,7 +222,7 @@ export function AttendanceScanner() {
           <h3 className="font-display text-lg text-primary mb-4 flex items-center gap-2">
             <Calendar className="text-gold" size={20} /> Próximos Encuentros
           </h3>
-          
+
           {meetings.length === 0 ? (
             <div className="text-center py-8 border-2 border-dashed border-border rounded-2xl">
               <p className="text-sm text-muted-foreground">Tu calendario está libre.</p>
@@ -232,13 +233,13 @@ export function AttendanceScanner() {
                 <div key={m.id} className="group flex items-center justify-between p-4 rounded-2xl border border-border bg-card hover:border-gold/50 transition-colors shadow-sm">
                   <div className="flex items-center gap-4">
                     <div className="bg-secondary/50 rounded-xl p-2 text-center min-w-[4rem] border border-border/50">
-                      <span className="block text-[10px] uppercase font-bold text-muted-foreground">{new Date(m.scheduled_date + 'T12:00:00').toLocaleDateString('es-PE',{weekday:'short'})}</span>
+                      <span className="block text-[10px] uppercase font-bold text-muted-foreground">{new Date(m.scheduled_date + 'T12:00:00').toLocaleDateString('es-PE', { weekday: 'short' })}</span>
                       <span className="block text-lg font-display text-primary">{m.scheduled_date.split('-')[2]}</span>
                     </div>
                     <div>
                       <p className="font-semibold text-sm text-primary mb-1">{m.title}</p>
                       <p className="text-xs text-muted-foreground flex items-center gap-1.5 font-medium">
-                        <Clock size={12} className="text-gold" /> 
+                        <Clock size={12} className="text-gold" />
                         <span>{formatTime(m.scheduled_time)} - {formatTime(m.scheduled_end_time)}</span>
                       </p>
                     </div>
@@ -258,13 +259,13 @@ export function AttendanceScanner() {
         </div>
       )}
 
-      {/* PESTAÑA 2: HISTORIAL (Reuniones pasadas) */}
+      {/* PESTAÑA 2: HISTORIAL */}
       {view === 'history' && (
         <div className="animate-in fade-in">
           <h3 className="font-display text-lg text-primary mb-4 flex items-center gap-2">
             <History className="text-gold" size={20} /> Archivo de Asistencias
           </h3>
-          
+
           {pastMeetings.length === 0 ? (
             <div className="text-center py-10 space-y-3">
               <div className="mx-auto w-12 h-12 bg-secondary/50 text-muted-foreground rounded-full flex items-center justify-center mb-2">
@@ -282,9 +283,8 @@ export function AttendanceScanner() {
                       {formatDate(m.scheduled_date)}
                     </p>
                   </div>
-                  
                   <div className="flex gap-2 w-full sm:w-auto">
-                    <button onClick={() => { setReportId(m.id); setReportReturnView('history'); setView('report'); }} 
+                    <button onClick={() => { setReportId(m.id); setReportReturnView('history'); setView('report'); }}
                       className="flex-1 sm:flex-none px-4 py-2 bg-secondary text-primary hover:bg-border rounded-xl text-xs font-bold transition-colors">
                       Ver Reporte
                     </button>
@@ -299,7 +299,7 @@ export function AttendanceScanner() {
         </div>
       )}
 
-      {/* PESTAÑA 3: MODO ESCÁNER (Reunión activa de hoy) */}
+      {/* PESTAÑA 3: ESCÁNER */}
       {view === 'scanner' && (
         <div className="animate-in fade-in">
           {!currentMeeting ? (
@@ -326,7 +326,7 @@ export function AttendanceScanner() {
                     ⏱️ Cierra a las {formatTime(currentMeeting.scheduled_end_time)}
                   </span>
                 </div>
-                <button onClick={() => { setReportId(currentMeeting.id); setReportReturnView('scanner'); setView('report'); }} 
+                <button onClick={() => { setReportId(currentMeeting.id); setReportReturnView('scanner'); setView('report'); }}
                   className="px-4 py-2 bg-white border border-green-200 text-green-800 rounded-xl text-xs font-bold hover:bg-green-50 transition-colors shadow-sm">
                   VER REPORTE
                 </button>
@@ -335,9 +335,7 @@ export function AttendanceScanner() {
               <div className="rounded-3xl overflow-hidden border-8 border-secondary aspect-square relative shadow-lg bg-black">
                 <Scanner onResult={(text) => handleScan(text)} options={{ delayBetweenScanSuccess: 2000 }} />
                 {lastScan && (
-                  <div className={`absolute inset-0 flex flex-col items-center justify-center text-white backdrop-blur-md z-10 animate-in zoom-in-95 ${
-                    lastScan.status === 'success' ? 'bg-green-600/95' : 'bg-red-600/95'
-                  }`}>
+                  <div className={`absolute inset-0 flex flex-col items-center justify-center text-white backdrop-blur-md z-10 animate-in zoom-in-95 ${lastScan.status === 'success' ? 'bg-green-600/95' : 'bg-red-600/95'}`}>
                     {lastScan.status === 'success' ? (
                       <>
                         <CheckCircle2 size={64} className="mb-3 drop-shadow-md" />
@@ -358,7 +356,7 @@ export function AttendanceScanner() {
         </div>
       )}
 
-      {/* PESTAÑA EXTRA: VISTA DEL REPORTE (Para descargar o visualizar) */}
+      {/* PESTAÑA 4: REPORTE */}
       {view === 'report' && reportId && (
         <div className="animate-in slide-in-from-right-4 duration-300">
           <div className="flex justify-between items-center mb-5 pb-4 border-b border-border">
@@ -368,6 +366,14 @@ export function AttendanceScanner() {
             </button>
           </div>
           <AttendanceReport meetingId={reportId} />
+        </div>
+      )}
+
+      {/* PESTAÑA 5: DIRECTORIO (solo admin) */}
+      {view === 'directory' && userRole === 'admin' && (
+        <div className="animate-in fade-in">
+          <h3 className="font-display text-lg text-primary mb-4">Directorio de Catequistas</h3>
+          <DirectoryManager />
         </div>
       )}
 

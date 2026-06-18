@@ -23,7 +23,7 @@ export function DirectoryManager() {
     const { error } = await supabase.from("catechists").insert({
       full_name: nuevoNombre.toUpperCase(),
       code: nuevoCodigo.toUpperCase(),
-      DNI: nuevoDni
+      dni: nuevoDni
     });
     if (error) alert("Error: " + error.message);
     else {
@@ -47,7 +47,7 @@ export function DirectoryManager() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <input required placeholder="Nombre" value={nuevoNombre} onChange={e => setNuevoNombre(e.target.value)} className="p-2 rounded-lg border text-sm" />
           <input required placeholder="Código (CAT-00)" value={nuevoCodigo} onChange={e => setNuevoCodigo(e.target.value)} className="p-2 rounded-lg border text-sm" />
-          <input required placeholder="DNI" value={nuevoDni} onChange={e => setNuevoDni(e.target.value)} maxLength={8} className="p-2 rounded-lg border text-sm" />
+          <input required placeholder="dni" value={nuevoDni} onChange={e => setNuevoDni(e.target.value)} maxLength={8} className="p-2 rounded-lg border text-sm" />
         </div>
         <button className="w-full mt-3 py-2 bg-primary text-white rounded-lg text-xs font-bold">REGISTRAR</button>
       </form>

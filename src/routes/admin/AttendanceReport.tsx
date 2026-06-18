@@ -1,7 +1,6 @@
-// src/components/admin/AttendanceReport.tsx
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { UserCheck, UserX, FileSpreadsheet, Loader2, Calendar } from "lucide-react";
+import { UserCheck, UserX, FileSpreadsheet, Loader2 } from "lucide-react";
 
 interface AttendanceReportProps {
   meetingId: string;
@@ -41,8 +40,8 @@ export function AttendanceReport({ meetingId }: AttendanceReportProps) {
         .select("id, code, full_name")
         .order("full_name", { ascending: true });
 
-      // 3. Obtener quiénes marcaron asistencia hoy
-      const { data: asistencias Hoy } = await supabase
+      // 3. Obtener quiénes marcaron asistencia hoy (¡AQUÍ ESTABA EL ERROR DEL ESPACIO!)
+      const { data: asistenciasHoy } = await supabase
         .from("attendance")
         .select("catechist_id")
         .eq("meeting_id", meetingId);

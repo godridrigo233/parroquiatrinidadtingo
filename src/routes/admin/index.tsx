@@ -6,7 +6,7 @@ import {
   Users, Image as ImageIcon, Save, AlertCircle, CheckCircle2, Heart 
 } from "lucide-react";
 import imageCompression from 'browser-image-compression';
-import { AttendanceScanner } from "@/components/admin/AttendanceScanner";
+import { AttendanceScanner } from "@/routes/admin/AttendanceScanner";
 
 export const Route = createFileRoute("/admin/")({
   head: () => ({ meta: [{ title: "Panel administrador · Parroquia" }, { name: "robots", content: "noindex" }] }),

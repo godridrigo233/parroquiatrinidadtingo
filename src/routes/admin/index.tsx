@@ -9,6 +9,7 @@ import {
 import imageCompression from 'browser-image-compression';
 import { AttendanceScanner } from "@/routes/admin/AttendanceScanner";
 import { EventsManager } from "@/routes/admin/EventsManager";
+
 export const Route = createFileRoute("/admin/")({
   head: () => ({ meta: [{ title: "Panel administrador · Parroquia" }, { name: "robots", content: "noindex" }] }),
   component: AdminDashboard,
@@ -292,12 +293,6 @@ function EditModal({ open, onClose, title, children }: { open: boolean; onClose:
 }
 
 // ────────────────────────────────────────────────
-//  SECCIÓN: EVENTOS
-// ────────────────────────────────────────────────
-type EventRow = { id: string; title: string; description: string | null; event_date: string; location: string | null };
-
-
-// ────────────────────────────────────────────────
 //  SECCIÓN: HORARIOS
 // ────────────────────────────────────────────────
 type ScheduleRow = { id: string; category: string; day_label: string; time_label: string; notes: string | null; sort_order: number };
@@ -514,7 +509,7 @@ function MinistriesManager({ showToast }: { showToast: (m: string, t?: "success"
 }
 
 // ────────────────────────────────────────────────
-//  SECCIÓN: GALERÍA
+//  SECCIÓN: GALERÍA (CON PAGINACIÓN)
 // ────────────────────────────────────────────────
 type GalleryRow = { id: string; title: string | null; category: string | null; image_url: string; sort_order: number };
 function GalleryManager({ showToast }: { showToast: (m: string, t?: "success" | "error") => void }) {
@@ -525,6 +520,20 @@ function GalleryManager({ showToast }: { showToast: (m: string, t?: "success" | 
   const [editing, setEditing] = useState<GalleryRow | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
+
+  // --- LÓGICA DE PAGINACIÓN ---
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 9;
+  const totalPages = Math.ceil(items.length / itemsPerPage);
+
+  // Asegurar que si borramos el último ítem de una página, regresemos a la anterior
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(totalPages);
+    }
+  }, [items.length, currentPage, totalPages]);
+
+  const currentItems = items.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const uploadImage = async (f: File) => {
     const compressed = await imageCompression(f, { maxSizeMB: 0.8, maxWidthOrHeight: 1200, useWebWorker: true });
@@ -575,27 +584,53 @@ function GalleryManager({ showToast }: { showToast: (m: string, t?: "success" | 
         </form>
       </Card>
 
-      <div className="lg:col-span-2 grid sm:grid-cols-3 gap-3">
-        {items.map(g => (
-          <div key={g.id} className="relative group aspect-square bg-secondary rounded-xl overflow-hidden border border-border">
-            <img src={g.image_url} alt={g.title ?? ""} className="w-full h-full object-cover" />
-            {g.title && (
-              <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 p-2">
-                <p className="text-white text-[10px] font-medium truncate">{g.title}</p>
+      <div className="lg:col-span-2 flex flex-col gap-4">
+        {/* Grilla de imágenes paginadas */}
+        <div className="grid sm:grid-cols-3 gap-3">
+          {currentItems.map(g => (
+            <div key={g.id} className="relative group aspect-square bg-secondary rounded-xl overflow-hidden border border-border">
+              <img src={g.image_url} alt={g.title ?? ""} className="w-full h-full object-cover" />
+              {g.title && (
+                <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 p-2">
+                  <p className="text-white text-[10px] font-medium truncate">{g.title}</p>
+                </div>
+              )}
+              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-2 transition-opacity">
+                <button onClick={() => { setEditing(g); setFile(null); }}
+                  className="bg-white text-primary p-2 rounded-lg shadow hover:bg-secondary transition-colors">
+                  <Pencil size={15} />
+                </button>
+                <button onClick={async () => { const ok = await remove(g.id, confirm.ask); if (ok) showToast("Foto eliminada"); }}
+                  className="bg-destructive text-white p-2 rounded-lg shadow">
+                  <Trash2 size={15} />
+                </button>
               </div>
-            )}
-            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-2 transition-opacity">
-              <button onClick={() => { setEditing(g); setFile(null); }}
-                className="bg-white text-primary p-2 rounded-lg shadow hover:bg-secondary transition-colors">
-                <Pencil size={15} />
-              </button>
-              <button onClick={async () => { const ok = await remove(g.id, confirm.ask); if (ok) showToast("Foto eliminada"); }}
-                className="bg-destructive text-white p-2 rounded-lg shadow">
-                <Trash2 size={15} />
-              </button>
             </div>
+          ))}
+        </div>
+
+        {/* Controles de Paginación */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-3 mt-2">
+            <button
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-1.5 rounded-lg bg-card border border-border text-xs font-medium hover:bg-secondary disabled:opacity-50 transition-colors"
+            >
+              Anterior
+            </button>
+            <span className="text-xs text-muted-foreground font-medium">
+              Página {currentPage} de {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1.5 rounded-lg bg-card border border-border text-xs font-medium hover:bg-secondary disabled:opacity-50 transition-colors"
+            >
+              Siguiente
+            </button>
           </div>
-        ))}
+        )}
       </div>
 
       <EditModal open={!!editing} onClose={() => { setEditing(null); setFile(null); }} title="Editar foto">

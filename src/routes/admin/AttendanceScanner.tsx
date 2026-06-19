@@ -19,7 +19,10 @@ export function AttendanceScanner() {
   const [currentMeeting, setCurrentMeeting] = useState<any>(null);
   const [meetings, setMeetings] = useState<any[]>([]);
   const [pastMeetings, setPastMeetings] = useState<any[]>([]);
-  const [lastScan, setLastScan] = useState<{ status: 'success' | 'error', msg: string } | null>(null);
+  
+  // ACTUALIZADO: Añadido subMsg para mostrar si llegó a tiempo o tarde
+  const [lastScan, setLastScan] = useState<{ status: 'success' | 'warning' | 'error', msg: string, subMsg?: string } | null>(null);
+  
   // Bandera para que el escáner no dispare handleScan en cadena mientras procesa uno
   const [processing, setProcessing] = useState(false);
 
@@ -80,6 +83,16 @@ export function AttendanceScanner() {
         return;
       }
 
+      // LÓGICA DE TARDANZA (15 minutos de tolerancia)
+      const now = new Date();
+      const [h, m] = currentMeeting.scheduled_time.split(':');
+      const meetingTime = new Date();
+      meetingTime.setHours(parseInt(h, 10), parseInt(m, 10), 0);
+      
+      const diffMins = (now.getTime() - meetingTime.getTime()) / 60000;
+      const isTardanza = diffMins > 15; // Tolerancia de 15 min
+      const finalStatus = isTardanza ? 'TARDANZA' : 'PRESENTE';
+
       // 1) Validar que el catequista exista ANTES de registrar la asistencia.
       const { data: catData, error: catError } = await supabase
         .from("catechists")
@@ -88,7 +101,6 @@ export function AttendanceScanner() {
         .maybeSingle();
 
       if (catError) {
-        // DIAGNÓSTICO TEMPORAL: mostramos el error real de Supabase en pantalla
         setLastScan({ status: 'error', msg: `Error catequista: ${catError.message}` });
         return;
       }
@@ -98,26 +110,28 @@ export function AttendanceScanner() {
         return;
       }
 
-      // 2) Registrar la asistencia ya con el nombre confirmado.
+      // 2) Registrar la asistencia con el estado calculado (Presente o Tardanza)
       const { error } = await supabase.from("attendance").insert({
         meeting_id: currentMeeting.id,
-        catechist_id: decryptedId
+        catechist_id: decryptedId,
+        status: finalStatus // NUEVO: Envía el estado a la base de datos
       });
 
       if (error) {
         if (error.code === '23505') {
           setLastScan({ status: 'error', msg: `${catData.full_name} ya está registrado` });
         } else {
-          // DIAGNÓSTICO TEMPORAL: mostramos el error real en pantalla en vez de un mensaje genérico
           setLastScan({ status: 'error', msg: `Error: ${error.message}` });
         }
       } else {
         new Audio("https://actions.google.com/sounds/v1/ui/beep_short_on.ogg").play().catch(() => {});
-        setLastScan({ status: 'success', msg: catData.full_name });
+        setLastScan({ 
+          status: isTardanza ? 'warning' : 'success', 
+          msg: catData.full_name,
+          subMsg: isTardanza ? `Tardanza (${Math.floor(diffMins)} min tarde)` : "A tiempo"
+        });
       }
     } catch (err: any) {
-      // DIAGNÓSTICO TEMPORAL: si algo lanza una excepción inesperada
-      // (red, parsing, lo que sea), la mostramos en vez de quedarnos mudos.
       setLastScan({ status: 'error', msg: `Excepción: ${err?.message ?? String(err)}` });
     } finally {
       setTimeout(() => {
@@ -364,11 +378,13 @@ export function AttendanceScanner() {
               <div className="rounded-3xl overflow-hidden border-8 border-secondary aspect-square relative shadow-lg bg-black">
                 <Scanner onResult={(text) => handleScan(text)} options={{ delayBetweenScanSuccess: 2000 }} />
                 {lastScan && (
-                  <div className={`absolute inset-0 flex flex-col items-center justify-center text-white backdrop-blur-md z-10 animate-in zoom-in-95 ${lastScan.status === 'success' ? 'bg-green-600/95' : 'bg-red-600/95'}`}>
-                    {lastScan.status === 'success' ? (
+                  <div className={`absolute inset-0 flex flex-col items-center justify-center text-white backdrop-blur-md z-10 animate-in zoom-in-95 ${
+                    lastScan.status === 'success' ? 'bg-green-600/95' : lastScan.status === 'warning' ? 'bg-yellow-500/95' : 'bg-red-600/95'
+                  }`}>
+                    {lastScan.status === 'success' || lastScan.status === 'warning' ? (
                       <>
                         <CheckCircle2 size={64} className="mb-3 drop-shadow-md" />
-                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-green-200 mb-1">¡Registrado!</p>
+                        {lastScan.subMsg && <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/80 mb-1">{lastScan.subMsg}</p>}
                         <p className="font-display text-3xl px-6 text-center leading-tight shadow-black drop-shadow-md">{lastScan.msg}</p>
                       </>
                     ) : (

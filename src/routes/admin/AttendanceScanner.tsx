@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Scanner } from "@yudiel/react-qr-scanner";
-import { CheckCircle2, XCircle, Calendar, Camera, Loader2, Plus, Trash2, ListTodo, Clock, CalendarPlus, History, FileText, UserPlus } from "lucide-react";
+import { CheckCircle2, XCircle, Calendar, Camera, Loader2, Plus, Trash2, ListTodo, Clock, CalendarPlus, History, FileText, UserPlus, AlertTriangle } from "lucide-react";
 import { AttendanceReport } from "./AttendanceReport";
 import { decryptQR } from "@/utils/crypto";
 import { DirectoryManager } from "./DirectoryManager";
@@ -70,6 +70,24 @@ export function AttendanceScanner() {
     setLoading(false);
   };
 
+  // --- NUEVA FUNCIÓN: EL TRADUCTOR DE LA CÁMARA ---
+  const handleScannerResult = (result: any) => {
+    if (!result) return;
+    
+    let scannedText = "";
+    if (typeof result === "string") {
+      scannedText = result;
+    } else if (Array.isArray(result) && result.length > 0) {
+      scannedText = result[0]?.rawValue || result[0]?.text || "";
+    } else if (typeof result === "object") {
+      scannedText = result.text || result.rawValue || "";
+    }
+
+    if (scannedText) {
+      handleScan(scannedText);
+    }
+  };
+
   const handleScan = async (scannedText: string) => {
     if (!currentMeeting) return;
     if (processing) return; 
@@ -79,7 +97,7 @@ export function AttendanceScanner() {
       const decryptedId = decryptQR(scannedText);
 
       if (!decryptedId) {
-        setLastScan({ status: 'error', msg: "QR Inválido o Falso" });
+        setLastScan({ status: 'error', msg: "QR Inválido o Falso", subMsg: "Código no reconocido por el sistema" });
         return;
       }
 
@@ -93,15 +111,13 @@ export function AttendanceScanner() {
       const isTardanza = diffMins > 15; 
       const finalStatus = isTardanza ? 'TARDANZA' : 'PRESENTE';
 
-      // CORRECCIÓN AQUÍ: Primero intentamos buscar por 'code' (Ej: CAT-01) 
-      // Si no encuentra nada, buscamos por 'id' como respaldo.
+      // BUSCAR EN BASE DE DATOS (Primero por Código, luego por ID)
       let { data: catData, error: catError } = await supabase
         .from("catechists")
         .select("id, full_name")
         .eq("code", decryptedId.trim().toUpperCase())
         .maybeSingle();
 
-      // Si no se encontró por código, intentamos por ID por si acaso el QR guardaba el UUID
       if (!catData && !catError) {
         const { data: backupData } = await supabase
           .from("catechists")
@@ -112,27 +128,27 @@ export function AttendanceScanner() {
       }
 
       if (catError) {
-        setLastScan({ status: 'error', msg: `Error base datos: ${catError.message}` });
+        setLastScan({ status: 'error', msg: `Error base datos`, subMsg: catError.message });
         return;
       }
 
       if (!catData) {
-        setLastScan({ status: 'error', msg: "Catequista no registrado en Directorio" });
+        setLastScan({ status: 'error', msg: "No registrado", subMsg: "Catequista no encontrado en el Directorio" });
         return;
       }
 
-      // 2) Registrar la asistencia usando el ID REAL de la tabla que encontramos
+      // Registrar asistencia
       const { error } = await supabase.from("attendance").insert({
         meeting_id: currentMeeting.id,
-        catechist_id: catData.id, // Usamos el ID verificado de la base de datos
+        catechist_id: catData.id, 
         status: finalStatus
       });
 
       if (error) {
         if (error.code === '23505') {
-          setLastScan({ status: 'error', msg: `${catData.full_name} ya marcado` });
+          setLastScan({ status: 'error', msg: "Ya marcado", subMsg: catData.full_name });
         } else {
-          setLastScan({ status: 'error', msg: `Error insert: ${error.message}` });
+          setLastScan({ status: 'error', msg: `Error insert`, subMsg: error.message });
         }
       } else {
         new Audio("https://actions.google.com/sounds/v1/ui/beep_short_on.ogg").play().catch(() => {});
@@ -143,7 +159,7 @@ export function AttendanceScanner() {
         });
       }
     } catch (err: any) {
-      setLastScan({ status: 'error', msg: `Excepción: ${err?.message ?? String(err)}` });
+      setLastScan({ status: 'error', msg: "Excepción", subMsg: err?.message ?? String(err) });
     } finally {
       setTimeout(() => {
         setLastScan(null);
@@ -387,7 +403,10 @@ export function AttendanceScanner() {
               </div>
 
               <div className="rounded-3xl overflow-hidden border-8 border-secondary aspect-square relative shadow-lg bg-black">
-                <Scanner onResult={(text) => handleScan(text)} options={{ delayBetweenScanSuccess: 2000 }} />
+                
+                {/* --- AQUI ESTA LA MAGIA APLICADA --- */}
+                <Scanner onResult={handleScannerResult} options={{ delayBetweenScanSuccess: 2000 }} />
+
                 {lastScan && (
                   <div className={`absolute inset-0 flex flex-col items-center justify-center text-white backdrop-blur-md z-10 animate-in zoom-in-95 ${
                     lastScan.status === 'success' ? 'bg-green-600/95' : lastScan.status === 'warning' ? 'bg-yellow-500/95' : 'bg-red-600/95'
@@ -402,6 +421,7 @@ export function AttendanceScanner() {
                       <>
                         <XCircle size={64} className="mb-2" />
                         <p className="font-display text-lg px-4 text-center break-words">{lastScan.msg}</p>
+                        {lastScan.subMsg && <p className="text-xs text-white/80 mt-2 px-6 text-center font-mono bg-black/20 py-1 rounded-md max-w-[90%] break-all">{lastScan.subMsg}</p>}
                       </>
                     )}
                   </div>

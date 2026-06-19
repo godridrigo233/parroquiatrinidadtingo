@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import imageCompression from 'browser-image-compression';
 import { AttendanceScanner } from "@/routes/admin/AttendanceScanner";
-
+import { EventsManager } from "@/routes/admin/EventsManager";
 export const Route = createFileRoute("/admin/")({
   head: () => ({ meta: [{ title: "Panel administrador · Parroquia" }, { name: "robots", content: "noindex" }] }),
   component: AdminDashboard,
@@ -295,86 +295,7 @@ function EditModal({ open, onClose, title, children }: { open: boolean; onClose:
 //  SECCIÓN: EVENTOS
 // ────────────────────────────────────────────────
 type EventRow = { id: string; title: string; description: string | null; event_date: string; location: string | null };
-function EventsManager({ showToast }: { showToast: (m: string, t?: "success" | "error") => void }) {
-  const confirm = useConfirm();
-  const { items, load, remove } = useTable<EventRow>("events", "event_date", true);
-  const empty = { title: "", description: "", event_date: "", location: "" };
-  const [form, setForm] = useState(empty);
-  const [editing, setEditing] = useState<EventRow | null>(null);
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const { error } = await supabase.from("events").insert({ ...form, event_date: new Date(form.event_date).toISOString() });
-    if (error) { showToast(error.message, "error"); return; }
-    setForm(empty); showToast("Evento creado"); load();
-  };
-
-  const saveEdit = async (e: React.FormEvent) => {
-    e.preventDefault(); if (!editing) return;
-    const { error } = await supabase.from("events").update({
-      title: editing.title, description: editing.description,
-      location: editing.location, event_date: new Date(editing.event_date).toISOString(),
-    }).eq("id", editing.id);
-    if (error) { showToast(error.message, "error"); return; }
-    setEditing(null); showToast("Evento actualizado"); load();
-  };
-
-  return (
-    <div className="grid lg:grid-cols-3 gap-6">
-      <Card>
-        <h2 className="font-display text-lg text-primary mb-1">Nuevo evento</h2>
-        <p className="text-xs text-muted-foreground mb-4">Aparecerá en la página pública.</p>
-        <form onSubmit={submit} className="space-y-3">
-          <Input required placeholder="Título del evento" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
-          <Input required type="datetime-local" value={form.event_date} onChange={e => setForm({ ...form, event_date: e.target.value })} />
-          <Input placeholder="Lugar (opcional)" value={form.location} onChange={e => setForm({ ...form, location: e.target.value })} />
-          <Textarea placeholder="Descripción breve…" rows={3} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
-          <PrimaryBtn type="submit"><Plus size={15} /> Publicar evento</PrimaryBtn>
-        </form>
-      </Card>
-
-      <div className="lg:col-span-2 space-y-3">
-        {items.length === 0 && (
-          <div className="text-center py-12 border-2 border-dashed border-border rounded-2xl text-muted-foreground text-sm">
-            Sin eventos aún — crea el primero.
-          </div>
-        )}
-        {items.map(e => (
-          <div key={e.id} className="bg-card rounded-xl p-5 border border-border flex gap-4 items-start shadow-sm hover:border-gold/40 transition-colors">
-            <div className="shrink-0 bg-blue-50 border border-blue-100 rounded-xl px-3 py-2 text-center min-w-[3.5rem]">
-              <span className="block text-[10px] uppercase font-bold text-blue-400">{new Date(e.event_date).toLocaleDateString('es-PE', { month: 'short' })}</span>
-              <span className="block text-xl font-display text-blue-700 leading-none">{new Date(e.event_date).getDate()}</span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-semibold text-sm text-primary leading-tight">{e.title}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">{new Date(e.event_date).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit', hour12: true })}{e.location ? ` · 📍 ${e.location}` : ""}</p>
-              {e.description && <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2">{e.description}</p>}
-            </div>
-            <div className="flex gap-1 shrink-0">
-              <button onClick={() => setEditing({ ...e, event_date: e.event_date.substring(0, 16) })}
-                className="p-2 text-primary hover:bg-secondary rounded-lg transition-colors"><Pencil size={15} /></button>
-              <button onClick={async () => { const ok = await remove(e.id, confirm.ask); if (ok) showToast("Eliminado"); }}
-                className="p-2 text-destructive hover:bg-destructive/10 rounded-lg transition-colors"><Trash2 size={15} /></button>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <EditModal open={!!editing} onClose={() => setEditing(null)} title="Editar evento">
-        {editing && (
-          <form onSubmit={saveEdit} className="space-y-3">
-            <Input required value={editing.title} onChange={e => setEditing({ ...editing, title: e.target.value })} />
-            <Input required type="datetime-local" value={editing.event_date} onChange={e => setEditing({ ...editing, event_date: e.target.value })} />
-            <Input placeholder="Lugar" value={editing.location ?? ""} onChange={e => setEditing({ ...editing, location: e.target.value })} />
-            <Textarea rows={3} value={editing.description ?? ""} onChange={e => setEditing({ ...editing, description: e.target.value })} />
-            <PrimaryBtn type="submit"><Save size={15} /> Guardar cambios</PrimaryBtn>
-          </form>
-        )}
-      </EditModal>
-      <confirm.Dialog />
-    </div>
-  );
-}
 
 // ────────────────────────────────────────────────
 //  SECCIÓN: HORARIOS

@@ -1,19 +1,71 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { UserCheck, UserX, FileSpreadsheet, Loader2 } from "lucide-react";
+import * as XLSX from "xlsx";
 
 interface AttendanceReportProps {
   meetingId: string;
 }
 
+interface Catechist {
+  id: string;
+  code: string;
+  full_name: string;
+}
+
 export function AttendanceReport({ meetingId }: AttendanceReportProps) {
   const [loading, setLoading] = useState(true);
   const [meetingInfo, setMeetingInfo] = useState<{ title: string; date: string } | null>(null);
-  const [presentes, setPresentes] = useState<any[]>([]);
-  const [ausentes, setAusentes] = useState<any[]>([]);
+  const [presentes, setPresentes] = useState<Catechist[]>([]);
+  const [ausentes, setAusentes] = useState<Catechist[]>([]);
+  const [justArrivedId, setJustArrivedId] = useState<string | null>(null);
+
+  // Guardamos el directorio completo en un ref para no tener que
+  // volver a pedirlo a Supabase cada vez que llega un evento realtime.
+  const directorioRef = useRef<Catechist[]>([]);
 
   useEffect(() => {
     obtenerReporte();
+
+    // --- SUSCRIPCIÓN REALTIME ---
+    // Cada vez que se inserta una asistencia para esta reunión,
+    // movemos al catequista de "ausentes" a "presentes" sin recargar nada.
+    const channel = supabase
+      .channel(`attendance-report-${meetingId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "attendance",
+          filter: `meeting_id=eq.${meetingId}`,
+        },
+        (payload) => {
+          const catechistId = payload.new.catechist_id as string;
+
+          setAusentes((prevAusentes) => {
+            const catequista = prevAusentes.find((c) => c.id === catechistId);
+            if (!catequista) return prevAusentes; // ya estaba presente o no existe
+            return prevAusentes.filter((c) => c.id !== catechistId);
+          });
+
+          setPresentes((prevPresentes) => {
+            if (prevPresentes.some((c) => c.id === catechistId)) return prevPresentes;
+            const catequista = directorioRef.current.find((c) => c.id === catechistId);
+            if (!catequista) return prevPresentes;
+            return [...prevPresentes, catequista].sort((a, b) => a.full_name.localeCompare(b.full_name));
+          });
+
+          // Resalta brevemente al que acaba de llegar en la lista de presentes
+          setJustArrivedId(catechistId);
+          setTimeout(() => setJustArrivedId(null), 2000);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
     /* eslint-disable-next-line react-hooks/exhaustive-deps */
   }, [meetingId]);
 
@@ -30,7 +82,7 @@ export function AttendanceReport({ meetingId }: AttendanceReportProps) {
       if (meeting) {
         setMeetingInfo({
           title: meeting.title,
-          date: meeting.scheduled_date
+          date: meeting.scheduled_date,
         });
       }
 
@@ -40,7 +92,7 @@ export function AttendanceReport({ meetingId }: AttendanceReportProps) {
         .select("id, code, full_name")
         .order("full_name", { ascending: true });
 
-      // 3. Obtener quiénes marcaron asistencia hoy (¡AQUÍ ESTABA EL ERROR DEL ESPACIO!)
+      // 3. Obtener quiénes marcaron asistencia hoy
       const { data: asistenciasHoy } = await supabase
         .from("attendance")
         .select("catechist_id")
@@ -50,6 +102,8 @@ export function AttendanceReport({ meetingId }: AttendanceReportProps) {
 
       // 4. Clasificar en Presentes y Ausentes
       if (todosLosCatequistas) {
+        directorioRef.current = todosLosCatequistas;
+
         const listPresentes = todosLosCatequistas.filter((c) => idsAsistieron.includes(c.id));
         const listAusentes = todosLosCatequistas.filter((c) => !idsAsistieron.includes(c.id));
 
@@ -63,35 +117,49 @@ export function AttendanceReport({ meetingId }: AttendanceReportProps) {
     }
   };
 
-  // FUNCIÓN MAESTRA: Exportar las listas directamente a un Excel/CSV limpio
-  const descargarExcelCSV = () => {
+  // FUNCIÓN MAESTRA: Exportar las listas a un archivo Excel (.xlsx) real,
+  // con dos hojas separadas: Presentes y Ausentes.
+  const descargarExcel = () => {
     if (!meetingInfo) return;
 
-    // Encabezados del documento
-    let contenidoCSV = "Código,Nombre Completo,Estado,Fecha,Actividad\n";
+    const filaPresentes = presentes.map((c) => ({
+      Código: c.code,
+      "Nombre Completo": c.full_name,
+      Estado: "PRESENTE",
+      Fecha: meetingInfo.date,
+      Actividad: meetingInfo.title,
+    }));
 
-    // Agregar filas de los Presentes
-    presentes.forEach((c) => {
-      contenidoCSV += `"${c.code}","${c.full_name}","PRESENTE","${meetingInfo.date}","${meetingInfo.title}"\n`;
-    });
+    const filaAusentes = ausentes.map((c) => ({
+      Código: c.code,
+      "Nombre Completo": c.full_name,
+      Estado: "AUSENTE",
+      Fecha: meetingInfo.date,
+      Actividad: meetingInfo.title,
+    }));
 
-    // Agregar filas de los Ausentes
-    ausentes.forEach((c) => {
-      contenidoCSV += `"${c.code}","${c.full_name}","AUSENTE","${meetingInfo.date}","${meetingInfo.title}"\n`;
-    });
+    const wb = XLSX.utils.book_new();
 
-    // Añadimos el BOM (\uFEFF) para forzar a Excel a leerlo en UTF-8 con tildes correctas
-    const blob = new Blob(["\uFEFF" + contenidoCSV], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    
-    // Crear un link temporal de descarga
-    const link = document.createElement("a");
-    link.href = url;
-    // Nombre dinámico del archivo: ej. "Reporte_Asistencia_2026-06-20.csv"
-    link.setAttribute("download", `Reporte_Asistencia_${meetingInfo.date}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const wsResumen = XLSX.utils.aoa_to_sheet([
+      ["Reporte de Asistencia"],
+      ["Actividad", meetingInfo.title],
+      ["Fecha", meetingInfo.date],
+      ["Presentes", presentes.length],
+      ["Ausentes", ausentes.length],
+      ["Total", presentes.length + ausentes.length],
+    ]);
+    wsResumen["!cols"] = [{ wch: 16 }, { wch: 30 }];
+    XLSX.utils.book_append_sheet(wb, wsResumen, "Resumen");
+
+    const wsPresentes = XLSX.utils.json_to_sheet(filaPresentes);
+    wsPresentes["!cols"] = [{ wch: 10 }, { wch: 32 }, { wch: 12 }, { wch: 12 }, { wch: 28 }];
+    XLSX.utils.book_append_sheet(wb, wsPresentes, "Presentes");
+
+    const wsAusentes = XLSX.utils.json_to_sheet(filaAusentes);
+    wsAusentes["!cols"] = [{ wch: 10 }, { wch: 32 }, { wch: 12 }, { wch: 12 }, { wch: 28 }];
+    XLSX.utils.book_append_sheet(wb, wsAusentes, "Ausentes");
+
+    XLSX.writeFile(wb, `Reporte_Asistencia_${meetingInfo.date}.xlsx`);
   };
 
   if (loading) {
@@ -108,7 +176,7 @@ export function AttendanceReport({ meetingId }: AttendanceReportProps) {
 
   return (
     <div className="space-y-5 animate-in fade-in duration-200">
-      
+
       {/* TARJETA DE ESTADÍSTICAS RÁPIDAS */}
       <div className="grid grid-cols-3 gap-3 bg-secondary/30 p-4 rounded-2xl border border-border/60 text-center">
         <div>
@@ -126,8 +194,8 @@ export function AttendanceReport({ meetingId }: AttendanceReportProps) {
       </div>
 
       {/* BOTÓN DE DESCARGA AUTOMÁTICA */}
-      <button 
-        onClick={descargarExcelCSV}
+      <button
+        onClick={descargarExcel}
         className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-sm flex items-center justify-center gap-2 shadow-sm shadow-emerald-700/10 transition-colors"
       >
         <FileSpreadsheet size={18} /> Descargar Reporte (Excel)
@@ -135,7 +203,7 @@ export function AttendanceReport({ meetingId }: AttendanceReportProps) {
 
       {/* VISTA DE LISTAS EN PANTALLA */}
       <div className="space-y-4 max-h-[300px] overflow-y-auto pr-1">
-        
+
         {/* SECCIÓN PRESENTES */}
         {presentes.length > 0 && (
           <div>
@@ -144,9 +212,16 @@ export function AttendanceReport({ meetingId }: AttendanceReportProps) {
             </h4>
             <div className="bg-card border border-border rounded-xl divide-y divide-border overflow-hidden">
               {presentes.map((c) => (
-                <div key={c.id} className="p-3 text-sm flex justify-between items-center bg-green-50/20">
+                <div
+                  key={c.id}
+                  className={`p-3 text-sm flex justify-between items-center transition-colors duration-700 ${
+                    justArrivedId === c.id ? "bg-green-200/60" : "bg-green-50/20"
+                  }`}
+                >
                   <span className="font-medium text-primary uppercase">{c.full_name}</span>
-                  <span className="text-[11px] font-mono bg-green-100 text-green-800 px-2 py-0.5 rounded-md font-bold">{c.code}</span>
+                  <span className="text-[11px] font-mono bg-green-100 text-green-800 px-2 py-0.5 rounded-md font-bold">
+                    {c.code}
+                  </span>
                 </div>
               ))}
             </div>
@@ -163,14 +238,15 @@ export function AttendanceReport({ meetingId }: AttendanceReportProps) {
               {ausentes.map((c) => (
                 <div key={c.id} className="p-3 text-sm flex justify-between items-center bg-red-50/10">
                   <span className="text-muted-foreground uppercase">{c.full_name}</span>
-                  <span className="text-[11px] font-mono bg-secondary text-muted-foreground px-2 py-0.5 rounded-md font-bold">{c.code}</span>
+                  <span className="text-[11px] font-mono bg-secondary text-muted-foreground px-2 py-0.5 rounded-md font-bold">
+                    {c.code}
+                  </span>
                 </div>
               ))}
             </div>
           </div>
         )}
       </div>
-
     </div>
   );
 }

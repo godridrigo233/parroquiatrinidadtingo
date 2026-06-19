@@ -126,7 +126,7 @@ export function AttendanceReport({ meetingId }: AttendanceReportProps) {
 
   // FUNCIÓN PARA JUSTIFICAR A UN AUSENTE
   const justificarFalta = async (catechistId: string, nombre: string) => {
-    const motivo = window.prompt(`Ingresa el motivo de justificación para ${nombre} (Ej: Examen UCSM, Salud, etc.):`);
+    const motivo = window.prompt(`Ingresa el motivo de justificación para ${nombre} :`);
     
     if (motivo && motivo.trim() !== "") {
       setLoading(true);

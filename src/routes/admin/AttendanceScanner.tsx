@@ -72,7 +72,7 @@ export function AttendanceScanner() {
 
   const handleScan = async (scannedText: string) => {
     if (!currentMeeting) return;
-    if (processing) return; // evita doble disparo mientras ya estamos procesando uno
+    if (processing) return; 
     setProcessing(true);
 
     try {
@@ -90,45 +90,56 @@ export function AttendanceScanner() {
       meetingTime.setHours(parseInt(h, 10), parseInt(m, 10), 0);
       
       const diffMins = (now.getTime() - meetingTime.getTime()) / 60000;
-      const isTardanza = diffMins > 15; // Tolerancia de 15 min
+      const isTardanza = diffMins > 15; 
       const finalStatus = isTardanza ? 'TARDANZA' : 'PRESENTE';
 
-      // 1) Validar que el catequista exista ANTES de registrar la asistencia.
-      const { data: catData, error: catError } = await supabase
+      // CORRECCIÓN AQUÍ: Primero intentamos buscar por 'code' (Ej: CAT-01) 
+      // Si no encuentra nada, buscamos por 'id' como respaldo.
+      let { data: catData, error: catError } = await supabase
         .from("catechists")
-        .select("full_name")
-        .eq("id", decryptedId)
+        .select("id, full_name")
+        .eq("code", decryptedId.trim().toUpperCase())
         .maybeSingle();
 
+      // Si no se encontró por código, intentamos por ID por si acaso el QR guardaba el UUID
+      if (!catData && !catError) {
+        const { data: backupData } = await supabase
+          .from("catechists")
+          .select("id, full_name")
+          .eq("id", decryptedId)
+          .maybeSingle();
+        catData = backupData;
+      }
+
       if (catError) {
-        setLastScan({ status: 'error', msg: `Error catequista: ${catError.message}` });
+        setLastScan({ status: 'error', msg: `Error base datos: ${catError.message}` });
         return;
       }
 
       if (!catData) {
-        setLastScan({ status: 'error', msg: "Catequista no encontrado" });
+        setLastScan({ status: 'error', msg: "Catequista no registrado en Directorio" });
         return;
       }
 
-      // 2) Registrar la asistencia con el estado calculado (Presente o Tardanza)
+      // 2) Registrar la asistencia usando el ID REAL de la tabla que encontramos
       const { error } = await supabase.from("attendance").insert({
         meeting_id: currentMeeting.id,
-        catechist_id: decryptedId,
-        status: finalStatus // NUEVO: Envía el estado a la base de datos
+        catechist_id: catData.id, // Usamos el ID verificado de la base de datos
+        status: finalStatus
       });
 
       if (error) {
         if (error.code === '23505') {
-          setLastScan({ status: 'error', msg: `${catData.full_name} ya está registrado` });
+          setLastScan({ status: 'error', msg: `${catData.full_name} ya marcado` });
         } else {
-          setLastScan({ status: 'error', msg: `Error: ${error.message}` });
+          setLastScan({ status: 'error', msg: `Error insert: ${error.message}` });
         }
       } else {
         new Audio("https://actions.google.com/sounds/v1/ui/beep_short_on.ogg").play().catch(() => {});
         setLastScan({ 
           status: isTardanza ? 'warning' : 'success', 
           msg: catData.full_name,
-          subMsg: isTardanza ? `Tardanza (${Math.floor(diffMins)} min tarde)` : "A tiempo"
+          subMsg: isTardanza ? `Tardanza (${Math.floor(diffMins)} min)` : "A tiempo"
         });
       }
     } catch (err: any) {

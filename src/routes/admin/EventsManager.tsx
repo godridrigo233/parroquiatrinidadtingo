@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Plus, Trash2, Pencil, Save } from "lucide-react";
 import { toast } from "sonner";
-import { logActivity } from "@/utils/logActivity";
+import { logActivity } from "@/utils/Logactivity";
 
 // ────────────────────────────────────────────────
 //  useTable — ahora registra el delete en activity_log

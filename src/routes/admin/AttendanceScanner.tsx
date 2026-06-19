@@ -76,23 +76,33 @@ export function AttendanceScanner() {
       return;
     }
 
-    const { data: catData } = await supabase
+    // 1) Validar que el catequista exista ANTES de registrar la asistencia.
+    //    Así nunca insertamos un registro "huérfano" y siempre tenemos
+    //    el nombre real disponible para mostrarlo en pantalla.
+    const { data: catData, error: catError } = await supabase
       .from("catechists")
       .select("full_name")
       .eq("id", decryptedId)
       .maybeSingle();
 
+    if (catError || !catData) {
+      setLastScan({ status: 'error', msg: "Catequista no encontrado" });
+      setTimeout(() => setLastScan(null), 2500);
+      return;
+    }
+
+    // 2) Registrar la asistencia ya con el nombre confirmado.
     const { error } = await supabase.from("attendance").insert({
       meeting_id: currentMeeting.id,
       catechist_id: decryptedId
     });
 
     if (error) {
-      if (error.code === '23505') setLastScan({ status: 'error', msg: "¡Ya registrado hoy!" });
+      if (error.code === '23505') setLastScan({ status: 'error', msg: `${catData.full_name} ya está registrado` });
       else setLastScan({ status: 'error', msg: "Error al registrar." });
     } else {
       new Audio("https://actions.google.com/sounds/v1/ui/beep_short_on.ogg").play().catch(() => {});
-      setLastScan({ status: 'success', msg: catData?.full_name || "Asistencia Registrada" });
+      setLastScan({ status: 'success', msg: catData.full_name });
     }
 
     setTimeout(() => setLastScan(null), 2500);

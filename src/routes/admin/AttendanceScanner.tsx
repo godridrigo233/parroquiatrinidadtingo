@@ -20,6 +20,8 @@ export function AttendanceScanner() {
   const [meetings, setMeetings] = useState<any[]>([]);
   const [pastMeetings, setPastMeetings] = useState<any[]>([]);
   const [lastScan, setLastScan] = useState<{ status: 'success' | 'error', msg: string } | null>(null);
+  // Bandera para que el escáner no dispare handleScan en cadena mientras procesa uno
+  const [processing, setProcessing] = useState(false);
 
   // ESTADOS DEL FORMULARIO
   const [newTitle, setNewTitle] = useState("");
@@ -67,45 +69,62 @@ export function AttendanceScanner() {
 
   const handleScan = async (scannedText: string) => {
     if (!currentMeeting) return;
+    if (processing) return; // evita doble disparo mientras ya estamos procesando uno
+    setProcessing(true);
 
-    const decryptedId = decryptQR(scannedText);
+    try {
+      const decryptedId = decryptQR(scannedText);
 
-    if (!decryptedId) {
-      setLastScan({ status: 'error', msg: "QR Inválido o Falso" });
-      setTimeout(() => setLastScan(null), 2500);
-      return;
+      if (!decryptedId) {
+        setLastScan({ status: 'error', msg: "QR Inválido o Falso" });
+        return;
+      }
+
+      // 1) Validar que el catequista exista ANTES de registrar la asistencia.
+      const { data: catData, error: catError } = await supabase
+        .from("catechists")
+        .select("full_name")
+        .eq("id", decryptedId)
+        .maybeSingle();
+
+      if (catError) {
+        // DIAGNÓSTICO TEMPORAL: mostramos el error real de Supabase en pantalla
+        setLastScan({ status: 'error', msg: `Error catequista: ${catError.message}` });
+        return;
+      }
+
+      if (!catData) {
+        setLastScan({ status: 'error', msg: "Catequista no encontrado" });
+        return;
+      }
+
+      // 2) Registrar la asistencia ya con el nombre confirmado.
+      const { error } = await supabase.from("attendance").insert({
+        meeting_id: currentMeeting.id,
+        catechist_id: decryptedId
+      });
+
+      if (error) {
+        if (error.code === '23505') {
+          setLastScan({ status: 'error', msg: `${catData.full_name} ya está registrado` });
+        } else {
+          // DIAGNÓSTICO TEMPORAL: mostramos el error real en pantalla en vez de un mensaje genérico
+          setLastScan({ status: 'error', msg: `Error: ${error.message}` });
+        }
+      } else {
+        new Audio("https://actions.google.com/sounds/v1/ui/beep_short_on.ogg").play().catch(() => {});
+        setLastScan({ status: 'success', msg: catData.full_name });
+      }
+    } catch (err: any) {
+      // DIAGNÓSTICO TEMPORAL: si algo lanza una excepción inesperada
+      // (red, parsing, lo que sea), la mostramos en vez de quedarnos mudos.
+      setLastScan({ status: 'error', msg: `Excepción: ${err?.message ?? String(err)}` });
+    } finally {
+      setTimeout(() => {
+        setLastScan(null);
+        setProcessing(false);
+      }, 3500);
     }
-
-    // 1) Validar que el catequista exista ANTES de registrar la asistencia.
-    //    Así nunca insertamos un registro "huérfano" y siempre tenemos
-    //    el nombre real disponible para mostrarlo en pantalla.
-    const { data: catData, error: catError } = await supabase
-      .from("catechists")
-      .select("full_name")
-      .eq("id", decryptedId)
-      .maybeSingle();
-
-    if (catError || !catData) {
-      setLastScan({ status: 'error', msg: "Catequista no encontrado" });
-      setTimeout(() => setLastScan(null), 2500);
-      return;
-    }
-
-    // 2) Registrar la asistencia ya con el nombre confirmado.
-    const { error } = await supabase.from("attendance").insert({
-      meeting_id: currentMeeting.id,
-      catechist_id: decryptedId
-    });
-
-    if (error) {
-      if (error.code === '23505') setLastScan({ status: 'error', msg: `${catData.full_name} ya está registrado` });
-      else setLastScan({ status: 'error', msg: "Error al registrar." });
-    } else {
-      new Audio("https://actions.google.com/sounds/v1/ui/beep_short_on.ogg").play().catch(() => {});
-      setLastScan({ status: 'success', msg: catData.full_name });
-    }
-
-    setTimeout(() => setLastScan(null), 2500);
   };
 
   const programarReunion = async (e: React.FormEvent) => {
@@ -355,7 +374,7 @@ export function AttendanceScanner() {
                     ) : (
                       <>
                         <XCircle size={64} className="mb-2" />
-                        <p className="font-display text-xl px-4 text-center">{lastScan.msg}</p>
+                        <p className="font-display text-lg px-4 text-center break-words">{lastScan.msg}</p>
                       </>
                     )}
                   </div>

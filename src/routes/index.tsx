@@ -94,7 +94,7 @@ const galleryImgs = [
 const sacerdotes = [
   {
     img: "/assets/padre-tommy.jpg",
-    name: "Padre Tommy Varghese, CMI",
+    name: "Rvdo P. Tommy Varghese, CMI",
     role: "Párroco",
     desc: "Pastor de la comunidad, dedicado a la celebración de los sacramentos, la formación de los fieles y el acompañamiento espiritual de la familia parroquial.",
   },

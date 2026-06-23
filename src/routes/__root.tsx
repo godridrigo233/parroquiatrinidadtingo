@@ -154,15 +154,11 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   
-  // Ponemos un log para saber si al menos React entró aquí
-  console.log("RootComponent renderizado correctamente");
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Añadimos un borde temporal para ver si la caja existe */}
-      <div className="min-h-screen border-4 border-red-500">
-        <Outlet />
-      </div>
+    <Outlet />
+      
     </QueryClientProvider>
   );
 }

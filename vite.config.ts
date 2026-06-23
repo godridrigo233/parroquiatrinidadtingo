@@ -9,6 +9,14 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate', // Se actualiza sola cuando haces cambios
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'assets/logo.png'],
+      // 1. Agregar workbox para manejar el caché de forma más inteligente
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
+      },
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'assets/logo.png'],
       manifest: {
         name: 'Parroquia Santísima Trinidad',
         short_name: 'P. Trinidad',
@@ -32,6 +40,9 @@ export default defineConfig({
       }
     })
   ],
+  ssr: {
+  noExternal: ['@tanstack/react-router'], // Asegura que el router se procese correctamente
+},
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

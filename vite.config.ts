@@ -1,17 +1,40 @@
-// @lovable.dev/vite-tanstack-config already includes the following — do NOT add them manually
-// or the app will break with duplicate plugins:
-//   - tanstackStart, viteReact, tailwindcss, tsConfigPaths, cloudflare (build-only),
-//     componentTagger (dev-only), VITE_* env injection, @ path alias, React/TanStack dedupe,
-//     error logger plugins, and sandbox detection (port/host/strictPort).
-// You can pass additional config via defineConfig({ vite: { ... } }) if needed.
-import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { VitePWA } from 'vite-plugin-pwa';
+import path from "path";
 
-// Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
-// @cloudflare/vite-plugin builds from this — wrangler.jsonc main alone is insufficient.
 export default defineConfig({
-  tanstackStart: {
-    server: { entry: "server" },
+  plugins: [
+    react(),
+    VitePWA({
+      registerType: 'autoUpdate', // Se actualiza sola cuando haces cambios
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'assets/logo.png'],
+      manifest: {
+        name: 'Parroquia Santísima Trinidad',
+        short_name: 'P. Trinidad',
+        description: 'Parroquia Santísima Trinidad de Tingo, Arequipa',
+        theme_color: '#f5f3ef', // El color principal de tu página (fondo)
+        background_color: '#f5f3ef',
+        display: 'standalone', // Esto oculta la barra del navegador de Chrome/Safari
+        icons: [
+          {
+            src: 'pwa-192x192.png', // Tendrás que crear estas imágenes
+            sizes: '192x192',
+            type: 'image/png'
+          },
+          {
+            src: 'pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any maskable'
+          }
+        ]
+      }
+    })
+  ],
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
   },
-  // AÑADE ESTA LÍNEA 👇
-  nitro: true 
 });

@@ -13,6 +13,8 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { DonacionesSection, DonationRow } from "@/components/site/DonacionesSection";
 import { AddToCalendar } from "@/components/site/AddToCalendar";
+import { SkeletonCard } from "@/components/ui/SkeletonCard";
+import { Preloader } from "@/components/ui/Preloader";
 import * as Sentry from "@sentry/react";
 // NOTA: Se eliminaron TODAS las importaciones de imágenes desde '@/assets/...'
 
@@ -118,6 +120,9 @@ function Home() {
   const [lightbox, setLightbox] = useState<{ url: string; title?: string | null } | null>(null);
   const [scrollY, setScrollY] = useState(0);
   const [donations, setDonations] = useState<DonationRow[]>([]);
+  
+  // 1. NUEVO ESTADO: Control de carga
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const onScroll = () => setScrollY(window.scrollY);
@@ -127,6 +132,9 @@ function Home() {
 
   useEffect(() => {
     (async () => {
+      // 2. ACTIVAR CARGA ANTES DE PEDIR LOS DATOS
+      setIsLoading(true);
+      
       const [s, m, e, g, d] = await Promise.all([
         supabase.from("schedules").select("*").order("sort_order"),
         supabase.from("ministries").select("*").order("created_at"),
@@ -134,11 +142,15 @@ function Home() {
         supabase.from("gallery_images").select("*").order("sort_order"),
         supabase.from("donations_info" as any).select("*").order("sort_order"),
       ]);
+      
       if (s.data) setSchedules(s.data as Schedule[]);
       if (m.data) setMinistries(m.data as Ministry[]);
       if (e.data) setEvents(e.data as Eventt[]);
       if (g.data) setGallery(g.data as GalleryImage[]);
       if (d.data) setDonations(d.data as DonationRow[]);
+      
+      // 3. APAGAR CARGA CUANDO LOS DATOS LLEGUEN
+      setIsLoading(false);
     })();
   }, []);
 
@@ -149,16 +161,15 @@ function Home() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      {isLoading && <Preloader />}
       <Navbar />
 
       {/* HERO */}
       <section id="inicio" className="relative h-[100svh] min-h-[640px] w-full overflow-hidden">
-        {/* Imagen con ken-burns + parallax */}
         <div
           className="absolute inset-0 will-change-transform"
           style={{ transform: `translate3d(0, ${scrollY * 0.35}px, 0)` }}
         >
-          {/* Ruta directa para heroImg */}
           <img
             src="/assets/hero-church.jpg"
             alt="Parroquia Santísima Trinidad"
@@ -166,12 +177,10 @@ function Home() {
           />
         </div>
 
-        {/* Overlay multicapa: profundidad + viñeta + glow dorado sutil */}
         <div className="absolute inset-0 bg-gradient-to-b from-primary/70 via-primary/40 to-primary/85" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,oklch(0.18_0.03_265/0.55)_75%,oklch(0.14_0.03_265/0.9)_100%)]" />
         <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-black/40 to-transparent" />
 
-        {/* Contenido */}
         <div
           className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6 max-w-5xl mx-auto"
           style={{ transform: `translate3d(0, ${scrollY * -0.15}px, 0)`, opacity: Math.max(0, 1 - scrollY / 600) }}
@@ -207,7 +216,6 @@ function Home() {
           </div>
         </div>
 
-        {/* Scroll cue refinado */}
         <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/60">
           <span className="text-[10px] tracking-[0.35em] uppercase">Desliza</span>
           <span className="block h-10 w-px bg-gradient-to-b from-gold/80 to-transparent animate-pulse" />
@@ -219,7 +227,6 @@ function Home() {
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
           <Reveal>
             <div className="relative">
-              {/* Ruta directa para interiorImg */}
               <img src="/assets/church-interior.jpg" alt="Interior de la parroquia" loading="lazy" className="rounded-2xl shadow-elegant w-full aspect-[4/5] object-cover" />
               <div className="absolute -bottom-8 -right-8 hidden md:block bg-card rounded-2xl shadow-card p-6 max-w-[220px] border border-border">
                 <p className="font-display text-3xl text-gold">+50</p>
@@ -296,7 +303,6 @@ function Home() {
           </Reveal>
 
           <div className="mt-16 grid md:grid-cols-2 gap-8">
-            {/* Rutas directas para devociones actualizadas aquí */}
             {[
               { img: "/assets/virgen-dolorosa.jpg", title: "Nuestra Señora de los Dolores", text: "Madre fiel que acompaña al pie de la cruz. La parroquia mantiene viva esta devoción mariana con el rezo del rosario y celebraciones especiales." },
               { img: "/assets/trinidad.jpg", title: "Santísima Trinidad", text: "Misterio central de nuestra fe: Padre, Hijo y Espíritu Santo. Bajo su nombre celebramos cada eucaristía y vivimos como comunidad." },
@@ -326,41 +332,50 @@ function Home() {
           </Reveal>
 
           <div className="mt-16 grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {ministries.map((m, i) => {
-              const Icon = ministryIcons[i % ministryIcons.length];
-              const ministryImage = m.image_url || ministryPhotos[i];
-              return (
-                <Reveal key={m.id} delay={i * 80}>
-                  <article className="group h-full flex flex-col bg-card rounded-2xl border border-border shadow-card hover:shadow-elegant hover:-translate-y-1 transition-all overflow-hidden">
-                    <div className="relative aspect-[16/10] overflow-hidden bg-secondary">
-                      {ministryImage && (
-                        <img
-                          src={ministryImage}
-                          alt={m.name}
-                          loading="lazy"
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                        />
-                      )}
-                      <span className="absolute top-3 left-3 h-9 w-9 rounded-lg bg-card/95 backdrop-blur flex items-center justify-center shadow-card">
-                        <Icon size={16} className="text-gold" />
-                      </span>
-                    </div>
-                    <div className="p-6 flex-1 flex flex-col">
-                      <h3 className="font-display text-2xl text-primary">{m.name}</h3>
-                      {m.description && (
-                        <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{m.description}</p>
-                      )}
-                      {(m.leader || m.schedule) && (
-                        <div className="mt-5 pt-5 border-t border-border space-y-1.5 text-sm">
-                          {m.leader && <p className="text-foreground"><span className="text-muted-foreground">Encargado:</span> {m.leader}</p>}
-                          {m.schedule && <p className="text-foreground flex items-center gap-1.5"><Clock size={14} className="text-gold" /> {m.schedule}</p>}
-                        </div>
-                      )}
-                    </div>
-                  </article>
+            {/* 4. APLICAMOS LOS SKELETONS A MINISTERIOS */}
+            {isLoading ? (
+              Array.from({ length: 3 }).map((_, i) => (
+                <Reveal key={`skel-min-${i}`} delay={i * 80}>
+                  <SkeletonCard />
                 </Reveal>
-              );
-            })}
+              ))
+            ) : (
+              ministries.map((m, i) => {
+                const Icon = ministryIcons[i % ministryIcons.length];
+                const ministryImage = m.image_url || ministryPhotos[i];
+                return (
+                  <Reveal key={m.id} delay={i * 80}>
+                    <article className="group h-full flex flex-col bg-card rounded-2xl border border-border shadow-card hover:shadow-elegant hover:-translate-y-1 transition-all overflow-hidden">
+                      <div className="relative aspect-[16/10] overflow-hidden bg-secondary">
+                        {ministryImage && (
+                          <img
+                            src={ministryImage}
+                            alt={m.name}
+                            loading="lazy"
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                          />
+                        )}
+                        <span className="absolute top-3 left-3 h-9 w-9 rounded-lg bg-card/95 backdrop-blur flex items-center justify-center shadow-card">
+                          <Icon size={16} className="text-gold" />
+                        </span>
+                      </div>
+                      <div className="p-6 flex-1 flex flex-col">
+                        <h3 className="font-display text-2xl text-primary">{m.name}</h3>
+                        {m.description && (
+                          <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{m.description}</p>
+                        )}
+                        {(m.leader || m.schedule) && (
+                          <div className="mt-5 pt-5 border-t border-border space-y-1.5 text-sm">
+                            {m.leader && <p className="text-foreground"><span className="text-muted-foreground">Encargado:</span> {m.leader}</p>}
+                            {m.schedule && <p className="text-foreground flex items-center gap-1.5"><Clock size={14} className="text-gold" /> {m.schedule}</p>}
+                          </div>
+                        )}
+                      </div>
+                    </article>
+                  </Reveal>
+                );
+              })
+            )}
           </div>
         </div>
       </section>
@@ -375,37 +390,54 @@ function Home() {
           </Reveal>
 
           <div className="mt-16 flex flex-wrap justify-center gap-6">
-            {Object.entries(groupedSchedules)
-              .filter(([cat]) => cat !== "catequesis")
-              .map(([cat, items], i) => {
-              const meta = categoryMeta[cat] ?? { label: cat, icon: Church };
-              const Icon = meta.icon;
-              return (
-                <Reveal key={cat} delay={i * 80} className="w-full sm:w-[calc(50%-12px)] lg:w-[calc(25%-18px)]">
-                  <div className="h-full bg-card rounded-2xl p-7 border border-border shadow-card hover:shadow-elegant transition-shadow group">
-                    <div className="h-14 w-14 rounded-xl bg-gradient-gold flex items-center justify-center text-primary-foreground shadow-card group-hover:scale-110 transition-transform">
-                      <Icon size={26} />
+            {/* 5. SKELETON PERSONALIZADO PARA HORARIOS */}
+            {isLoading ? (
+              Array.from({ length: 4 }).map((_, i) => (
+                <Reveal key={`skel-horario-${i}`} delay={i * 80} className="w-full sm:w-[calc(50%-12px)] lg:w-[calc(25%-18px)]">
+                  <div className="h-[280px] bg-card rounded-2xl p-7 border border-border shadow-sm flex flex-col animate-pulse">
+                    <div className="h-14 w-14 rounded-xl bg-gray-200 mb-5"></div>
+                    <div className="h-6 bg-gray-200 rounded-md w-3/4 mb-6"></div>
+                    <div className="space-y-4">
+                      <div className="h-4 bg-gray-100 rounded w-full"></div>
+                      <div className="h-4 bg-gray-100 rounded w-5/6"></div>
+                      <div className="h-4 bg-gray-100 rounded w-4/6"></div>
                     </div>
-                    <h3 className="mt-5 font-display text-2xl text-primary">{meta.label}</h3>
-                    <ul className="mt-4 space-y-3">
-                      {items.map((it) => (
-                        <li key={it.id} className="border-l-2 border-gold pl-3">
-                          <p className="text-sm font-semibold text-foreground">{it.day_label}</p>
-                          <p className="text-sm text-muted-foreground">{it.time_label}</p>
-                          {it.notes && <p className="text-xs text-muted-foreground/80 italic mt-0.5">{it.notes}</p>}
-                        </li>
-                      ))}
-                    </ul>
                   </div>
                 </Reveal>
-              );
-            })}
+              ))
+            ) : (
+              Object.entries(groupedSchedules)
+                .filter(([cat]) => cat !== "catequesis")
+                .map(([cat, items], i) => {
+                const meta = categoryMeta[cat] ?? { label: cat, icon: Church };
+                const Icon = meta.icon;
+                return (
+                  <Reveal key={cat} delay={i * 80} className="w-full sm:w-[calc(50%-12px)] lg:w-[calc(25%-18px)]">
+                    <div className="h-full bg-card rounded-2xl p-7 border border-border shadow-card hover:shadow-elegant transition-shadow group">
+                      <div className="h-14 w-14 rounded-xl bg-gradient-gold flex items-center justify-center text-primary-foreground shadow-card group-hover:scale-110 transition-transform">
+                        <Icon size={26} />
+                      </div>
+                      <h3 className="mt-5 font-display text-2xl text-primary">{meta.label}</h3>
+                      <ul className="mt-4 space-y-3">
+                        {items.map((it) => (
+                          <li key={it.id} className="border-l-2 border-gold pl-3">
+                            <p className="text-sm font-semibold text-foreground">{it.day_label}</p>
+                            <p className="text-sm text-muted-foreground">{it.time_label}</p>
+                            {it.notes && <p className="text-xs text-muted-foreground/80 italic mt-0.5">{it.notes}</p>}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </Reveal>
+                );
+              })
+            )}
           </div>
 
           <Reveal className="mt-14 text-center">
             <Link
               to="/sacramentos"
-                className="inline-flex items-center gap-3 px-9 py-4 text-lg rounded-full bg-gradient-gold text-primary-foreground font-semibold shadow-card hover:shadow-elegant transition-shadow"            >
+              className="inline-flex items-center gap-3 px-9 py-4 text-lg rounded-full bg-gradient-gold text-primary-foreground font-semibold shadow-card hover:shadow-elegant transition-shadow"            >
               Ver requisitos de sacramentos <ArrowRight size={18} />
             </Link>
             <p className="mt-3 text-base text-muted-foreground">
@@ -487,6 +519,7 @@ function Home() {
         </Dialog>
       </section>  
       <DonacionesSection items={donations} />
+      
       {/* NOTICIAS */}
       <section id="noticias" className="py-24 px-5 lg:px-8">
         <div className="max-w-7xl mx-auto">
@@ -501,7 +534,23 @@ function Home() {
             </a>
           </Reveal>
 
-          {events.length > 0 && (
+          {/* 6. SKELETON PERSONALIZADO PARA AVISOS CON EL FONDO AZUL */}
+          {isLoading ? (
+            <Reveal className="mt-10">
+              <div className="rounded-2xl bg-gradient-to-br from-primary to-primary/80 p-8 shadow-elegant w-full animate-pulse">
+                <div className="h-4 bg-white/20 rounded w-48 mb-8"></div>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="border-l-2 border-gold/30 pl-4 space-y-3">
+                      <div className="h-6 bg-white/20 rounded w-3/4"></div>
+                      <div className="h-4 bg-white/10 rounded w-1/2"></div>
+                      <div className="h-4 bg-white/10 rounded w-5/6"></div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </Reveal>
+          ) : events.length > 0 && (
           <Reveal className="mt-10">
             <div className="rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground p-8 shadow-elegant">
               <p className="uppercase tracking-[0.2em] text-xs text-gold font-semibold">Próximos eventos</p>
@@ -531,7 +580,7 @@ function Home() {
               </div>
             </div>
           </Reveal>
-        )}
+          )}
 
           <Reveal className="mt-12">
             <FacebookFeed />

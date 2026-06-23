@@ -3,7 +3,7 @@
   "short_name": "P. Trinidad",
   "description": "Parroquia Santísima Trinidad de Tingo, Arequipa",
   "theme_color": "#140e72",
-  "background_color": "#f5f3ef",
+  "background_color": "#140e72",
   "display": "standalone",
   "start_url": "/",
   "icons": [

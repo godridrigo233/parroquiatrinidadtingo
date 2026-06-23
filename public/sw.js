@@ -1,14 +1,23 @@
 self.addEventListener('install', (e) => {
-  self.skipWaiting();
+  self.skipWaiting(); // Se instala inmediatamente
 });
 
 self.addEventListener('activate', (e) => {
-  e.waitUntil(self.clients.claim());
+  // Cuando se activa, busca TODAS las cachés antiguas y las elimina sin piedad
+  e.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          console.log('Borrando caché antigua:', cacheName);
+          return caches.delete(cacheName);
+        })
+      );
+    }).then(() => self.clients.claim())
+  );
 });
 
-// Le respondemos "OK" a Chrome para que certifique que el SW está vivo
 self.addEventListener('fetch', (e) => {
-  e.respondWith(
-    fetch(e.request).catch(() => new Response("OK"))
-  );
+  // Simplemente dejamos que la web funcione normal, pidiendo todo a Vercel.
+  // Solo interceptamos la petición porque Chrome exige que haya un evento 'fetch' para habilitar la PWA.
+  e.respondWith(fetch(e.request));
 });

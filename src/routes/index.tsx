@@ -725,7 +725,7 @@ function Home() {
               </div>
             </div>
             <p className="mt-5 text-sm text-white/70 italic font-display">
-              «Gloria al Padre, al Hijo y al Espíritu Santo.»
+              «Gloria al Padre, y al Hijo y al Espíritu Santo.»
             </p>
           </div>
           <div>

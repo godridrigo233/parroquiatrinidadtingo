@@ -1,14 +1,14 @@
-// Este es un Service Worker "Dummy" (básico).
-// Su única función es existir para que Chrome habilite el botón de Instalar PWA.
-
 self.addEventListener('install', (e) => {
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (e) => {
-  return self.clients.claim();
+  e.waitUntil(self.clients.claim());
 });
 
+// Le respondemos "OK" a Chrome para que certifique que el SW está vivo
 self.addEventListener('fetch', (e) => {
-  // No hacemos nada con las peticiones, dejamos que Vercel se encargue.
+  e.respondWith(
+    fetch(e.request).catch(() => new Response("OK"))
+  );
 });

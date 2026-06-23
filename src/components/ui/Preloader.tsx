@@ -2,8 +2,7 @@ import { Loader2 } from "lucide-react";
 
 export function Preloader() {
   return (
-    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#140e72] text-white select-none animate-in fade-in duration-300">
-      {/* Contenedor central */}
+<div className="fixed inset-0 z-[9999] flex md:hidden flex-col items-center justify-center bg-[#140e72] text-white select-none animate-in fade-in duration-300">      {/* Contenedor central */}
       <div className="flex flex-col items-center gap-6 text-center px-6">
         {/* Logo con animación de respiración/escala suave */}
         <div className="relative h-24 w-24 md:h-28 md:w-28 animate-pulse duration-1000">

@@ -124,6 +124,9 @@ function Home() {
     const onScroll = () => setScrollY(window.scrollY);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
+    if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
+    navigator.serviceWorker.register('/sw.ts'); // O el archivo que genere el plugin
+  }
   }, []);
 
   useEffect(() => {

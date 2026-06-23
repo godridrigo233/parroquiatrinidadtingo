@@ -19,6 +19,7 @@ export default defineConfig({
       strategies: 'injectManifest', 
       srcDir: 'src', // Donde buscará tu lógica
       filename: 'sw.ts', // Debes crear este archivo en /src/sw.ts
+      injectRegister: null, // Desactiva la inyección automática en HTML
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'assets/logo.png'],
       manifest: {
         name: 'Parroquia Santísima Trinidad',

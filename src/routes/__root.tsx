@@ -108,7 +108,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content:
           "Parroquia católica Santísima Trinidad de Tingo, Arequipa. Horarios de misa, sacramentos y comunidad parroquial.",
       },
-      { name: "theme-color", content: "#140e72" },
+      { name: "theme-color", content: "#1e2a5e" },
       { property: "og:site_name", content: "Parroquia Santísima Trinidad de Tingo" },
       { property: "og:type", content: "website" },
       { property: "og:locale", content: "es_PE" },
@@ -116,8 +116,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "apple-touch-icon", href: "/pwa-192x192.png" },
-      { rel: "manifest", href: "/manifest.webmanifest" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {

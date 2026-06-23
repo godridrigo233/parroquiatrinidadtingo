@@ -14,7 +14,6 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { DonacionesSection, DonationRow } from "@/components/site/DonacionesSection";
 import { AddToCalendar } from "@/components/site/AddToCalendar";
 import * as Sentry from "@sentry/react";
-import { InstallPWA } from "@/components/site/InstallPWA";
 // NOTA: Se eliminaron TODAS las importaciones de imágenes desde '@/assets/...'
 
 const SITE_URL = "https://parroquiatrinidadtingo.lovable.app";
@@ -711,7 +710,6 @@ function Home() {
       </footer>
 
       <WhatsAppFab />
-      <InstallPWA />
     </div>
   );
 }

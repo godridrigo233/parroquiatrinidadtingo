@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Menu, X } from "lucide-react";
+import { InstallPWA } from "@/components/site/InstallPWA"; // ← Importación de tu botón
 
 const links = [
   { href: "/#inicio", label: "Inicio" },
@@ -67,6 +68,7 @@ export function Navbar() {
           </div>
         </button>
 
+        {/* NAVEGACIÓN DE ESCRITORIO */}
         <nav className="hidden lg:flex items-center gap-6">
           {links.map((l) =>
             l.route ? (
@@ -79,15 +81,21 @@ export function Navbar() {
               </a>
             ),
           )}
-          <Link
-            to="/"
-            hash="contacto"
-            className="px-4 py-2 rounded-full bg-gradient-gold text-primary-foreground text-sm font-semibold shadow-card hover:shadow-elegant transition-shadow"
-          >
-            Visítanos
-          </Link>
+          
+          {/* 👇 BOTONES DERECHOS (Escritorio) */}
+          <div className="flex items-center gap-3">
+            <InstallPWA /> {/* <--- Aquí va el botón de PWA */}
+            <Link
+              to="/"
+              hash="contacto"
+              className="px-4 py-2 rounded-full bg-gradient-gold text-primary-foreground text-sm font-semibold shadow-card hover:shadow-elegant transition-shadow"
+            >
+              Visítanos
+            </Link>
+          </div>
         </nav>
 
+        {/* BOTÓN HAMBURGUESA (Móvil) */}
         <div className="lg:hidden flex items-center gap-1">
           <button
             onClick={() => setOpen(!open)}
@@ -99,6 +107,7 @@ export function Navbar() {
         </div>
       </div>
 
+      {/* NAVEGACIÓN MÓVIL (Menú desplegable) */}
       {open && (
         <div className="lg:hidden bg-background border-t border-border">
           <nav className="px-5 py-4 flex flex-col gap-1">
@@ -123,6 +132,12 @@ export function Navbar() {
                 </a>
               ),
             )}
+            
+            {/* 👇 BOTÓN PWA EN MÓVIL */}
+            <div className="mt-4 flex flex-col gap-3">
+               <InstallPWA /> {/* <--- El botón también se mostrará en el menú móvil */}
+            </div>
+            
           </nav>
         </div>
       )}

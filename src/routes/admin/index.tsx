@@ -9,7 +9,7 @@ import {
 import imageCompression from 'browser-image-compression';
 import { AttendanceScanner } from "@/routes/admin/AttendanceScanner";
 import { EventsManager } from "@/routes/admin/EventsManager";
-import { SecretariaDashboard } from "@/components/admin/SecretariaDashboard";
+import { SecretariaDashboard } from "@/routes/admin/SecretariaDashboard";
 export const Route = createFileRoute("/admin/")({
   head: () => ({ meta: [{ title: "Panel administrador · Parroquia" }, { name: "robots", content: "noindex" }] }),
   component: AdminDashboard,

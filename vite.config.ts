@@ -16,6 +16,9 @@ export default defineConfig({
         clientsClaim: true,
         skipWaiting: true,
       },
+      strategies: 'injectManifest', 
+      srcDir: 'src', // Donde buscará tu lógica
+      filename: 'sw.ts', // Debes crear este archivo en /src/sw.ts
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'assets/logo.png'],
       manifest: {
         name: 'Parroquia Santísima Trinidad',

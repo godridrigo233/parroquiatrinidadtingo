@@ -158,7 +158,14 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  
+    useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker
+        .register('/sw.js')
+        .then(() => console.log('Service Worker PWA registrado'))
+        .catch((err) => console.log('Error en SW:', err));
+    }
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

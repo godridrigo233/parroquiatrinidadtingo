@@ -13,12 +13,16 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { DonacionesSection, DonationRow } from "@/components/site/DonacionesSection";
 import { AddToCalendar } from "@/components/site/AddToCalendar";
-
+import * as Sentry from "@sentry/react";
 // NOTA: Se eliminaron TODAS las importaciones de imágenes desde '@/assets/...'
 
 const SITE_URL = "https://parroquiatrinidadtingo.lovable.app";
 const HOME_OG_IMAGE =
   "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/3432647d-43db-4a55-b562-41513493df53/id-preview-91ff1323--99ad5a9e-cbbf-4cb3-8a34-00165e03bf57.lovable.app-1779232569211.png";
+Sentry.init({
+  dsn: "https://8d2244a4f316e9ba59a1de0835a10373@o4511615179096064.ingest.us.sentry.io/4511615199019008",
+  integrations: [],
+});
 
 export const Route = createFileRoute("/")({
   head: () => ({

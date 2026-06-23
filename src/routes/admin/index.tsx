@@ -9,7 +9,7 @@ import {
 import imageCompression from 'browser-image-compression';
 import { AttendanceScanner } from "@/routes/admin/AttendanceScanner";
 import { EventsManager } from "@/routes/admin/EventsManager";
-
+import { SecretariaDashboard } from "@/components/admin/SecretariaDashboard";
 export const Route = createFileRoute("/admin/")({
   head: () => ({ meta: [{ title: "Panel administrador · Parroquia" }, { name: "robots", content: "noindex" }] }),
   component: AdminDashboard,
@@ -29,10 +29,9 @@ const tabs: { id: Tab; label: string; icon: typeof Calendar; description: string
 function AdminDashboard() {
   const navigate = useNavigate();
   const [ready, setReady] = useState(false);
-  const [userRole, setUserRole] = useState<"admin" | "editor" | null>(null);
-  const [userName, setUserName] = useState("");
+  const [userRole, setUserRole] = useState<"admin" | "editor" | "secretaria" | null>(null); 
   const [tab, setTab] = useState<Tab>("events");
-
+  const [userName, setUserName] = useState("");
   const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
   const showToast = (msg: string, type: "success" | "error" = "success") => {
     setToast({ msg, type });
@@ -52,6 +51,7 @@ function AdminDashboard() {
 
       const rolesList = roles?.map(r => r.role) || [];
       if (rolesList.includes("admin"))       { setUserRole("admin");  setTab("events"); }
+      else if (rolesList.includes("secretaria")) { setUserRole("secretaria"); } // <- NUEVA LÍNEA
       else if (rolesList.includes("editor")) { setUserRole("editor"); setTab("attendance"); }
       else                                   { setUserRole(null); }
       setReady(true);
@@ -78,7 +78,9 @@ function AdminDashboard() {
       </div>
     </div>
   );
-
+  if (userRole === "secretaria") {
+    return <SecretariaDashboard userName={userName} logout={logout} />;
+  }
   const tabsToShow = userRole === "admin" ? tabs : tabs.filter(t => t.id === "attendance");
   const activeTab = tabs.find(t => t.id === tab);
 

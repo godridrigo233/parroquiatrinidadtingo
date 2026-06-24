@@ -9,7 +9,7 @@ import {
 } from "@tanstack/react-router";
 import { useEffect } from "react";
 import appCss from "../styles.css?url";
-
+import { AuthProvider } from "@/contexts/AuthContext";
 
 const ORG_JSONLD = {
   "@context": "https://schema.org",
@@ -169,8 +169,9 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-    <Outlet />
-      
+        <AuthProvider>
+        <Outlet />
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

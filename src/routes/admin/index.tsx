@@ -10,6 +10,8 @@ import imageCompression from 'browser-image-compression';
 import { AttendanceScanner } from "@/routes/admin/AttendanceScanner";
 import { EventsManager } from "@/routes/admin/EventsManager";
 import { SecretariaDashboard } from "@/routes/admin/SecretariaDashboard";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+
 export const Route = createFileRoute("/admin/")({
   head: () => ({ meta: [{ title: "Panel administrador · Parroquia" }, { name: "robots", content: "noindex" }] }),
   component: AdminDashboard,
@@ -85,8 +87,9 @@ function AdminDashboard() {
   const activeTab = tabs.find(t => t.id === tab);
 
   return (
+    <ProtectedRoute>
     <div className="min-h-screen bg-[#f5f3ef] relative">
-
+      
       {/* ── HEADER ── */}
       <header className="bg-card border-b border-border sticky top-0 z-20 shadow-sm">
         <div className="max-w-7xl mx-auto px-5 h-16 flex items-center justify-between gap-4">
@@ -206,6 +209,7 @@ function AdminDashboard() {
         </div>
       )}
     </div>
+    </ProtectedRoute>
   );
 }
 

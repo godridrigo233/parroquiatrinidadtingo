@@ -4,20 +4,21 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   LogOut, Plus, Trash2, Pencil, X, Calendar, Clock,
   Users, Image as ImageIcon, Save, AlertCircle, CheckCircle2, Heart,
-  LayoutDashboard, ChevronRight, Zap
+  LayoutDashboard, ChevronRight, Zap, Boxes
 } from "lucide-react";
 import imageCompression from 'browser-image-compression';
 import { AttendanceScanner } from "@/routes/admin/AttendanceScanner";
 import { EventsManager } from "@/routes/admin/EventsManager";
 import { SecretariaDashboard } from "@/routes/admin/SecretariaDashboard";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { InventoryDashboard } from "@/routes/admin/inventario";
 
 export const Route = createFileRoute("/admin/")({
   head: () => ({ meta: [{ title: "Panel administrador · Parroquia" }, { name: "robots", content: "noindex" }] }),
   component: AdminDashboard,
 });
 
-type Tab = "events" | "schedules" | "ministries" | "gallery" | "donations" | "attendance";
+type Tab = "events" | "schedules" | "ministries" | "gallery" | "donations" | "attendance" | "inventory";
 
 const tabs: { id: Tab; label: string; icon: typeof Calendar; description: string; color: string }[] = [
   { id: "events",     label: "Eventos",     icon: Calendar,       description: "Publicar y editar",  color: "text-blue-500"   },
@@ -26,6 +27,7 @@ const tabs: { id: Tab; label: string; icon: typeof Calendar; description: string
   { id: "gallery",    label: "Galería",     icon: ImageIcon,      description: "Fotos del templo",   color: "text-green-500"  },
   { id: "donations",  label: "Donaciones",  icon: Heart,          description: "Canales de pago",    color: "text-rose-500"   },
   { id: "attendance", label: "Asistencia",  icon: Zap,            description: "Registro QR",        color: "text-gold"       },
+  { id: "inventory",  label: "Inventario",  icon: Boxes,          description: "Control de activos", color: "text-indigo-500" },
 ];
 
 function AdminDashboard() {
@@ -53,7 +55,7 @@ function AdminDashboard() {
 
       const rolesList = roles?.map(r => r.role) || [];
       if (rolesList.includes("admin"))       { setUserRole("admin");  setTab("events"); }
-      else if (rolesList.includes("secretaria")) { setUserRole("secretaria"); } // <- NUEVA LÍNEA
+      else if (rolesList.includes("secretaria")) { setUserRole("secretaria"); } 
       else if (rolesList.includes("editor")) { setUserRole("editor"); setTab("attendance"); }
       else                                   { setUserRole(null); }
       setReady(true);
@@ -195,6 +197,7 @@ function AdminDashboard() {
             {tab === "gallery"    && userRole === "admin" && <GalleryManager showToast={showToast} />}
             {tab === "donations"  && userRole === "admin" && <DonationsManager showToast={showToast} />}
             {tab === "attendance" && <AttendanceScanner />}
+            {tab === "inventory"  && userRole === "admin" && <InventoryDashboard />}
           </main>
         </div>
       </div>

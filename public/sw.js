@@ -1,45 +1,31 @@
 // public/sw.js
-const CACHE_NAME = 'parroquia-cache-v1';
-const ASSETS_TO_CACHE = [
-  '/',
-  '/manifest.webmanifest',
-  '/pwa-192x192.png',
-  '/pwa-512x512.png'
-];
+// 🚨 Cambiamos la versión a v2 para forzar a los celulares y PCs a borrar la basura vieja
+const CACHE_NAME = 'parroquia-cache-v2';
 
-// Instalar el Service Worker y guardar en caché los archivos críticos
+// 1. Instalar y obligar al navegador a usar esta nueva versión de inmediato
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
-    }).then(() => self.skipWaiting()) // Fuerza la activación inmediata
-  );
+  self.skipWaiting();
 });
 
-// Activar y limpiar cachés antiguos
+// 2. Al activarse, DESTRUIR la caché vieja que está congelando las pestañas nuevas
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cache) => {
-          if (cache !== CACHE_NAME) {
-            return caches.delete(cache);
-          }
+          // Elimina cualquier rastro de la versión v1 o cachés rebeldes
+          return caches.delete(cache);
         })
       );
-    }).then(() => self.clients.claim()) // Toma el control de la página de inmediato
+    }).then(() => self.clients.claim()) // Toma el control de la página en el acto
   );
 });
 
-// Estrategia de red con respaldo en caché (Exigido por Chrome para PWAs)
+// 3. El truco maestro: El evento fantasma
 self.addEventListener('fetch', (event) => {
-  // Solo interceptar peticiones GET normales (evita conflictos con Supabase/POSTs)
-  if (event.request.method !== 'GET') return;
-
-  event.respondWith(
-    fetch(event.request)
-      .catch(() => {
-        return caches.match(event.request);
-      })
-  );
+  // Chrome en Android EXIGE que este evento 'fetch' exista en el código 
+  // para permitir que salga el botón de "Instalar App".
+  // Al no interceptar nada adentro, engañamos a Chrome: cumplimos su regla, 
+  // pero obligamos al navegador a pedirle los datos frescos a Vercel SIEMPRE.
+  return;
 });

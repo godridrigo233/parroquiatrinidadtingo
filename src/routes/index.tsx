@@ -117,9 +117,14 @@ function Home() {
   
   // 👇 1. Estado para diferir la carga de Facebook y liberar el hilo principal del móvil
   const [loadFacebook, setLoadFacebook] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrollY(window.scrollY);
+    const onScroll = () => {
+      if (!checkMobile) {
+        setScrollY(window.scrollY);
+      }
+    }
     window.addEventListener("scroll", onScroll, { passive: true });
     
     // 👇 2. Retrasar la inyección del feed iframe de Facebook 2.5 segundos
@@ -192,7 +197,7 @@ function Home() {
 
       {/* HERO SECTION */}
       <section id="inicio" className="relative h-[100svh] min-h-[640px] w-full overflow-hidden">
-        <div className="absolute inset-0 will-change-transform" style={{ transform: `translate3d(0, ${scrollY * 0.35}px, 0)` }}>
+        <div className="absolute inset-0 will-change-transform" style={{ transform: isMobile ? "none" : `translate3d(0, ${scrollY * 0.35}px, 0)` }}>
           <img
             src="/assets/hero-church.jpg"
             alt="Parroquia Santísima Trinidad"
@@ -292,12 +297,12 @@ function Home() {
           <div className="mt-16 grid sm:grid-cols-2 gap-8 md:gap-12">
             {sacerdotes.map((p, i) => (
               <Reveal key={p.name} delay={i * 120}>
-                <article className="group relative bg-card rounded-2xl overflow-hidden border border-border shadow-card hover:shadow-elegant transition-shadow">
+                <article className="group relative bg-card rounded-2xl overflow-hidden border border-border shadow-card hover:shadow-elegant transition-shadow will-change-transform">
                   <div className="aspect-[3/4] overflow-hidden">
                     <OptimizedImage
                       src={`${p.img}?v=1`}
                       alt={`${p.role} ${p.name}`}
-                      className="w-full h-full object-cover object-top group-hover:scale-[1.03] transition-transform duration-700"
+                      className="w-full h-full object-cover object-top group-hover:scale-[1.03] transition-transform duration-700 will-change-transform"
                     />
                   </div>
                   <div className="p-7">
@@ -360,10 +365,10 @@ function Home() {
                 const ministryImage = m.image_url || ministryPhotos[i];
                 return (
                   <Reveal key={m.id} delay={i * 80}>
-                    <article className="group h-full flex flex-col bg-card rounded-2xl border border-border shadow-card hover:shadow-elegant hover:-translate-y-1 transition-all overflow-hidden">
+                    <article className="group h-full flex flex-col bg-card rounded-2xl border border-border shadow-card hover:shadow-elegant hover:-translate-y-1 transition-all overflow-hidden will-change-transform">
                       <div className="relative aspect-[16/10] overflow-hidden bg-secondary">
                         {ministryImage && (
-                          <OptimizedImage src={`${ministryImage}?v=1`} alt={m.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                          <OptimizedImage src={`${ministryImage}?v=1`} alt={m.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 will-change-transform" />
                         )}
                         <span className="absolute top-3 left-3 h-9 w-9 rounded-lg bg-card/95 backdrop-blur flex items-center justify-center shadow-card">
                           <Icon size={16} className="text-gold" />

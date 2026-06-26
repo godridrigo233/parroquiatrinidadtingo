@@ -10,52 +10,51 @@ export function InstallPWA() {
   const [showIOSInstructions, setShowIOSInstructions] = useState(false);
 
   useEffect(() => {
-    // 1. Detectar si el usuario está en un dispositivo Apple (iOS)
-    const userAgent = window.navigator.userAgent.toLowerCase();
-    const isIOSDevice = /iphone|ipad|ipod/.test(userAgent);
-    
-    // 2. Detectar si la app ya está instalada (para no mostrar el botón)
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
-                         ('standalone' in window.navigator && (window.navigator as any).standalone);
+  const userAgent = window.navigator.userAgent.toLowerCase();
+  const isIOSDevice = /iphone|ipad|ipod/.test(userAgent);
+  const isAndroidDevice = /android/.test(userAgent);
+  
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                       ('standalone' in window.navigator && (window.navigator as any).standalone);
 
-    // Si es un iPhone y NO está instalada, activamos el modo iOS
-    if (isIOSDevice && !isStandalone) {
-      setIsIOS(true);
-    }
+  if (isIOSDevice && !isStandalone) {
+    setIsIOS(true);
+  }
 
-    // 3. Lógica normal para Android y Computadoras
-    const handleBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-      setIsInstallable(true);
-    };
+  if (isAndroidDevice && !isStandalone) {
+    setIsInstallable(true);
+  }
 
-    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+  const handleBeforeInstallPrompt = (e: Event) => {
+    e.preventDefault();
+    setDeferredPrompt(e);
+    setIsInstallable(true);
+  };
 
-    return () => {
-      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-    };
-  }, []);
+  window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+  return () => {
+    window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+  };
+}, []);
 
   const handleInstallClick = async () => {
-    // Si es iPhone, mostramos la ventana de instrucciones
-    if (isIOS) {
-      setShowIOSInstructions(true);
-      return;
-    }
+  if (isIOS) {
+    setShowIOSInstructions(true);
+    return;
+  }
 
-    // Si es Android/PC, hacemos la instalación automática
-    if (!deferredPrompt) return;
+  // Si el evento nativo está listo, lanzamos la instalación limpia
+  if (deferredPrompt) {
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
-    
-    if (outcome === "accepted") {
-      console.log("App instalada con éxito");
-    }
-    
+    if (outcome === "accepted") console.log("App instalada");
     setDeferredPrompt(null);
     setIsInstallable(false);
-  };
+  } else {
+    // 👇 Si Chrome retuvo el evento, le enseñamos al usuario cómo instalarlo manualmente
+    alert("Para instalar la aplicación en Android:\n\n1. Toca los 3 puntos (⋮) de la esquina superior derecha de Chrome.\n2. Selecciona 'Instalar aplicación' o 'Agregar a la pantalla de inicio'.");
+  }
+};
 
   // Si no es instalable en Android y tampoco es iOS, ocultamos el botón
   if (!isInstallable && !isIOS) return null;

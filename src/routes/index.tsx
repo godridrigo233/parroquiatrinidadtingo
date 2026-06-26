@@ -10,6 +10,7 @@ import { Navbar } from "@/components/site/Navbar";
 import { Reveal } from "@/components/site/Reveal";
 import { WhatsAppFab } from "@/components/site/WhatsAppFab";
 import { FacebookFeed } from "@/components/site/FacebookFeed";
+import { OptimizedImage } from "@/components/site/OptimizedImage";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { DonacionesSection, DonationRow } from "@/components/site/DonacionesSection";
@@ -113,15 +114,23 @@ const sacerdotes = [
 function Home() {
   const [lightbox, setLightbox] = useState<{ url: string; title?: string | null } | null>(null);
   const [scrollY, setScrollY] = useState(0);
+  
+  // 👇 1. Estado para diferir la carga de Facebook y liberar el hilo principal del móvil
+  const [loadFacebook, setLoadFacebook] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrollY(window.scrollY);
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    
+    // 👇 2. Retrasar la inyección del feed iframe de Facebook 2.5 segundos
+    const timer = setTimeout(() => setLoadFacebook(true), 2500);
+
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      clearTimeout(timer);
+    };
   }, []);
 
-  // ── OPTIMIZACIÓN CENTRAL: MOTOR DE CACHÉ DE TANSTACK QUERY ──
-  // Guardamos los datos por 15 minutos frescos (staleTime). Si el usuario cambia de página y vuelve, carga en 0ms.
   const staleConfig = { staleTime: 1000 * 60 * 15, gcTime: 1000 * 60 * 30 };
 
   const { data: schedules = [], isLoading: loadingSchedules } = useQuery({
@@ -169,7 +178,6 @@ function Home() {
     ...staleConfig
   });
 
-  // Estado global de carga unificado para el Preloader inicial
   const globalLoading = loadingSchedules || loadingMinistries || loadingEvents || loadingGallery || loadingDonations;
 
   const groupedSchedules = schedules.reduce<Record<string, Schedule[]>>((acc, s) => {
@@ -182,14 +190,14 @@ function Home() {
       <Preloader isLoading={globalLoading} />
       <Navbar />
 
-      {/* HERO SECTION (Esta imagen NO lleva lazy load porque es el LCP principal) */}
+      {/* HERO SECTION */}
       <section id="inicio" className="relative h-[100svh] min-h-[640px] w-full overflow-hidden">
         <div className="absolute inset-0 will-change-transform" style={{ transform: `translate3d(0, ${scrollY * 0.35}px, 0)` }}>
           <img
             src="/assets/hero-church.jpg"
             alt="Parroquia Santísima Trinidad"
             className="ken-burns absolute inset-0 h-[115%] w-full object-cover"
-            priority="high" // Optimización SEO para que pinte rápido el fondo principal
+            priority="high"
           />
         </div>
 
@@ -235,12 +243,13 @@ function Home() {
         </div>
       </section>
 
-      {/* SOBRE LA PARROQUIA (Lazy loading inyectado) */}
+      {/* SOBRE LA PARROQUIA */}
       <section id="parroquia" className="py-24 md:py-32 px-5 lg:px-8">
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
           <Reveal>
             <div className="relative">
-              <img src="/assets/church-interior.jpg" alt="Interior de la parroquia" loading="lazy" className="rounded-2xl shadow-elegant w-full aspect-[4/5] object-cover" />
+              {/* 👇 Inyección de OptimizedImage para decodificación asíncrona */}
+              <OptimizedImage src="/assets/church-interior.jpg" alt="Interior de la parroquia" className="rounded-2xl shadow-elegant w-full aspect-[4/5] object-cover" />
               <div className="absolute -bottom-8 -right-8 hidden md:block bg-card rounded-2xl shadow-card p-6 max-w-[220px] border border-border">
                 <p className="font-display text-3xl text-gold">+50</p>
                 <p className="text-sm text-muted-foreground mt-1">Años sembrando fe en Tingo</p>
@@ -285,10 +294,9 @@ function Home() {
               <Reveal key={p.name} delay={i * 120}>
                 <article className="group relative bg-card rounded-2xl overflow-hidden border border-border shadow-card hover:shadow-elegant transition-shadow">
                   <div className="aspect-[3/4] overflow-hidden">
-                    <img
+                    <OptimizedImage
                       src={`${p.img}?v=1`}
                       alt={`${p.role} ${p.name}`}
-                      loading="lazy"
                       className="w-full h-full object-cover object-top group-hover:scale-[1.03] transition-transform duration-700"
                     />
                   </div>
@@ -319,7 +327,7 @@ function Home() {
             ].map((d, i) => (
               <Reveal key={d.title} delay={i * 100}>
                 <div className="group relative rounded-2xl overflow-hidden shadow-elegant aspect-[4/5]">
-                  <img src={`${d.img}?v=1`} alt={d.title} loading="lazy" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                  <OptimizedImage src={`${d.img}?v=1`} alt={d.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                   <div className="absolute inset-0 bg-gradient-to-t from-primary via-primary/60 to-transparent" />
                   <div className="absolute bottom-0 inset-x-0 p-8 text-primary-foreground">
                     <h3 className="font-display text-3xl text-white">{d.title}</h3>
@@ -332,12 +340,13 @@ function Home() {
         </div>
       </section>
 
-      {/* MINISTERIOS (Con esqueletos de TanStack Query) */}
+      {/* MINISTERIOS */}
       <section id="ministerios" className="py-24 px-5 lg:px-8 bg-secondary/50">
         <div className="max-w-7xl mx-auto">
           <Reveal className="text-center max-w-2xl mx-auto">
             <p className="text-gold uppercase tracking-[0.25em] text-xs font-semibold">Servir y caminar juntos</p>
             <h2 className="mt-3 font-display text-4xl md:text-5xl font-medium">Ministerios y grupos</h2>
+            <p className="mt-4 text-muted-foreground">Carismas al servicio de la comunidad parroquial.</p>
           </Reveal>
 
           <div className="mt-16 grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -354,7 +363,7 @@ function Home() {
                     <article className="group h-full flex flex-col bg-card rounded-2xl border border-border shadow-card hover:shadow-elegant hover:-translate-y-1 transition-all overflow-hidden">
                       <div className="relative aspect-[16/10] overflow-hidden bg-secondary">
                         {ministryImage && (
-                          <img src={`${ministryImage}?v=1`} alt={m.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                          <OptimizedImage src={`${ministryImage}?v=1`} alt={m.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                         )}
                         <span className="absolute top-3 left-3 h-9 w-9 rounded-lg bg-card/95 backdrop-blur flex items-center justify-center shadow-card">
                           <Icon size={16} className="text-gold" />
@@ -458,7 +467,7 @@ function Home() {
                     {items.map((g) => (
                       <CarouselItem key={g.id} className="pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
                         <button type="button" onClick={() => setLightbox({ url: g.src, title: g.label })} className="group relative block w-full aspect-square overflow-hidden rounded-2xl shadow-card focus:outline-none focus:ring-2 focus:ring-gold">
-                          <img src={`${g.src}?v=1`} alt={g.label ?? ""} loading="lazy" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                          <OptimizedImage src={`${g.src}?v=1`} alt={g.label ?? ""} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                           {g.label && (
                             <span className="absolute inset-x-0 bottom-0 p-3 text-white text-sm font-medium bg-gradient-to-t from-primary/90 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
                               {g.label}
@@ -480,7 +489,7 @@ function Home() {
           <DialogContent className="max-w-5xl p-0 bg-transparent border-0 shadow-none">
             {lightbox && (
               <div className="relative">
-                <img src={lightbox.url} alt={lightbox.title ?? ""} className="w-full max-h-[85vh] object-contain rounded-2xl bg-black" />
+                <OptimizedImage src={lightbox.url} alt={lightbox.title ?? ""} className="w-full max-h-[85vh] object-contain rounded-2xl bg-black" />
                 {lightbox.title && <p className="mt-3 text-center text-white font-display text-xl drop-shadow">{lightbox.title}</p>}
               </div>
             )}
@@ -537,9 +546,17 @@ function Home() {
             </Reveal>
           )}
 
-          <Reveal className="mt-12">
-            <FacebookFeed />
-          </Reveal>
+          {/* 👇 CONTROL DEL PROCESADOR MÓVIL: Solo renderiza Facebook tras pasar el temporizador inicial */}
+          <div className="mt-12 min-h-[350px] flex items-center justify-center">
+            {loadFacebook ? (
+              <FacebookFeed />
+            ) : (
+              <div className="text-xs text-muted-foreground animate-pulse flex flex-col items-center gap-2">
+                <div className="w-5 h-5 border-2 border-gold border-t-transparent rounded-full animate-spin" />
+                <span>Sincronizando últimas publicaciones...</span>
+              </div>
+            )}
+          </div>
         </div>
       </section>
 

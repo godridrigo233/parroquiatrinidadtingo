@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
-import { Download, MoreVertical, PlusSquare, X, SmartPhone } from "lucide-react";
+// 👇 CORREGIDO: "Smartphone" con 'p' minúscula
+import { Download, MoreVertical, PlusSquare, X, Smartphone } from "lucide-react";
 
 export function InstallPWA() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstallable, setIsInstallable] = useState(false);
   
-  // Estados para pantallas de instrucciones personalizadas
   const [isIOS, setIsIOS] = useState(false);
   const [showIOSInstructions, setShowIOSInstructions] = useState(false);
   const [showAndroidInstructions, setShowAndroidInstructions] = useState(false);
@@ -22,14 +22,13 @@ export function InstallPWA() {
       setIsIOS(true);
     }
 
-    // Si es Android y no está instalada, mostramos el botón en la web
     if (isAndroidDevice && !isStandalone) {
       setIsInstallable(true);
     }
 
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
-      setDeferredPrompt(e); // El navegador Android está listo para la descarga directa
+      setDeferredPrompt(e);
       setIsInstallable(true);
     };
 
@@ -46,18 +45,16 @@ export function InstallPWA() {
       return;
     }
 
-    // 🌟 TRUCO DE INGENIERÍA: Si Android guardó el evento, descarga DIRECTO sin ventanas
     if (deferredPrompt) {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
       if (outcome === "accepted") {
-        console.log("App instalada con éxito por el usuario");
+        console.log("App instalada con éxito");
       }
       setDeferredPrompt(null);
       return;
     }
 
-    // Si Chrome retuvo el evento nativo temporalmente, abrimos el modal elegante
     setShowAndroidInstructions(true);
   };
 
@@ -73,7 +70,7 @@ export function InstallPWA() {
         Instalar App
       </button>
 
-      {/* 🤖 NUEVO MODAL HERMOSO PARA ANDROID */}
+      {/* 🤖 MODAL PARA ANDROID CORREGIDO */}
       {showAndroidInstructions && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm">
           <div className="bg-card text-card-foreground p-6 rounded-2xl max-w-sm w-full shadow-elegant relative border border-border animate-in fade-in zoom-in-95 duration-200">
@@ -86,7 +83,8 @@ export function InstallPWA() {
             
             <div className="flex items-center gap-2 text-primary mb-3">
               <div className="bg-amber-100 p-2 rounded-xl text-amber-700">
-                <SmartPhone size={22} />
+                {/* 👇 IMPLEMENTADO COMPONENTE CORREGIDO */}
+                <Smartphone size={22} />
               </div>
               <h3 className="text-lg font-display font-semibold">Instalar en Android</h3>
             </div>
@@ -133,9 +131,8 @@ export function InstallPWA() {
             
             <h3 className="text-lg font-display font-semibold mb-2 text-primary">Instalar en iPhone</h3>
             <p className="mb-5 text-xs text-muted-foreground leading-relaxed">
-              Para instalar la app de la Parroquia en tu dispositivo Apple, sigue estos dos pasos desde Safari: 
+              Para instalar la app de la Parroquia en tu dispositivo Apple, sigue estos dos pasos desde Safari:
             </p>
-            
             <button 
               onClick={() => setShowIOSInstructions(false)}
               className="w-full mt-6 bg-secondary text-foreground py-2.5 rounded-xl font-semibold text-sm hover:bg-secondary/80 transition-colors"

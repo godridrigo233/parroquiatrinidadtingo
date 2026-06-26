@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-// 👇 CORREGIDO: "Smartphone" con 'p' minúscula
-import { Download, MoreVertical, PlusSquare, X, Smartphone } from "lucide-react";
+// 👇 Asegúrate de importar 'Share' para el modal de iPhone
+import { Download, MoreVertical, PlusSquare, X, Smartphone, Share } from "lucide-react";
 
 export function InstallPWA() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -70,7 +70,7 @@ export function InstallPWA() {
         Instalar App
       </button>
 
-      {/* 🤖 MODAL PARA ANDROID CORREGIDO */}
+      {/* 🤖 MODAL PARA ANDROID */}
       {showAndroidInstructions && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm">
           <div className="bg-card text-card-foreground p-6 rounded-2xl max-w-sm w-full shadow-elegant relative border border-border animate-in fade-in zoom-in-95 duration-200">
@@ -83,7 +83,6 @@ export function InstallPWA() {
             
             <div className="flex items-center gap-2 text-primary mb-3">
               <div className="bg-amber-100 p-2 rounded-xl text-amber-700">
-                {/* 👇 IMPLEMENTADO COMPONENTE CORREGIDO */}
                 <Smartphone size={22} />
               </div>
               <h3 className="text-lg font-display font-semibold">Instalar en Android</h3>
@@ -129,13 +128,36 @@ export function InstallPWA() {
               <X size={20} />
             </button>
             
-            <h3 className="text-lg font-display font-semibold mb-2 text-primary">Instalar en iPhone</h3>
+            <div className="flex items-center gap-2 text-primary mb-3">
+              <div className="bg-blue-100 p-2 rounded-xl text-blue-700">
+                <Smartphone size={22} />
+              </div>
+              <h3 className="text-lg font-display font-semibold">Instalar en iPhone</h3>
+            </div>
+
             <p className="mb-5 text-xs text-muted-foreground leading-relaxed">
               Para instalar la app de la Parroquia en tu dispositivo Apple, sigue estos dos pasos desde Safari:
             </p>
+            
+            {/* 👇 INSTRUCCIONES DE IPHONE RESTAURADAS CON DISEÑO MODERNO */}
+            <ol className="flex flex-col gap-4 text-left text-sm text-foreground">
+              <li className="flex items-center gap-4 bg-secondary/40 p-3 rounded-xl border border-border">
+                <span className="bg-background p-2 rounded-lg shadow-sm border border-border">
+                  <Share size={18} className="text-blue-500" />
+                </span>
+                <span className="text-xs">1. Toca el botón <strong>Compartir</strong> en la barra inferior de Safari.</span>
+              </li>
+              <li className="flex items-center gap-4 bg-secondary/40 p-3 rounded-xl border border-border">
+                <span className="bg-background p-2 rounded-lg shadow-sm border border-border">
+                  <PlusSquare size={18} className="text-foreground" />
+                </span>
+                <span className="text-xs">2. Selecciona <strong>"Agregar a inicio"</strong>.</span>
+              </li>
+            </ol>
+
             <button 
               onClick={() => setShowIOSInstructions(false)}
-              className="w-full mt-6 bg-secondary text-foreground py-2.5 rounded-xl font-semibold text-sm hover:bg-secondary/80 transition-colors"
+              className="w-full mt-6 bg-secondary text-foreground py-2.5 rounded-xl font-semibold text-sm hover:bg-secondary/80 transition-colors active:scale-[0.98]"
             >
               Entendido
             </button>

@@ -12,7 +12,7 @@ import {
 
 // NOTA: Se eliminó la importación de ogSacramentos aquí
 
-const SITE_URL = "https://parroquiatrinidadtingo.lovable.app";
+const SITE_URL = "https://parroquiatrinidadtingo.vercel.app";
 
 const sacramentos = [
   {

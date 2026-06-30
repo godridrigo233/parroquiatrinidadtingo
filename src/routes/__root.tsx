@@ -15,7 +15,7 @@ const ORG_JSONLD = {
   "@context": "https://schema.org",
   "@type": "CatholicChurch",
   name: "Parroquia Santísima Trinidad de Tingo",
-  url: "https://parroquiatrinidadtingo.lovable.app",
+  url: "https://parroquiatrinidadtingo.vercel.app",
   telephone: "+51 915 049 850",
   address: {
     "@type": "PostalAddress",

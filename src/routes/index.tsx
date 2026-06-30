@@ -19,7 +19,7 @@ import { SkeletonCard } from "@/components/ui/SkeletonCard";
 import { Preloader } from "@/components/ui/Preloader";
 import * as Sentry from "@sentry/react";
 
-const SITE_URL = "https://parroquiatrinidadtingo.lovable.app";
+const SITE_URL = "https://parroquiatrinidadtingo.vercel.app";
 const HOME_OG_IMAGE =
   "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/3432647d-43db-4a55-b562-41513493df53/id-preview-91ff1323--99ad5a9e-cbbf-4cb3-8a34-00165e03bf57.lovable.app-1779232569211.png";
 

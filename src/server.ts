@@ -14,9 +14,8 @@ let serverEntryPromise: Promise<ServerEntry> | undefined;
 // ============================================================================
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 
-function checkRateLimit(ip: string): boolean {
-  const limit = 5; // Máximo 15 peticiones...
-  const windowMs = 60 * 1000; // ...por minuto
+function checkRateLimit(ip: string, limit: number, windowMs: number): boolean {
+  
   const now = Date.now();
 
   const userRecord = rateLimitMap.get(ip);
@@ -102,30 +101,29 @@ export default {
       // 2. INTERCEPTOR DE SEGURIDAD (Antes de procesar la solicitud)
       // ============================================================================
       const url = new URL(request.url);
-      
-      // Proteger las rutas sensibles (Ajusta '/api' si tus rutas de acción se llaman diferente)
+      const ip = 
+        request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || 
+        "ip-desconocida";
+
+      // NIVEL 1: Protección Administrativa (Muy estricta)
+      if (url.pathname.startsWith("/admin")) {
+        // Solo 3 intentos por minuto para el acceso al panel admin
+        if (!checkRateLimit(ip, 3, 60 * 1000)) {
+          console.warn(`[SEGURIDAD CRÍTICA] Intento de fuerza bruta en /admin detectado. IP: ${ip}`);
+          return new Response(JSON.stringify({ error: "Acceso denegado temporalmente por seguridad." }), {
+            status: 429,
+            headers: { "content-type": "application/json" },
+          });
+        }
+      }
+
+      // NIVEL 2: Protección de APIs (Estándar)
       if (url.pathname.startsWith("/api")) {
-        // Extraer la IP real del cliente desde las cabeceras estándar de Edge/Vercel
-        const ip = 
-          request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || 
-          request.headers.get("cf-connecting-ip") || 
-          request.headers.get("x-real-ip") || 
-          "ip-desconocida";
-
-        const isAllowed = checkRateLimit(ip);
-
-        if (!isAllowed) {
-          console.warn(`[DEFENSA] Tráfico bloqueado para la IP: ${ip}`);
-          
-          return new Response(
-            JSON.stringify({ 
-              error: "Has superado el límite de peticiones. Por favor, espera un minuto." 
-            }), 
-            {
-              status: 429,
-              headers: { "content-type": "application/json" },
-            }
-          );
+        if (!checkRateLimit(ip, 15, 60 * 1000)) {
+          return new Response(JSON.stringify({ error: "Límite de peticiones alcanzado." }), {
+            status: 429,
+            headers: { "content-type": "application/json" },
+          });
         }
       }
       // ============================================================================

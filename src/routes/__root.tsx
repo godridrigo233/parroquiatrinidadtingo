@@ -8,6 +8,7 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { useEffect } from "react";
+import { Analytics } from "@vercel/analytics/react";
 import appCss from "../styles.css?url";
 import { AuthProvider } from "@/contexts/AuthContext";
 
@@ -171,6 +172,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
         <AuthProvider>
         <Outlet />
+        <Analytics />
       </AuthProvider>
     </QueryClientProvider>
   );

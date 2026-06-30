@@ -16,22 +16,37 @@ function LoginInterface() {
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // 🛡️ NUEVOS ESTADOS DE SEGURIDAD
+  // 🛡️ ESTADOS DE SEGURIDAD
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [isLocked, setIsLocked] = useState(false);
   const [lockoutTimer, setLockoutTimer] = useState(0);
 
-  // ⏱️ CONTROL DEL TEMPORIZADOR EN SEGUNDO PLANO
+  // ⏱️ CONTROL DEL TEMPORIZADOR Y PERSISTENCIA (Inmune a recargas)
   useEffect(() => {
+    // 1. Al cargar la página, revisar si hay un castigo guardado en el disco
+    const savedLockUntil = localStorage.getItem("lockUntil");
+    if (savedLockUntil) {
+      const remaining = Math.floor((parseInt(savedLockUntil) - Date.now()) / 1000);
+      if (remaining > 0) {
+        setIsLocked(true);
+        setLockoutTimer(remaining);
+        setErrorMessage("Demasiados intentos. Acceso congelado temporalmente.");
+      } else {
+        // Si el tiempo ya pasó mientras estaba cerrado, limpiar la memoria
+        localStorage.removeItem("lockUntil");
+      }
+    }
+
+    // 2. Ejecutar la cuenta regresiva si está bloqueado
     let interval: NodeJS.Timeout;
-    
     if (isLocked && lockoutTimer > 0) {
       interval = setInterval(() => {
         setLockoutTimer((prev) => {
           if (prev <= 1) {
             setIsLocked(false);
-            setFailedAttempts(0); // Restablecer intentos al expirar el tiempo
+            setFailedAttempts(0);
             setErrorMessage("");
+            localStorage.removeItem("lockUntil"); // Eliminar castigo
             return 0;
           }
           return prev - 1;
@@ -47,7 +62,7 @@ function LoginInterface() {
   const handleAuthentication = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Cortafuegos: Si está bloqueado, no permitimos que pase nada
+    // Cortafuegos: Si está bloqueado, rechazar inmediatamente
     if (isLocked) return;
     
     setErrorMessage("");
@@ -65,6 +80,8 @@ function LoginInterface() {
         if (nextAttempts >= 3) {
           setIsLocked(true);
           setLockoutTimer(30);
+          // GUARDAR EN DISCO: Marcar el tiempo exacto en el futuro donde se liberará
+          localStorage.setItem("lockUntil", (Date.now() + 30000).toString());
           setErrorMessage("Demasiados intentos. Acceso congelado temporalmente.");
         } else {
           setErrorMessage("Credenciales incorrectas. Verifica tu correo y contraseña.");
@@ -73,6 +90,7 @@ function LoginInterface() {
       } else {
         // Éxito: Limpiamos historial y entramos
         setFailedAttempts(0);
+        localStorage.removeItem("lockUntil");
         navigate({ to: "/admin" });
       }
     } else {
@@ -88,7 +106,7 @@ function LoginInterface() {
         password,
         options: {
           data: {
-            full_name: fullName.trim().toUpperCase(), // Forzamos mayúsculas siempre
+            full_name: fullName.trim().toUpperCase(), 
           },
         },
       });

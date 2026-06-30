@@ -667,11 +667,22 @@ function Home() {
             </div>
           </div>
           <div>
-            <p className="font-semibold text-white uppercase tracking-widest text-xs">Horarios</p>
+            <p className="font-semibold text-white uppercase tracking-widest text-xs">Horarios y Contacto</p>
+            
             <ul className="mt-4 space-y-2 text-sm text-white/75">
               <li>Domingos · 8:00 AM y 6:00 PM</li>
               <li>Lun – Vie · 6:00 PM</li>
-              <li>Sábado · 6:00 PM</li>
+              <li>Sábado · 6:00 PM (vigilia)</li>
+            </ul>
+
+            <div className="my-3 border-t border-white/10" />
+
+            <ul className="space-y-2 text-sm text-white/75">
+              <li>Secretaría: Lun – Sáb · 3:00 – 6:00 PM</li>
+              <li>
+                Tel: <a href="tel:+51915049850" className="hover:text-white hover:underline transition-colors">+51 915 049 850</a>{" "}
+                <span className="text-white/50">(solo llamadas)</span>
+              </li>
             </ul>
           </div>
           <div>
@@ -679,6 +690,11 @@ function Home() {
             <div className="mt-4 flex flex-wrap gap-2">
               <a href="https://www.facebook.com/parroquiasantisimatrinidadtingo/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 text-sm">
                 <Facebook size={16} /> Facebook
+              </a>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <a href="https://www.instagram.com/stma_trinidad_tingo/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 text-sm">
+                <Instagram size={16} /> Instagram
               </a>
             </div>
           </div>

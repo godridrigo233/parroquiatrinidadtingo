@@ -15,7 +15,7 @@ let serverEntryPromise: Promise<ServerEntry> | undefined;
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 
 function checkRateLimit(ip: string): boolean {
-  const limit = 15; // Máximo 15 peticiones...
+  const limit = 5; // Máximo 15 peticiones...
   const windowMs = 60 * 1000; // ...por minuto
   const now = Date.now();
 

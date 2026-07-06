@@ -14,6 +14,177 @@ export type Database = {
   }
   public: {
     Tables: {
+      attendance: {
+        Row: {
+          catechist_id: string | null
+          id: string
+          meeting_id: string | null
+          notes: string | null
+          scanned_at: string | null
+          status: string | null
+        }
+        Insert: {
+          catechist_id?: string | null
+          id?: string
+          meeting_id?: string | null
+          notes?: string | null
+          scanned_at?: string | null
+          status?: string | null
+        }
+        Update: {
+          catechist_id?: string | null
+          id?: string
+          meeting_id?: string | null
+          notes?: string | null
+          scanned_at?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_catechist_id_fkey"
+            columns: ["catechist_id"]
+            isOneToOne: false
+            referencedRelation: "catechists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      audit_logs: {
+        Row: {
+          action: string
+          changed_at: string | null
+          changed_by: string | null
+          id: string
+          new_data: Json | null
+          old_data: Json | null
+          record_id: string
+          table_name: string
+        }
+        Insert: {
+          action: string
+          changed_at?: string | null
+          changed_by?: string | null
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          record_id: string
+          table_name: string
+        }
+        Update: {
+          action?: string
+          changed_at?: string | null
+          changed_by?: string | null
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          record_id?: string
+          table_name?: string
+        }
+        Relationships: []
+      }
+      caja_movimientos: {
+        Row: {
+          categoria: string
+          concepto: string
+          created_at: string | null
+          fecha_movimiento: string | null
+          id: string
+          metodo_pago: string
+          monto: number
+          registrado_por: string | null
+          tipo: string
+        }
+        Insert: {
+          categoria: string
+          concepto: string
+          created_at?: string | null
+          fecha_movimiento?: string | null
+          id?: string
+          metodo_pago: string
+          monto: number
+          registrado_por?: string | null
+          tipo: string
+        }
+        Update: {
+          categoria?: string
+          concepto?: string
+          created_at?: string | null
+          fecha_movimiento?: string | null
+          id?: string
+          metodo_pago?: string
+          monto?: number
+          registrado_por?: string | null
+          tipo?: string
+        }
+        Relationships: []
+      }
+      catechists: {
+        Row: {
+          code: string
+          created_at: string | null
+          dni: string | null
+          full_name: string
+          id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          dni?: string | null
+          full_name: string
+          id?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          dni?: string | null
+          full_name?: string
+          id?: string
+        }
+        Relationships: []
+      }
+      donations_info: {
+        Row: {
+          account_number: string | null
+          bank_name: string
+          cci: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          qr_image_url: string | null
+          sort_order: number | null
+          title: string
+        }
+        Insert: {
+          account_number?: string | null
+          bank_name: string
+          cci?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          qr_image_url?: string | null
+          sort_order?: number | null
+          title: string
+        }
+        Update: {
+          account_number?: string | null
+          bank_name?: string
+          cci?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          qr_image_url?: string | null
+          sort_order?: number | null
+          title?: string
+        }
+        Relationships: []
+      }
       events: {
         Row: {
           created_at: string
@@ -74,6 +245,110 @@ export type Database = {
         }
         Relationships: []
       }
+      inventory_items: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          location: string
+          name: string
+          notes: string | null
+          quantity: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          id?: string
+          location: string
+          name: string
+          notes?: string | null
+          quantity?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          location?: string
+          name?: string
+          notes?: string | null
+          quantity?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      inventory_transactions: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          item_id: string
+          notes: string | null
+          quantity: number
+          responsible_person: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          item_id: string
+          notes?: string | null
+          quantity: number
+          responsible_person: string
+          type: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          item_id?: string
+          notes?: string | null
+          quantity?: number
+          responsible_person?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_transactions_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meetings: {
+        Row: {
+          created_at: string | null
+          id: string
+          scheduled_date: string
+          scheduled_end_time: string
+          scheduled_time: string
+          title: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          scheduled_date?: string
+          scheduled_end_time?: string
+          scheduled_time?: string
+          title: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          scheduled_date?: string
+          scheduled_end_time?: string
+          scheduled_time?: string
+          title?: string
+        }
+        Relationships: []
+      }
       ministries: {
         Row: {
           created_at: string
@@ -103,39 +378,6 @@ export type Database = {
           leader?: string | null
           name?: string
           schedule?: string | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      news: {
-        Row: {
-          content: string
-          created_at: string
-          excerpt: string | null
-          id: string
-          image_url: string | null
-          published_at: string
-          title: string
-          updated_at: string
-        }
-        Insert: {
-          content: string
-          created_at?: string
-          excerpt?: string | null
-          id?: string
-          image_url?: string | null
-          published_at?: string
-          title: string
-          updated_at?: string
-        }
-        Update: {
-          content?: string
-          created_at?: string
-          excerpt?: string | null
-          id?: string
-          image_url?: string | null
-          published_at?: string
-          title?: string
           updated_at?: string
         }
         Relationships: []
@@ -199,6 +441,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_my_role: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -208,7 +451,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "editor"
+      app_role: "admin" | "editor" | "secretaria"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -336,7 +579,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "editor"],
+      app_role: ["admin", "editor", "secretaria"],
     },
   },
 } as const

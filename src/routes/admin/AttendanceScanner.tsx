@@ -405,7 +405,7 @@ export function AttendanceScanner() {
               <div className="rounded-3xl overflow-hidden border-8 border-secondary aspect-square relative shadow-lg bg-black">
                 
                 {/* --- AQUI ESTA LA MAGIA APLICADA --- */}
-                <Scanner onResult={handleScannerResult} options={{ delayBetweenScanSuccess: 2000 }} />
+                <Scanner onScan={handleScannerResult} scanDelay={2000} />
 
                 {lastScan && (
                   <div className={`absolute inset-0 flex flex-col items-center justify-center text-white backdrop-blur-md z-10 animate-in zoom-in-95 ${

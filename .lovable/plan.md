@@ -1,63 +1,60 @@
-## Objetivo
+## Plan: Corregir errores de build + crear módulo admin de Eventos
 
-Tres mejoras al sitio de la Parroquia Santísima Trinidad:
+### Parte 1 — Corregir errores de build (bloqueantes)
 
-1. **Sección de Sacramentos** con requisitos detallados (lo más buscado).
-2. **Meta tags y og:image** por página para previsualizaciones bonitas en WhatsApp/Facebook.
-3. **Mejoras de contraste y modo claro/oscuro** para mejor legibilidad.
+1. **`src/routes/admin/AttendanceReport.tsx:111`** — coerción de `string | null` a `string | undefined` (usar `?? undefined`).
+2. **`src/routes/admin/AttendanceScanner.tsx:408`** — la API de `@yudiel/react-qr-scanner` cambió `onResult` → `onScan`. Ajustar el prop y firma del handler.
+3. **`src/routes/index.tsx:124`** — `checkMobile` no está definida (causa también el runtime error actual). Definir el helper dentro del `useEffect` o eliminar la referencia.
+4. **`src/routes/index.tsx:181`** — el select de `donations_info` devuelve `SelectQueryError` (relación mal inferida). Simplificar el `.select("*")` o castear vía `unknown as DonationRow[]`.
+5. **`src/routes/index.tsx:205`** — quitar el prop `priority` del `<img>` nativo (o cambiar a `<OptimizedImage>` que sí lo acepta).
+6. **`src/utils/Logactivity.ts`** — la tabla `activity_log` no existe en `types.ts`. Dos opciones: (a) crear la tabla vía migración, o (b) hacer el log opcional con cast a `any`. Propongo **opción b** (no bloquear build; ya hay `audit_logs` para auditoría real).
 
----
+### Parte 2 — Módulo Admin de Eventos
 
-## 1. Nueva página de Sacramentos
+**Base de datos:** La tabla `events` ya existe con `id, title, description, event_date, location, image_url, created_at, updated_at` y 7 policies RLS. No requiere migración.
 
-Se crea una ruta dedicada `/sacramentos` (con su propia URL compartible) que cubre los 7 sacramentos, priorizando los 4 más consultados:
+**Nueva ruta:** `src/routes/admin/eventos.tsx`
 
-- **Bautismo**: requisitos (partida de nacimiento, padrinos confirmados, charlas pre-bautismales), edad, costos referenciales, qué traer el día de la celebración.
-- **Primera Comunión**: edad, catequesis (duración, días), requisitos para niños y para adultos.
-- **Confirmación**: edad mínima, catequesis previa, padrinos.
-- **Matrimonio**: documentos (partidas de bautismo recientes, DNI, charlas prematrimoniales), tiempo de anticipación, expediente matrimonial.
-- **Reconciliación (Confesión)**: horarios disponibles.
-- **Unción de los enfermos**: cómo solicitarla a domicilio.
-- **Orden sacerdotal**: contacto vocacional.
+Estructura:
+- Envolver todo el componente con `<ProtectedRoute>` (ya existe en `src/components/auth/ProtectedRoute.tsx`) + verificación de rol `admin` vía `useUserRole()`.
+- Si no hay sesión o el rol no es admin → mensaje "Acceso denegado".
 
-Cada sacramento se presenta como tarjeta expandible (Accordion) con ícono dorado, lista de requisitos, horarios de atención y un botón "Solicitar información" que abre el formulario de contacto con el asunto pre-llenado.
+**UI (usando tokens del proyecto: `bg-card`, `primary`, `gold`, `border-border`):**
 
-En la página de inicio, la sección actual de "Vida sacramental" añade un botón **"Ver requisitos completos →"** que lleva a `/sacramentos`.
+```
+┌─ Header: "Gestión de Eventos" + botón "+ Nuevo Evento" (bg-primary)
+├─ Formulario (colapsable, bg-card rounded-2xl):
+│    - title (input required, max 200)
+│    - description (textarea)
+│    - event_date (datetime-local, min = ahora)
+│    - location (input)
+│    - Botones: Guardar (bg-gold) / Cancelar
+└─ Lista de eventos futuros (bg-card):
+     - Card por evento: título, fecha formateada, ubicación, descripción
+     - Íconos lucide: Calendar, MapPin, Trash2
+     - Botón eliminar → AlertDialog de shadcn para confirmar
+```
 
-Se añade el enlace **"Sacramentos"** en el Navbar.
+**Lógica:**
+- `useQuery` (o `useEffect` + estado, siguiendo el patrón del proyecto) para leer `events` donde `event_date >= now()` ordenado ASC.
+- Validación cliente: `event_date` no puede ser pasado (mostrar toast con `sonner`).
+- Validación con `zod` (título 1-200, fecha futura).
+- Insert:
+  ```ts
+  // TODO: AQUÍ SE CONFIGURARÁ EL WEBHOOK PARA NOTIFICACIONES AUTOMÁTICAS
+  await supabase.from("events").insert({...})
+  ```
+- Delete con confirmación (AlertDialog) → refresca lista.
+- Toast de éxito/error con `sonner`.
 
-## 2. Meta tags y og:image por página
+**Nota:** Ya existe `src/routes/admin/EventsManager.tsx`. Voy a **crear la nueva ruta `eventos.tsx` desde cero** como pediste, sin tocar el manager existente (por si se usa en otro lado).
 
-Cada ruta tendrá su propio `head()` con metadata específica:
+### Archivos afectados
 
-- `/` (Home): título, descripción y og:image actual de la parroquia.
-- `/sacramentos`: título "Sacramentos — Parroquia Santísima Trinidad de Tingo", descripción de los servicios, og:image temática.
-- Imágenes para compartir: se reutiliza la imagen del hero / Santísima Trinidad como og:image en cada ruta correspondiente.
-
-Incluye: `title`, `description`, `og:title`, `og:description`, `og:image`, `og:url`, `og:type`, `twitter:card`. También JSON-LD tipo **Church** / **CatholicChurch** en la home con dirección, horarios de misa y teléfono — esto ayuda a que Google muestre la parroquia con horarios en los resultados de búsqueda.
-
-## 3. Contraste y modo claro/oscuro
-
-- **Auditoría de contraste**: revisar secciones con texto dorado sobre fondos claros y textos `muted-foreground` que pierden legibilidad, ajustando los tokens en `src/styles.css` para cumplir WCAG AA.
-- **Toggle de tema** (sol/luna) en el Navbar, con persistencia en localStorage y respeto a `prefers-color-scheme` del sistema.
-- **Modo claro pulido**: definir bien las variables `--background`, `--foreground`, `--gold`, `--muted` para que el modo claro se vea elegante (no solo "invertido").
-- Script anti-flash (`ScriptOnce`) para evitar parpadeo al cargar.
-
----
-
-## Detalles técnicos
-
-- Nueva ruta: `src/routes/sacramentos.tsx` (TanStack file-based routing).
-- Componentes shadcn ya disponibles: `Accordion`, `Card`, `Button`.
-- Para el toggle de tema: hook `useTheme` simple + botón en `Navbar.tsx`; clase `dark` en `<html>`.
-- `head()` por ruta con dominio `https://parroquiatrinidadtingo.lovable.app`.
-- JSON-LD se inyecta vía `scripts` en `head()` de `/`.
-
----
-
-## Lo que NO incluye este plan
-
-- No conecta el formulario al envío real de correo (eso queda en el plan previo, pendiente de configurar el dominio).
-- No se cambia el contenido de horarios ni datos de contacto existentes.
+- ✏️ `src/routes/admin/AttendanceReport.tsx`
+- ✏️ `src/routes/admin/AttendanceScanner.tsx`
+- ✏️ `src/routes/index.tsx`
+- ✏️ `src/utils/Logactivity.ts`
+- 🆕 `src/routes/admin/eventos.tsx`
 
 ¿Procedo?

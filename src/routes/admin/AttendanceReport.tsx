@@ -108,7 +108,7 @@ export function AttendanceReport({ meetingId }: AttendanceReportProps) {
           } else if (asistencia.status === 'TARDANZA') {
             listTardanzas.push({ ...cat, status: asistencia.status });
           } else if (asistencia.status === 'JUSTIFICADO') {
-            listJustificados.push({ ...cat, status: asistencia.status, notes: asistencia.notes });
+            listJustificados.push({ ...cat, status: asistencia.status, notes: asistencia.notes ?? undefined });
           }
         });
 

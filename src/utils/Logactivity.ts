@@ -19,7 +19,7 @@ export async function logActivity({ action, entity, entityLabel, entityId }: Log
     const { data: userData } = await supabase.auth.getUser();
     const actorEmail = userData?.user?.email    ?? null;
 
-    const { error } = await supabase.from("activity_log").insert({
+    const { error } = await (supabase.from as any)("activity_log").insert({
       actor_email: actorEmail,
       action,
       entity,

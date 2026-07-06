@@ -120,13 +120,16 @@ function Home() {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
+    const checkMobile = () => window.matchMedia("(max-width: 768px)").matches;
+    setIsMobile(checkMobile());
+
     const onScroll = () => {
-      if (!checkMobile) {
+      if (!checkMobile()) {
         setScrollY(window.scrollY);
       }
-    }
+    };
     window.addEventListener("scroll", onScroll, { passive: true });
-    
+
     // 👇 2. Retrasar la inyección del feed iframe de Facebook 2.5 segundos
     const timer = setTimeout(() => setLoadFacebook(true), 2500);
 
@@ -178,7 +181,7 @@ function Home() {
     queryKey: ["home_donations"],
     queryFn: async () => {
       const { data } = await supabase.from("donations_info" as any).select("*").order("sort_order");
-      return (data as DonationRow[]) || [];
+      return ((data as unknown) as DonationRow[]) || [];
     },
     ...staleConfig
   });
@@ -202,7 +205,7 @@ function Home() {
             src="/assets/hero-church.jpg"
             alt="Parroquia Santísima Trinidad"
             className="ken-burns absolute inset-0 h-[115%] w-full object-cover"
-            priority="high"
+            fetchPriority="high"
           />
         </div>
 

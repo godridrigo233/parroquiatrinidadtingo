@@ -120,13 +120,14 @@ function EditModal({ open, onClose, title, children }: { open: boolean; onClose:
 // ────────────────────────────────────────────────
 //  SECCIÓN: EVENTOS
 // ────────────────────────────────────────────────
-type EventRow = { id: string; title: string; description: string | null; event_date: string; location: string | null };
+type EventRow = { id: string; title: string; description: string | null; event_date: string; location: string | null; image_url?: string | null };
 
 export function EventsManager({ showToast }: { showToast?: (m: string, t?: "success" | "error") => void }) {
   const confirm = useConfirm();
   const { items, load, remove } = useTable<EventRow>("events", "event_date", true, (e) => e.title);
   const empty = { title: "", description: "", event_date: "", location: "" };
   const [form, setForm] = useState(empty);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [editing, setEditing] = useState<EventRow | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -134,9 +135,30 @@ export function EventsManager({ showToast }: { showToast?: (m: string, t?: "succ
     e.preventDefault();
     setSaving(true);
 
+    // Subir afiche (si existe) al bucket público de imágenes
+    let image_url: string | null = null;
+    if (imageFile) {
+      const ext = imageFile.name.split(".").pop()?.toLowerCase() || "jpg";
+      if (!["png", "jpg", "jpeg"].includes(ext)) {
+        setSaving(false);
+        toast.error("Formato no permitido", { description: "Usa PNG, JPG o JPEG." });
+        return;
+      }
+      const path = `events/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("parroquia-images")
+        .upload(path, imageFile, { contentType: imageFile.type, upsert: false });
+      if (upErr) {
+        setSaving(false);
+        toast.error("No se pudo subir la imagen", { description: upErr.message });
+        return;
+      }
+      image_url = supabase.storage.from("parroquia-images").getPublicUrl(path).data.publicUrl;
+    }
+
     const { data, error } = await supabase
       .from("events")
-      .insert({ ...form, event_date: new Date(form.event_date).toISOString() })
+      .insert({ ...form, event_date: new Date(form.event_date).toISOString(), image_url })
       .select()
       .single();
 
@@ -158,6 +180,7 @@ export function EventsManager({ showToast }: { showToast?: (m: string, t?: "succ
           event_date: new Date(form.event_date).toISOString(),
           location: form.location,
           description: form.description,
+          image_url,
         }),
       });
     } catch (webhookError) {
@@ -176,8 +199,10 @@ export function EventsManager({ showToast }: { showToast?: (m: string, t?: "succ
     });
 
     setForm(empty);
+    setImageFile(null);
     load();
   };
+
 
   const saveEdit = async (e: React.FormEvent) => {
     e.preventDefault();

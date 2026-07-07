@@ -115,9 +115,6 @@ const sacerdotes = [
 function Home() {
   const [lightbox, setLightbox] = useState<{ url: string; title?: string | null } | null>(null);
   const [scrollY, setScrollY] = useState(0);
-  
-  // 👇 1. Estado para diferir la carga de Facebook y liberar el hilo principal del móvil
-  const [loadFacebook, setLoadFacebook] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {

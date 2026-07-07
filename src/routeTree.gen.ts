@@ -14,7 +14,6 @@ import { Route as CarnetRouteImport } from './routes/carnet'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
-import { Route as AdminEventosRouteImport } from './routes/admin/eventos'
 
 const SacramentosRoute = SacramentosRouteImport.update({
   id: '/sacramentos',
@@ -41,17 +40,11 @@ const AdminLoginRoute = AdminLoginRouteImport.update({
   path: '/admin/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminEventosRoute = AdminEventosRouteImport.update({
-  id: '/admin/eventos',
-  path: '/admin/eventos',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/carnet': typeof CarnetRoute
   '/sacramentos': typeof SacramentosRoute
-  '/admin/eventos': typeof AdminEventosRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/': typeof AdminIndexRoute
 }
@@ -59,7 +52,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/carnet': typeof CarnetRoute
   '/sacramentos': typeof SacramentosRoute
-  '/admin/eventos': typeof AdminEventosRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin': typeof AdminIndexRoute
 }
@@ -68,42 +60,21 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/carnet': typeof CarnetRoute
   '/sacramentos': typeof SacramentosRoute
-  '/admin/eventos': typeof AdminEventosRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/': typeof AdminIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/carnet'
-    | '/sacramentos'
-    | '/admin/eventos'
-    | '/admin/login'
-    | '/admin/'
+  fullPaths: '/' | '/carnet' | '/sacramentos' | '/admin/login' | '/admin/'
   fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/carnet'
-    | '/sacramentos'
-    | '/admin/eventos'
-    | '/admin/login'
-    | '/admin'
-  id:
-    | '__root__'
-    | '/'
-    | '/carnet'
-    | '/sacramentos'
-    | '/admin/eventos'
-    | '/admin/login'
-    | '/admin/'
+  to: '/' | '/carnet' | '/sacramentos' | '/admin/login' | '/admin'
+  id: '__root__' | '/' | '/carnet' | '/sacramentos' | '/admin/login' | '/admin/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CarnetRoute: typeof CarnetRoute
   SacramentosRoute: typeof SacramentosRoute
-  AdminEventosRoute: typeof AdminEventosRoute
   AdminLoginRoute: typeof AdminLoginRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
@@ -145,13 +116,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/eventos': {
-      id: '/admin/eventos'
-      path: '/admin/eventos'
-      fullPath: '/admin/eventos'
-      preLoaderRoute: typeof AdminEventosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -159,7 +123,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CarnetRoute: CarnetRoute,
   SacramentosRoute: SacramentosRoute,
-  AdminEventosRoute: AdminEventosRoute,
   AdminLoginRoute: AdminLoginRoute,
   AdminIndexRoute: AdminIndexRoute,
 }

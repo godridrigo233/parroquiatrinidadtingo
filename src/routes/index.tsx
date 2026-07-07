@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   Church, Clock, BookOpen, Flame, Heart, Users, Music, GraduationCap,
   Sparkles, MapPin, Phone, Facebook, Instagram, Mail, Calendar, ArrowRight, Quote, Briefcase,
+  MessageCircle,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/site/Navbar";

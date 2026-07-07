@@ -148,8 +148,25 @@ export function EventsManager({ showToast }: { showToast?: (m: string, t?: "succ
       return;
     }
 
+    // Notificación automática vía Webhook (Make.com)
+    try {
+      await fetch("https://hook.us2.make.com/k1clffm3rgfvp43hww8j9gokoty7y2gm", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: form.title,
+          event_date: new Date(form.event_date).toISOString(),
+          location: form.location,
+          description: form.description,
+        }),
+      });
+    } catch (webhookError) {
+      console.error("Webhook de notificación falló:", webhookError);
+    }
+
     toast.success(`Evento "${form.title}" publicado`);
     showToast?.("Evento creado");
+
 
     logActivity({
       action: "create",

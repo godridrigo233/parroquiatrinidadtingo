@@ -120,13 +120,14 @@ function EditModal({ open, onClose, title, children }: { open: boolean; onClose:
 // ────────────────────────────────────────────────
 //  SECCIÓN: EVENTOS
 // ────────────────────────────────────────────────
-type EventRow = { id: string; title: string; description: string | null; event_date: string; location: string | null };
+type EventRow = { id: string; title: string; description: string | null; event_date: string; location: string | null; image_url?: string | null };
 
 export function EventsManager({ showToast }: { showToast?: (m: string, t?: "success" | "error") => void }) {
   const confirm = useConfirm();
   const { items, load, remove } = useTable<EventRow>("events", "event_date", true, (e) => e.title);
   const empty = { title: "", description: "", event_date: "", location: "" };
   const [form, setForm] = useState(empty);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [editing, setEditing] = useState<EventRow | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -134,9 +135,30 @@ export function EventsManager({ showToast }: { showToast?: (m: string, t?: "succ
     e.preventDefault();
     setSaving(true);
 
+    // Subir afiche (si existe) al bucket público de imágenes
+    let image_url: string | null = null;
+    if (imageFile) {
+      const ext = imageFile.name.split(".").pop()?.toLowerCase() || "jpg";
+      if (!["png", "jpg", "jpeg"].includes(ext)) {
+        setSaving(false);
+        toast.error("Formato no permitido", { description: "Usa PNG, JPG o JPEG." });
+        return;
+      }
+      const path = `events/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("parroquia-images")
+        .upload(path, imageFile, { contentType: imageFile.type, upsert: false });
+      if (upErr) {
+        setSaving(false);
+        toast.error("No se pudo subir la imagen", { description: upErr.message });
+        return;
+      }
+      image_url = supabase.storage.from("parroquia-images").getPublicUrl(path).data.publicUrl;
+    }
+
     const { data, error } = await supabase
       .from("events")
-      .insert({ ...form, event_date: new Date(form.event_date).toISOString() })
+      .insert({ ...form, event_date: new Date(form.event_date).toISOString(), image_url })
       .select()
       .single();
 
@@ -158,6 +180,7 @@ export function EventsManager({ showToast }: { showToast?: (m: string, t?: "succ
           event_date: new Date(form.event_date).toISOString(),
           location: form.location,
           description: form.description,
+          image_url,
         }),
       });
     } catch (webhookError) {
@@ -176,8 +199,10 @@ export function EventsManager({ showToast }: { showToast?: (m: string, t?: "succ
     });
 
     setForm(empty);
+    setImageFile(null);
     load();
   };
+
 
   const saveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -231,11 +256,22 @@ export function EventsManager({ showToast }: { showToast?: (m: string, t?: "succ
           <Input required type="datetime-local" value={form.event_date} onChange={e => setForm({ ...form, event_date: e.target.value })} />
           <Input placeholder="Lugar (opcional)" value={form.location} onChange={e => setForm({ ...form, location: e.target.value })} />
           <Textarea placeholder="Descripción breve…" rows={3} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
+          <div>
+            <label className="block text-xs text-muted-foreground mb-1.5">Afiche del evento (PNG, JPG)</label>
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/jpg"
+              onChange={e => setImageFile(e.target.files?.[0] ?? null)}
+              className="w-full text-xs file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-gradient-gold file:text-primary file:font-semibold file:cursor-pointer cursor-pointer text-muted-foreground"
+            />
+            {imageFile && <p className="text-xs text-gold mt-1.5">📎 {imageFile.name}</p>}
+          </div>
           <PrimaryBtn type="submit" disabled={saving}>
             <Plus size={15} /> {saving ? "Publicando…" : "Publicar evento"}
           </PrimaryBtn>
         </form>
       </Card>
+
 
       <div className="lg:col-span-2 space-y-3">
         {items.length === 0 && (

@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   Church, Clock, BookOpen, Flame, Heart, Users, Music, GraduationCap,
   Sparkles, MapPin, Phone, Facebook, Instagram, Mail, Calendar, ArrowRight, Quote, Briefcase,
+  MessageCircle,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/site/Navbar";
@@ -553,6 +554,29 @@ function Home() {
               </div>
             </Reveal>
           )}
+
+          {/* Canal oficial de WhatsApp */}
+          <Reveal className="mt-10">
+            <div className="rounded-2xl bg-card border border-border p-6 md:p-8 shadow-card flex flex-col md:flex-row md:items-center gap-6">
+              <div className="shrink-0 h-14 w-14 rounded-2xl bg-[#25D366]/15 text-[#25D366] flex items-center justify-center">
+                <MessageCircle size={28} />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-display text-2xl md:text-3xl text-primary">Mantente conectado con nuestra comunidad</h3>
+                <p className="mt-2 text-sm md:text-base text-muted-foreground">
+                  Únete a nuestro canal oficial de WhatsApp para recibir avisos parroquiales, horarios y eventos en tu celular.
+                </p>
+              </div>
+              <a
+                href="https://whatsapp.com/channel/0029Vb8tmDx90x2wWaZDB71a"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full bg-[#25D366] text-white font-semibold hover:bg-[#1ebe57] shadow-card transition-colors whitespace-nowrap"
+              >
+                <MessageCircle size={20} /> Unirse al Canal de WhatsApp
+              </a>
+            </div>
+          </Reveal>
 
           {/* 👇 CONTROL DEL PROCESADOR MÓVIL: Solo renderiza Facebook tras pasar el temporizador inicial */}
           <div className="mt-12 min-h-[350px] flex items-center justify-center">

@@ -256,11 +256,22 @@ export function EventsManager({ showToast }: { showToast?: (m: string, t?: "succ
           <Input required type="datetime-local" value={form.event_date} onChange={e => setForm({ ...form, event_date: e.target.value })} />
           <Input placeholder="Lugar (opcional)" value={form.location} onChange={e => setForm({ ...form, location: e.target.value })} />
           <Textarea placeholder="Descripción breve…" rows={3} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
+          <div>
+            <label className="block text-xs text-muted-foreground mb-1.5">Afiche del evento (PNG, JPG)</label>
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/jpg"
+              onChange={e => setImageFile(e.target.files?.[0] ?? null)}
+              className="w-full text-xs file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-gradient-gold file:text-primary file:font-semibold file:cursor-pointer cursor-pointer text-muted-foreground"
+            />
+            {imageFile && <p className="text-xs text-gold mt-1.5">📎 {imageFile.name}</p>}
+          </div>
           <PrimaryBtn type="submit" disabled={saving}>
             <Plus size={15} /> {saving ? "Publicando…" : "Publicar evento"}
           </PrimaryBtn>
         </form>
       </Card>
+
 
       <div className="lg:col-span-2 space-y-3">
         {items.length === 0 && (

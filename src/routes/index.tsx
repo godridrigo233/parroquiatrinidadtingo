@@ -128,12 +128,8 @@ function Home() {
     };
     window.addEventListener("scroll", onScroll, { passive: true });
 
-    // 👇 2. Retrasar la inyección del feed iframe de Facebook 2.5 segundos
-    const timer = setTimeout(() => setLoadFacebook(true), 2500);
-
     return () => {
       window.removeEventListener("scroll", onScroll);
-      clearTimeout(timer);
     };
   }, []);
 

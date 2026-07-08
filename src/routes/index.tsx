@@ -547,97 +547,72 @@ function Home() {
             </Reveal>
           )}
 
-           {/* Grid moderno de publicaciones de Facebook */}
+          {/* Canal oficial de WhatsApp - Diseño Premium e Intuitivo */}
+          <Reveal className="mt-12">
+            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#25D366]/5 via-card to-card border border-[#25D366]/20 p-6 md:p-10 shadow-elegant group">
+              <div className="absolute -right-16 -bottom-16 w-64 h-64 bg-[#25D366]/5 rounded-full blur-3xl pointer-events-none group-hover:bg-[#25D366]/10 transition-colors duration-500" />
+              
+              <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+                <div className="flex flex-col md:flex-row items-start gap-5">
+                  <div className="shrink-0 h-16 w-16 rounded-2xl bg-[#25D366] text-white flex items-center justify-center shadow-[0_8px_25px_rgba(37,211,102,0.3)] group-hover:scale-105 transition-transform duration-300">
+                    <MessageCircle size={32} fill="currentColor" className="text-white" />
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="bg-[#25D366]/10 text-[#1e9e4b] text-xs font-bold tracking-wider px-3 py-1 rounded-full uppercase">
+                        Canal Oficial
+                      </span>
+                      <span className="text-muted-foreground/70 text-xs font-medium bg-muted px-2.5 py-1 rounded-full border border-border/40">
+                        🔒 Privado y Seguro
+                      </span>
+                    </div>
+                    
+                    <h3 className="font-display text-2xl md:text-3xl text-primary font-semibold tracking-tight">
+                      Mantente conectado con nuestra comunidad
+                    </h3>
+                    
+                    <p className="text-sm md:text-base text-muted-foreground max-w-2xl leading-relaxed">
+                      Únete para recibir de forma directa, instantánea y privada en tu celular:
+                    </p>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1 text-sm text-foreground/80 font-semibold">
+                      <div className="flex items-center gap-2 bg-black/5 dark:bg-white/5 px-3 py-2 rounded-xl border border-border/40">
+                        <span className="text-base">🔔</span> Avisos Parroquiales
+                      </div>
+                      <div className="flex items-center gap-2 bg-black/5 dark:bg-white/5 px-3 py-2 rounded-xl border border-border/40">
+                        <span className="text-base">📆</span> Horarios de Misa
+                      </div>
+                      <div className="flex items-center gap-2 bg-black/5 dark:bg-white/5 px-3 py-2 rounded-xl border border-border/40">
+                        <span className="text-base">✨</span> Eventos Especiales
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="shrink-0 w-full lg:w-auto">
+                  <a
+                    href="https://whatsapp.com/channel/0029Vb8tmDx90x2wWaZDB71a"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-3 w-full lg:w-auto px-8 py-4 rounded-2xl bg-[#25D366] text-white font-bold hover:bg-[#20ba59] shadow-[0_10px_25px_rgba(37,211,102,0.25)] hover:shadow-[0_10px_30px_rgba(37,211,102,0.4)] hover:-translate-y-1 transition-all duration-300 active:translate-y-0 text-center select-none"
+                  >
+                    Unirse al Canal de WhatsApp
+                    <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform duration-300" />
+                  </a>
+                </div>
+              </div>
+            </div>
+          </Reveal>
+
+          {/* Grid moderno de publicaciones de Facebook */}
           <Reveal className="mt-12">
             <h3 className="font-display text-2xl md:text-3xl text-primary mb-6">Últimas publicaciones</h3>
             <FacebookPostsGrid />
-         {/* Canal oficial de WhatsApp */}
-<Reveal className="mt-12">
-  <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#25D366]/5 via-card to-card border border-[#25D366]/20 p-6 md:p-10 shadow-elegant group">
-    {/* Destello decorativo de fondo */}
-    <div className="absolute -right-16 -bottom-16 w-64 h-64 bg-[#25D366]/5 rounded-full blur-3xl pointer-events-none group-hover:bg-[#25D366]/10 transition-colors duration-500" />
-    
-    <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-8">
-      <div className="flex flex-col md:flex-row items-start gap-5">
-        {/* Icono Principal con Sombra de Presencia */}
-        <div className="shrink-0 h-16 w-16 rounded-2xl bg-[#25D366] text-white flex items-center justify-center shadow-[0_8px_25px_rgba(37,211,102,0.3)] group-hover:scale-105 transition-transform duration-300">
-          <MessageCircle size={32} fill="currentColor" className="text-white" />
-        </div>
-        
-        {/* Bloque de Contenido */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="bg-[#25D366]/10 text-[#1e9e4b] text-xs font-bold tracking-wider px-3 py-1 rounded-full uppercase">
-              Canal Oficial
-            </span>
-            <span className="text-muted-foreground/70 text-xs font-medium bg-muted px-2.5 py-1 rounded-full border border-border/40">
-              🔒 Privado y Seguro
-            </span>
-          </div>
-          
-          <h3 className="font-display text-2xl md:text-3xl text-primary font-semibold tracking-tight">
-            Mantente conectado con nuestra comunidad
-          </h3>
-          
-          <p className="text-sm md:text-base text-muted-foreground max-w-2xl leading-relaxed">
-            Únete para recibir de forma directa, instantánea y privada en tu celular:
-          </p>
-          
-          {/* Grid Intuitivo: Desglose visual para lectura rápida en 1 segundo */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1 text-sm text-foreground/80 font-semibold">
-            <div className="flex items-center gap-2 bg-black/5 dark:bg-white/5 px-3 py-2 rounded-xl border border-border/40">
-              <span className="text-base">🔔</span> Avisos Parroquiales
-            </div>
-            <div className="flex items-center gap-2 bg-black/5 dark:bg-white/5 px-3 py-2 rounded-xl border border-border/40">
-              <span className="text-base">📆</span> Horarios de Misa
-            </div>
-            <div className="flex items-center gap-2 bg-black/5 dark:bg-white/5 px-3 py-2 rounded-xl border border-border/40">
-              <span className="text-base">✨</span> Eventos Especiales
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Botón de Acción de Alto Impacto */}
-      <div className="shrink-0 w-full lg:w-auto">
-        <a
-          href="https://whatsapp.com/channel/0029Vb8tmDx90x2wWaZDB71a"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center justify-center gap-3 w-full lg:w-auto px-8 py-4 rounded-2xl bg-[#25D366] text-white font-bold hover:bg-[#20ba59] shadow-[0_10px_25px_rgba(37,211,102,0.25)] hover:shadow-[0_10px_30px_rgba(37,211,102,0.4)] hover:-translate-y-1 transition-all duration-300 active:translate-y-0 text-center select-none"
-        >
-          Unirse al Canal de WhatsApp
-          <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform duration-300" />
-        </a>
-      </div>
-    </div>
-  </div>
-</Reveal>
-        </div>
-      </section>
-
-      {/* TESTIMONIOS */}
-      <section className="py-24 px-5 lg:px-8">
-        <div className="max-w-6xl mx-auto">
-          <Reveal className="text-center max-w-2xl mx-auto">
-            <p className="text-gold uppercase tracking-[0.25em] text-xs font-semibold">Voces de la comunidad</p>
-            <h2 className="mt-3 font-display text-4xl md:text-5xl font-medium">Testimonios</h2>
           </Reveal>
-
-          <div className="mt-14 grid md:grid-cols-2 gap-6">
-            {testimonios.map((t, i) => (
-              <Reveal key={i} delay={i * 80}>
-                <blockquote className="relative bg-card rounded-2xl p-8 border border-border shadow-card">
-                  <Quote className="absolute top-5 right-5 text-gold/30" size={48} />
-                  <p className="font-display text-xl leading-relaxed text-foreground/90 italic">«{t.text}»</p>
-                  <footer className="mt-5 text-sm text-muted-foreground">— {t.author}</footer>
-                </blockquote>
-              </Reveal>
-            ))}
-          </div>
         </div>
       </section>
-
+      
       {/* CONTACTO */}
       <section id="contacto" className="py-24 px-5 lg:px-8 bg-primary text-primary-foreground">
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-start">

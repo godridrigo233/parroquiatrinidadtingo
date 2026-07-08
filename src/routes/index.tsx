@@ -567,13 +567,10 @@ function Home() {
                       <span className="bg-[#25D366]/10 text-[#1e9e4b] text-xs font-bold tracking-wider px-3 py-1 rounded-full uppercase">
                         Canal Oficial
                       </span>
-                      <span className="text-muted-foreground/70 text-xs font-medium bg-muted px-2.5 py-1 rounded-full border border-border/40">
-                        🔒 Privado y Seguro
-                      </span>
                     </div>
                     
                     <h3 className="font-display text-2xl md:text-3xl text-primary font-semibold tracking-tight">
-                      Mantente conectado con nuestra comunidad
+                      Mantente conectado con nuestra comunidad!
                     </h3>
                     
                     <p className="text-sm md:text-base text-muted-foreground max-w-2xl leading-relaxed">

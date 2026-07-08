@@ -44,7 +44,7 @@ const sacramentos = [
       "Asistir a la charla pre-bautismal (padres y padrinos).",
     ],
     informacion: {
-      cuando: "Todos los sábados a las 10:00 a.m.",
+      cuando: "Todos los sábados desde las 15:00 pm, previa programación.",
       donde: "En el templo parroquial.",
       padrinos: "Máximo 2 padrinos.",
       anticipacion: "Con al menos 1 mes de anticipación.",
@@ -536,17 +536,7 @@ function SacramentosPage() {
                       <Phone size={16} />
                       Contactar secretaría
                     </a>
-                    <a
-                      href={`${SITE_URL}/contacto`}
-                      className="flex items-center gap-2.5 w-full px-4 py-3 rounded-xl border-2 text-sm font-semibold transition-colors hover:bg-[#F0F4F8]"
-                      style={{
-                        borderColor: selected.color,
-                        color: selected.color,
-                      }}
-                    >
-                      <Mail size={16} />
-                      Inscribirme
-                    </a>
+                    
                     {/* PLACEHOLDER: Enlace para descargar requisitos en PDF.
                         Reemplazar href con la ruta real del archivo PDF. */}
                     <a

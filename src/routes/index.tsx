@@ -574,33 +574,7 @@ function Home() {
           {/* Grid moderno de publicaciones de Facebook */}
           <Reveal className="mt-12">
             <h3 className="font-display text-2xl md:text-3xl text-primary mb-6">Últimas publicaciones</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-              {[
-                { src: "https://images.unsplash.com/photo-1548625149-fc4a29cf7092?auto=format&fit=crop&w=800&q=80", alt: "Comunidad parroquial reunida" },
-                { src: "https://images.unsplash.com/photo-1519834785169-98be25ec3f84?auto=format&fit=crop&w=800&q=80", alt: "Celebración litúrgica" },
-                { src: "https://images.unsplash.com/photo-1504052434569-70ad5836ab65?auto=format&fit=crop&w=800&q=80", alt: "Familia en la fe" },
-              ].map((post, i) => (
-                <a
-                  key={i}
-                  href="https://www.facebook.com/parroquiasantisimatrinidadtingo"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group block rounded-xl bg-card border border-border shadow-sm overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
-                >
-                  <div className="h-56 overflow-hidden">
-                    <OptimizedImage
-                      src={post.src}
-                      alt={post.alt}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                  </div>
-                  <div className="p-4 flex items-center gap-2 text-sm text-muted-foreground">
-                    <Facebook size={16} className="text-primary" />
-                    <span>Ver publicación</span>
-                  </div>
-                </a>
-              ))}
-            </div>
+            <FacebookPostsGrid />
           </Reveal>
         </div>
       </section>
@@ -745,6 +719,102 @@ function Home() {
       </footer>
 
       <WhatsAppFab />
+    </div>
+  );
+}
+
+type FacebookPost = {
+  id: number;
+  image_url: string | null;
+  post_url: string | null;
+  description: string | null;
+  created_at: string;
+};
+
+function FacebookPostsGrid() {
+  const { data, isLoading } = useQuery({
+    queryKey: ["facebook_posts", "latest3"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("facebook_posts")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(3);
+      if (error) throw error;
+      return (data ?? []) as FacebookPost[];
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="rounded-xl bg-white border border-border shadow-sm overflow-hidden animate-pulse">
+            <div className="h-56 bg-gray-200" />
+            <div className="p-4 space-y-2">
+              <div className="h-3 bg-gray-200 rounded w-11/12" />
+              <div className="h-3 bg-gray-200 rounded w-10/12" />
+              <div className="h-3 bg-gray-200 rounded w-8/12" />
+              <div className="h-4 bg-gray-200 rounded w-1/3 mt-4" />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  const posts = data ?? [];
+
+  if (posts.length === 0) {
+    return (
+      <div className="rounded-xl border border-dashed border-border bg-card/50 py-12 px-6 text-center">
+        <p className="text-muted-foreground mb-4">Aún no hay publicaciones recientes.</p>
+        <a
+          href="https://www.facebook.com/parroquiasantisimatrinidadtingo/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 text-primary font-semibold hover:text-gold transition-colors"
+        >
+          <Facebook size={18} /> Visita nuestra página de Facebook
+        </a>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+      {posts.map((post) => (
+        <a
+          key={post.id}
+          href={post.post_url ?? "https://www.facebook.com/parroquiasantisimatrinidadtingo/"}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group block rounded-xl bg-white border border-border shadow-sm overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
+        >
+          <div className="h-56 overflow-hidden bg-gray-100">
+            {post.image_url ? (
+              <OptimizedImage
+                src={post.image_url}
+                alt={post.description ?? "Publicación de Facebook"}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                <Facebook size={40} />
+              </div>
+            )}
+          </div>
+          <div className="px-4 pt-1 pb-4">
+            {post.description && (
+              <p className="text-sm text-gray-600 mt-3 mb-4 line-clamp-3">{post.description}</p>
+            )}
+            <div className="flex items-center gap-1.5 text-sm font-medium text-blue-600">
+              <span>Ver publicación</span>
+              <ArrowRight size={14} />
+            </div>
+          </div>
+        </a>
+      ))}
     </div>
   );
 }

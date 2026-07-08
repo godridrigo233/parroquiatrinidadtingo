@@ -10,7 +10,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/site/Navbar";
 import { Reveal } from "@/components/site/Reveal";
 import { WhatsAppFab } from "@/components/site/WhatsAppFab";
-
 import { OptimizedImage } from "@/components/site/OptimizedImage";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -722,28 +721,45 @@ function Home() {
     </div>
   );
 }
-
 type FacebookPost = {
-  id: number;
+  id: string;
   image_url: string | null;
   post_url: string | null;
   description: string | null;
-  created_at: string;
 };
-
 function FacebookPostsGrid() {
-  const { data, isLoading } = useQuery({
-    queryKey: ["facebook_posts", "latest3"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("facebook_posts")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(3);
-      if (error) throw error;
-      return (data ?? []) as FacebookPost[];
-    },
-  });
+  const [posts, setPosts] = useState<FacebookPost[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchFacebookFeed = async () => {
+      try {
+        // Hacemos el fetch directamente a tu endpoint JSON, mucho más rápido y sin intermediarios
+        const response = await fetch("https://rss.app/feeds/v1.1/vXpVb6k0mdMFJzil.json");
+        const data = await response.json();
+
+        if (data.items) {
+          // Mapeamos los datos exactamente como vienen en tu JSON
+          const formattedPosts = data.items.slice(0, 3).map((item: any) => ({
+            id: item.id,
+            post_url: item.url,
+            // Usamos content_text para la descripción sin etiquetas HTML
+            description: item.content_text || "Mira nuestra última publicación.",
+            // Jalamos la imagen directa del campo "image"
+            image_url: item.image || "https://images.unsplash.com/photo-1438032005730-c779502df39b?q=80&w=600"
+          }));
+          
+          setPosts(formattedPosts);
+        }
+      } catch (error) {
+        console.error("Error jalando el feed de Facebook en vivo:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchFacebookFeed();
+  }, []);
 
   if (isLoading) {
     return (
@@ -762,8 +778,6 @@ function FacebookPostsGrid() {
       </div>
     );
   }
-
-  const posts = data ?? [];
 
   if (posts.length === 0) {
     return (
@@ -793,9 +807,9 @@ function FacebookPostsGrid() {
         >
           <div className="h-56 overflow-hidden bg-gray-100">
             {post.image_url ? (
-              <OptimizedImage
+              <img
                 src={post.image_url}
-                alt={post.description ?? "Publicación de Facebook"}
+                alt="Publicación de Facebook"
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               />
             ) : (

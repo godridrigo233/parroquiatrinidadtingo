@@ -242,6 +242,30 @@ export type Database = {
         }
         Relationships: []
       }
+      facebook_posts: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: number
+          image_url: string
+          post_url: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: number
+          image_url: string
+          post_url: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: number
+          image_url?: string
+          post_url?: string
+        }
+        Relationships: []
+      }
       gallery_images: {
         Row: {
           category: string | null

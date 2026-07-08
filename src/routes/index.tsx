@@ -796,35 +796,43 @@ function FacebookPostsGrid() {
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
       {posts.map((post) => (
         <a
           key={post.id}
           href={post.post_url ?? "https://www.facebook.com/parroquiasantisimatrinidadtingo/"}
           target="_blank"
           rel="noopener noreferrer"
-          className="group block rounded-xl bg-white border border-border shadow-sm overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
+          className="group flex flex-col h-full rounded-2xl bg-white border border-border/60 shadow-md hover:shadow-xl hover:-translate-y-1.5 transition-all duration-500 overflow-hidden"
         >
-          <div className="h-56 overflow-hidden bg-gray-100">
+          {/* Contenedor de Imagen con efecto de zoom sutil */}
+          <div className="relative h-60 overflow-hidden bg-muted">
             {post.image_url ? (
               <img
                 src={post.image_url}
                 alt="Publicación de Facebook"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                <Facebook size={40} />
+              <div className="w-full h-full flex items-center justify-center text-muted-foreground bg-primary/5">
+                <Facebook size={48} className="opacity-20" />
               </div>
             )}
+            {/* Pequeño overlay gradiente para darle profundidad */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           </div>
-          <div className="px-4 pt-1 pb-4">
-            {post.description && (
-              <p className="text-sm text-gray-600 mt-3 mb-4 line-clamp-3">{post.description}</p>
-            )}
-            <div className="flex items-center gap-1.5 text-sm font-medium text-blue-600">
-              <span>Ver publicación</span>
-              <ArrowRight size={14} />
+
+          {/* Contenedor de Texto y Botón */}
+          <div className="flex flex-col flex-1 p-6 md:p-7">
+            {/* El flex-1 asegura que el texto empuje el botón hacia abajo */}
+            <p className="text-sm md:text-base text-foreground/80 leading-relaxed mb-6 line-clamp-4 flex-1">
+              {post.description}
+            </p>
+            
+            {/* Botón estilo "Call to Action" usando el color primario de la parroquia */}
+            <div className="mt-auto w-full py-3 px-4 rounded-xl bg-primary/5 group-hover:bg-primary text-primary group-hover:text-primary-foreground font-semibold flex items-center justify-center gap-2 transition-colors duration-300">
+              Ver publicación
+              <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-300" />
             </div>
           </div>
         </a>

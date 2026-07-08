@@ -10,7 +10,8 @@ import {
 import { useEffect } from "react";
 import appCss from "../styles.css?url";
 import { AuthProvider } from "@/contexts/AuthContext";
-
+import { CookieBanner } from '../components/auth/CookieBanner';
+import { useAnalytics } from '../hooks/useAnalytics';
 const ORG_JSONLD = {
   "@context": "https://schema.org",
   "@type": "CatholicChurch",
@@ -157,6 +158,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
+  useAnalytics('G-PHPPD45JSX')
   const { queryClient } = Route.useRouteContext();
     useEffect(() => {
     if ('serviceWorker' in navigator) {
@@ -172,6 +174,8 @@ function RootComponent() {
         <AuthProvider>
         <Outlet />
       </AuthProvider>
+      <CookieBanner />
     </QueryClientProvider>
+    
   );
 }

@@ -1,25 +1,40 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Droplets, Cookie, HeartHandshake, Heart, HandHeart, Cross, Phone, Clock, CheckCircle2 } from "lucide-react";
+import { useState } from "react";
+import {
+  Droplets,
+  Cookie,
+  HeartHandshake,
+  Heart,
+  HandHeart,
+  Cross,
+  Phone,
+  Clock,
+  CheckCircle2,
+  MapPin,
+  Calendar,
+  Users,
+  FileText,
+  ChevronRight,
+  Mail,
+  HelpCircle,
+} from "lucide-react";
 import { Navbar } from "@/components/site/Navbar";
 import { Reveal } from "@/components/site/Reveal";
-import { WhatsAppFab } from "@/components/site/WhatsAppFab";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-
-// NOTA: Se eliminó la importación de ogSacramentos aquí
 
 const SITE_URL = "https://parroquiatrinidadtingo.vercel.app";
+
+/* ─────────────────────── DATOS ─────────────────────── */
 
 const sacramentos = [
   {
     id: "bautismo",
     icon: Droplets,
     title: "Bautismo",
-    intro: "Puerta de entrada a la vida cristiana. Por el agua y el Espíritu nacemos a la fe.",
+    color: "#3B7A8C",
+    intro:
+      "Puerta de entrada a la vida cristiana. Por el agua y el Espíritu nacemos a la fe.",
+    descripcion:
+      "Por el Bautismo somos hijos de Dios, miembros de la Iglesia y herederos de la vida eterna.",
     requisitos: [
       "Copia de DNI.",
       "Recibo de agua y recibo de luz (ambos obligatorios).",
@@ -27,27 +42,73 @@ const sacramentos = [
       "Si son padrinos solteros, presentar constancia de confirmación.",
       "Asistir a la charla pre-bautismal (padres y padrinos).",
     ],
+    informacion: {
+      cuando: "Todos los sábados a las 10:00 a.m.",
+      donde: "En el templo parroquial.",
+      padrinos: "Máximo 2 padrinos.",
+      anticipacion: "Con al menos 1 mes de anticipación.",
+    },
     horario: "Solicitar con un mínimo de 1 mes de anticipación.",
     nota: "Para bautismos de mayores de 8 años se requiere asistir a catequesis.",
+    faq: [
+      {
+        q: "¿Pueden ser padrinos si no son casados por la Iglesia?",
+        a: "Sí, pueden ser padrinos siempre que sean solteros confirmados y lleven una vida acorde a la fe católica.",
+      },
+      {
+        q: "¿Cuántos padrinos puede tener mi hijo(a)?",
+        a: "Puede tener uno (1) o dos (2) padrinos, como máximo.",
+      },
+      {
+        q: "¿Los padres y padrinos deben asistir a la charla?",
+        a: "Sí, es un requisito indispensable para comprender el significado del sacramento y asumir el compromiso cristiano.",
+      },
+    ],
+    tiempo: "Inscribirse con 1 mes de anticipación.",
   },
   {
     id: "primera-comunion",
     icon: Cookie,
+    color: "#C8A030",
     title: "Primera Comunión",
-    intro: "Encuentro con el Señor presente en la Eucaristía. Pan de vida para el camino.",
+    intro:
+      "Encuentro con el Señor presente en la Eucaristía. Pan de vida para el camino.",
+    descripcion:
+      "Recibir el don del Espíritu Santo. Jesús se hace presente en la Eucaristía.",
     requisitos: [
       "Edad mínima: 9 años.",
       "Catequesis de 1 año.",
       "Pago de inscripción.",
       "Presentar la documentación requerida por secretaría.",
     ],
+    informacion: {
+      cuando: "Según calendario de catequesis.",
+      donde: "En el templo parroquial.",
+      padrinos: "No aplica para este sacramento.",
+      anticipacion: "Inicio de catequesis: marzo de cada año.",
+    },
     horario: "Inscripciones en secretaría parroquial.",
+    faq: [
+      {
+        q: "¿Cuánto dura la catequesis?",
+        a: "La catequesis de Primera Comunión tiene una duración de 1 año.",
+      },
+      {
+        q: "¿Cuál es la edad mínima?",
+        a: "El niño o la niña debe tener al menos 9 años cumplidos.",
+      },
+    ],
+    tiempo: "Inicio de catequesis: marzo de cada año.",
   },
   {
     id: "matrimonio",
     icon: HeartHandshake,
+    color: "#7A3B3B",
     title: "Matrimonio",
-    intro: "Alianza de amor entre un varón y una mujer, signo del amor de Cristo por su Iglesia.",
+    intro:
+      "Alianza de amor entre un varón y una mujer, signo del amor de Cristo por su Iglesia.",
+    descripcion:
+      "Alianza de amor bendecida por Dios. Signo del amor de Cristo por su Iglesia.",
     requisitos: [
       "Partida de Bautismo de los novios (original y actualizada).",
       "Constancia de Confirmación.",
@@ -62,42 +123,113 @@ const sacramentos = [
       "Inscripción con anticipación de 90 días (3 meses).",
       "Abonar el derecho parroquial.",
     ],
+    informacion: {
+      cuando: "Previa coordinación con el párroco.",
+      donde: "En el templo parroquial.",
+      padrinos: "Padrinos casados por la Iglesia.",
+      anticipacion: "Inscribirse con 3 meses de anticipación.",
+    },
     horario: "Atención para preparación: lunes a sábado de 3:00 a 6:00 PM.",
+    faq: [
+      {
+        q: "¿Cuánto tiempo antes debo inscribirme?",
+        a: "Se requiere una inscripción con anticipación mínima de 90 días (3 meses).",
+      },
+      {
+        q: "¿Qué documentos necesito de mis padrinos?",
+        a: "Los padrinos deben estar casados por la Iglesia y presentar su partida de matrimonio religioso.",
+      },
+    ],
+    tiempo: "Inscribirse con 3 meses de anticipación.",
   },
   {
     id: "reconciliacion",
     icon: Heart,
-    title: "Reconciliación (Confesión)",
-    intro: "El abrazo misericordioso del Padre que perdona y restaura.",
+    color: "#4A7C59",
+    title: "Reconciliación",
+    intro:
+      "El abrazo misericordioso del Padre que perdona y restaura.",
+    descripcion:
+      "El perdón de Dios que nos devuelve la paz. El abrazo misericordioso del Padre.",
     requisitos: [
       "No requiere inscripción previa.",
       "Examen de conciencia, arrepentimiento y propósito de enmienda.",
     ],
+    informacion: {
+      cuando: "Antes o después de cada misa.",
+      donde: "En el confesionario del templo.",
+      padrinos: "No aplica.",
+      anticipacion: "Previo en la celebración de la Primera Comunión.",
+    },
     horario: "Antes o después de misa.",
+    faq: [
+      {
+        q: "¿Necesito cita previa?",
+        a: "No, puede acercarse antes o después de cualquier misa para confesarse.",
+      },
+    ],
+    tiempo: "Previo a la celebración de Primera Comunión.",
   },
   {
     id: "uncion",
     icon: HandHeart,
-    title: "Unción de los enfermos",
-    intro: "Consuelo y fortaleza para quienes atraviesan enfermedad grave o edad avanzada.",
+    color: "#6B6B3D",
+    title: "Unción de los Enfermos",
+    intro:
+      "Consuelo y fortaleza para quienes atraviesan enfermedad grave o edad avanzada.",
+    descripcion:
+      "Fortaleza y consuelo en la enfermedad. Consuelo para quienes atraviesan enfermedad grave.",
     requisitos: [
       "Solicitar al sacerdote en cualquier momento.",
       "Indicar dirección y estado del enfermo.",
     ],
-    horario: "Atención a domicilio coordinando por teléfono o en secretaría.",
+    informacion: {
+      cuando: "En cualquier momento de necesidad.",
+      donde: "A domicilio o en el templo.",
+      padrinos: "No aplica.",
+      anticipacion: "Llamar a la oficina parroquial con la dirección del enfermo.",
+    },
+    horario:
+      "Atención a domicilio coordinando por teléfono o en secretaría.",
+    faq: [
+      {
+        q: "¿Se puede solicitar a domicilio?",
+        a: "Sí, el sacerdote puede acudir al domicilio del enfermo. Coordine por teléfono o en secretaría.",
+      },
+    ],
+    tiempo: "Llamar a la oficina parroquial con la dirección del enfermo.",
   },
   {
     id: "orden",
     icon: Cross,
-    title: "Orden sacerdotal",
-    intro: "Vocación al servicio del Pueblo de Dios como diácono, presbítero u obispo.",
+    color: "#5C3D6E",
+    title: "Orden Sacerdotal",
+    intro:
+      "Vocación al servicio del Pueblo de Dios como diácono, presbítero u obispo.",
+    descripcion:
+      "Vocación al servicio del Pueblo de Dios como diácono, presbítero u obispo.",
     requisitos: [
       "Discernimiento vocacional con un sacerdote acompañante.",
       "Formación en el seminario diocesano.",
     ],
+    informacion: {
+      cuando: "Proceso continuo de discernimiento.",
+      donde: "Con el párroco y en el seminario diocesano.",
+      padrinos: "No aplica.",
+      anticipacion: "Conversar con el párroco para acompañamiento vocacional.",
+    },
     horario: "Conversa con el párroco para acompañamiento vocacional.",
+    faq: [
+      {
+        q: "¿Cómo inicio el proceso?",
+        a: "El primer paso es conversar con el párroco, quien lo guiará en el discernimiento vocacional.",
+      },
+    ],
+    tiempo: "Conversar con el párroco para acompañamiento.",
   },
 ];
+
+/* ─────────────────── ROUTE ─────────────────── */
 
 export const Route = createFileRoute("/sacramentos")({
   head: () => ({
@@ -108,7 +240,10 @@ export const Route = createFileRoute("/sacramentos")({
         content:
           "Requisitos para Bautismo, Primera Comunión, Matrimonio, Confesión, Unción y Orden en la Parroquia Santísima Trinidad de Tingo, Arequipa.",
       },
-      { property: "og:title", content: "Sacramentos · Parroquia Santísima Trinidad" },
+      {
+        property: "og:title",
+        content: "Sacramentos · Parroquia Santísima Trinidad",
+      },
       {
         property: "og:description",
         content:
@@ -116,10 +251,15 @@ export const Route = createFileRoute("/sacramentos")({
       },
       { property: "og:url", content: `${SITE_URL}/sacramentos` },
       { property: "og:type", content: "article" },
-      // NOTA: Se actualizó la variable a la ruta de texto directo en las dos líneas siguientes:
-      { property: "og:image", content: `${SITE_URL}/assets/og-sacramentos.jpg` },
+      {
+        property: "og:image",
+        content: `${SITE_URL}/assets/og-sacramentos.jpg`,
+      },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:image", content: `${SITE_URL}/assets/og-sacramentos.jpg` },
+      {
+        name: "twitter:image",
+        content: `${SITE_URL}/assets/og-sacramentos.jpg`,
+      },
     ],
     links: [{ rel: "canonical", href: `${SITE_URL}/sacramentos` }],
     scripts: [
@@ -143,136 +283,504 @@ export const Route = createFileRoute("/sacramentos")({
   component: SacramentosPage,
 });
 
+/* ─────────────────── PAGE ─────────────────── */
+
 function SacramentosPage() {
+  const [selected, setSelected] = useState(sacramentos[0]);
+
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-[#FAF7F2] text-[#2C1810]">
       <Navbar />
 
-      {/* HERO */}
-      <section className="relative pt-32 pb-20 px-5 lg:px-8 bg-gradient-to-b from-primary to-primary/85 text-primary-foreground overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,oklch(0.78_0.13_80/0.18),transparent_60%)]" />
-        <div className="relative max-w-5xl mx-auto text-center">
-          <span className="gold-divider text-white/90">
-            <span>Vida sacramental</span>
-          </span>
-          <h1 className="mt-6 font-display text-5xl md:text-6xl lg:text-7xl font-medium leading-[1.05] text-white">
-            Los <span className="italic text-gold">Sacramentos</span><br />
-            en nuestra parroquia
-          </h1>
-          <p className="mt-7 max-w-2xl mx-auto text-white/80 text-lg leading-relaxed">
-            Signos eficaces de la gracia, instituidos por Cristo y confiados a la Iglesia. Conoce los requisitos y cómo prepararte para recibirlos.
-          </p>
-          <div className="mt-10 inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white/10 border border-white/20 backdrop-blur text-sm text-white/90">
-            <Clock size={16} className="text-gold" />
-            <span>Secretaría: Lunes a sábado · 3:00 PM – 6:00 PM</span>
+      {/* ════════════════ HERO ════════════════ */}
+      <section className="relative pt-24 overflow-hidden">
+        {/* Background: imagen de manos con cáliz — reemplazar src con tu imagen real */}
+        <div className="relative h-[340px] md:h-[420px] w-full">
+          <img
+            src="/assets/hero-sacramentos.jpg"
+            alt="Manos sosteniendo el cáliz sagrado"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#2C1810]/80 via-[#2C1810]/40 to-transparent" />
+          <div className="relative h-full flex flex-col justify-end pb-10 px-6 lg:px-8 max-w-6xl mx-auto">
+            <div className="flex items-center gap-3 mb-3">
+              <span className="block w-10 h-[2px] bg-[#C8A45C]" />
+              <span className="text-[#C8A45C] text-xs uppercase tracking-[0.3em] font-semibold">
+                Vida sacramental
+              </span>
+            </div>
+            <h1
+              className="font-display text-5xl md:text-6xl lg:text-7xl text-white leading-[1.05]"
+              style={{ fontStyle: "italic" }}
+            >
+              Sacramentos
+            </h1>
+            <p className="mt-2 text-white/75 text-base md:text-lg max-w-md">
+              Encuentros con la gracia de Dios
+            </p>
           </div>
         </div>
       </section>
 
-      {/* SACRAMENTOS GRID */}
-      <section className="py-20 md:py-24 px-5 lg:px-8">
-        <div className="max-w-5xl mx-auto">
-          <Reveal className="text-center max-w-2xl mx-auto mb-10">
-            <p className="text-gold uppercase tracking-[0.25em] text-xs font-semibold">Requisitos</p>
-            <h2 className="mt-3 font-display text-3xl md:text-4xl font-medium">
-              Pulsa cada sacramento para ver los detalles
+      {/* ════════════════ NUESTROS SACRAMENTOS — GRID ════════════════ */}
+      <section className="py-16 md:py-20 px-5 lg:px-8 bg-white">
+        <div className="max-w-6xl mx-auto">
+          <Reveal className="text-center mb-12">
+            <div className="flex items-center justify-center gap-3 mb-3">
+              <span className="block w-8 h-[2px] bg-[#C8A45C]" />
+              <span className="text-[#C8A45C] text-xs uppercase tracking-[0.3em] font-semibold">
+                Fe y gracia
+              </span>
+              <span className="block w-8 h-[2px] bg-[#C8A45C]" />
+            </div>
+            <h2 className="font-display text-3xl md:text-4xl font-medium text-[#2C1810]">
+              Nuestros Sacramentos
             </h2>
           </Reveal>
 
           <Reveal>
-            <Accordion type="single" collapsible className="space-y-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-5">
               {sacramentos.map((s) => {
                 const Icon = s.icon;
+                const isActive = selected.id === s.id;
                 return (
-                  <AccordionItem
+                  <button
                     key={s.id}
-                    value={s.id}
-                    id={s.id}
-                    className="border border-border bg-card rounded-2xl shadow-card overflow-hidden px-6 scroll-mt-24"
+                    onClick={() => setSelected(s)}
+                    className={`group flex flex-col items-center text-center p-5 rounded-2xl border transition-all duration-200 ${
+                      isActive
+                        ? "border-[#C8A45C] bg-[#FBF8F1] shadow-md"
+                        : "border-[#E8E2D8] bg-white hover:border-[#C8A45C]/50 hover:shadow-sm"
+                    }`}
                   >
-                    <AccordionTrigger className="py-6 hover:no-underline">
-                      <div className="flex items-center gap-4 text-left">
-                        <span className="h-12 w-12 rounded-xl bg-gradient-gold text-primary-foreground flex items-center justify-center shadow-card shrink-0">
-                          <Icon size={22} />
-                        </span>
-                        <div>
-                          <h3 className="font-display text-2xl text-primary">{s.title}</h3>
-                          <p className="text-sm text-muted-foreground mt-0.5">{s.intro}</p>
-                        </div>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="pb-7">
-                      <div className="pl-16 space-y-5">
-                        <div>
-                          <p className="text-xs uppercase tracking-[0.2em] text-gold font-semibold mb-3">Requisitos</p>
-                          <ul className="space-y-2.5">
-                            {s.requisitos.map((r, i) => (
-                              <li key={i} className="flex items-start gap-2.5 text-sm text-foreground/90">
-                                <CheckCircle2 size={16} className="text-gold mt-0.5 shrink-0" />
-                                <span>{r}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                        <div className="flex items-start gap-2.5 text-sm bg-secondary/60 rounded-lg p-4">
-                          <Clock size={16} className="text-gold mt-0.5 shrink-0" />
-                          <p className="text-foreground/85">{s.horario}</p>
-                        </div>
-                        {s.nota && (
-                          <p className="text-xs italic text-muted-foreground border-l-2 border-gold pl-3">
-                            {s.nota}
-                          </p>
-                        )}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
+                    <span
+                      className="h-16 w-16 rounded-full flex items-center justify-center mb-3 transition-transform group-hover:scale-105"
+                      style={{ backgroundColor: s.color + "18" }}
+                    >
+                      <Icon size={28} style={{ color: s.color }} />
+                    </span>
+                    <h3 className="font-display text-sm font-semibold text-[#2C1810] leading-tight mb-1.5">
+                      {s.title}
+                    </h3>
+                    <p className="text-[11px] text-[#6B5E53] leading-snug mb-3 line-clamp-3">
+                      {s.intro}
+                    </p>
+                    <span
+                      className="inline-flex items-center gap-1 text-xs font-semibold px-4 py-1.5 rounded-full text-white transition-opacity"
+                      style={{ backgroundColor: s.color }}
+                    >
+                      Ver más
+                    </span>
+                  </button>
                 );
               })}
-            </Accordion>
+            </div>
           </Reveal>
         </div>
       </section>
 
-      {/* CTA FINAL */}
-      <section className="py-20 px-5 lg:px-8 bg-secondary/50">
-        <div className="max-w-4xl mx-auto text-center">
-          <Reveal>
-            <p className="text-gold uppercase tracking-[0.25em] text-xs font-semibold">¿Tienes dudas?</p>
-            <h2 className="mt-3 font-display text-3xl md:text-4xl font-medium">
-              Conversa con nosotros
+      {/* ════════════════ DETALLE DEL SACRAMENTO SELECCIONADO ════════════════ */}
+      <section className="py-16 md:py-20 px-5 lg:px-8 bg-[#FAF7F2]">
+        <div className="max-w-6xl mx-auto">
+          <Reveal key={selected.id}>
+            <div className="grid lg:grid-cols-[380px_1fr] gap-8 items-start">
+              {/* Imagen lateral */}
+              <div className="relative rounded-2xl overflow-hidden h-[300px] lg:h-full min-h-[360px]">
+                {/* Reemplazar src con imagen real del sacramento */}
+                <img
+                  src={`/assets/sacramento-${selected.id}.jpg`}
+                  alt={selected.title}
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#2C1810]/60 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-6">
+                  <h3
+                    className="font-display text-3xl text-white font-medium"
+                    style={{ fontStyle: "italic" }}
+                  >
+                    {selected.title}
+                  </h3>
+                  <p className="mt-1 text-white/80 text-sm">
+                    {selected.descripcion}
+                  </p>
+                </div>
+              </div>
+
+              {/* Contenido detallado */}
+              <div className="bg-white rounded-2xl border border-[#E8E2D8] shadow-sm overflow-hidden">
+                {/* Tabs de cabecera */}
+                <div className="flex border-b border-[#E8E2D8]">
+                  <div className="flex-1 flex items-center gap-2 px-5 py-4 border-b-2 border-[#C8A45C] bg-[#FBF8F1]">
+                    <CheckCircle2
+                      size={16}
+                      className="text-[#C8A45C] shrink-0"
+                    />
+                    <span className="text-xs uppercase tracking-[0.15em] font-bold text-[#2C1810]">
+                      Requisitos
+                    </span>
+                  </div>
+                  <div className="flex-1 flex items-center gap-2 px-5 py-4">
+                    <HelpCircle
+                      size={16}
+                      className="text-[#9B8E80] shrink-0"
+                    />
+                    <span className="text-xs uppercase tracking-[0.15em] font-bold text-[#9B8E80]">
+                      Información
+                    </span>
+                  </div>
+                  <div className="flex-1 flex items-center gap-2 px-5 py-4">
+                    <FileText
+                      size={16}
+                      className="text-[#9B8E80] shrink-0"
+                    />
+                    <span className="text-xs uppercase tracking-[0.15em] font-bold text-[#9B8E80]">
+                      Acciones
+                    </span>
+                  </div>
+                </div>
+
+                {/* Contenido en 3 columnas */}
+                <div className="grid md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-[#E8E2D8]">
+                  {/* Col 1: Requisitos */}
+                  <div className="p-5">
+                    <ul className="space-y-3">
+                      {selected.requisitos.map((r, i) => (
+                        <li
+                          key={i}
+                          className="flex items-start gap-2.5 text-sm text-[#3D2B1F]/85"
+                        >
+                          <CheckCircle2
+                            size={15}
+                            style={{ color: selected.color }}
+                            className="mt-0.5 shrink-0"
+                          />
+                          <span>{r}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    {selected.nota && (
+                      <p className="mt-4 text-xs italic text-[#9B8E80] border-l-2 border-[#C8A45C] pl-3">
+                        {selected.nota}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Col 2: Información */}
+                  <div className="p-5 space-y-4">
+                    <div className="flex items-start gap-2.5">
+                      <Calendar
+                        size={15}
+                        className="text-[#C8A45C] mt-0.5 shrink-0"
+                      />
+                      <div>
+                        <p className="text-xs font-bold text-[#2C1810] uppercase tracking-wide">
+                          ¿Cuándo?
+                        </p>
+                        <p className="text-sm text-[#6B5E53] mt-0.5">
+                          {selected.informacion.cuando}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2.5">
+                      <MapPin
+                        size={15}
+                        className="text-[#C8A45C] mt-0.5 shrink-0"
+                      />
+                      <div>
+                        <p className="text-xs font-bold text-[#2C1810] uppercase tracking-wide">
+                          ¿Dónde?
+                        </p>
+                        <p className="text-sm text-[#6B5E53] mt-0.5">
+                          {selected.informacion.donde}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2.5">
+                      <Users
+                        size={15}
+                        className="text-[#C8A45C] mt-0.5 shrink-0"
+                      />
+                      <div>
+                        <p className="text-xs font-bold text-[#2C1810] uppercase tracking-wide">
+                          ¿Padrinos?
+                        </p>
+                        <p className="text-sm text-[#6B5E53] mt-0.5">
+                          {selected.informacion.padrinos}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2.5">
+                      <Clock
+                        size={15}
+                        className="text-[#C8A45C] mt-0.5 shrink-0"
+                      />
+                      <div>
+                        <p className="text-xs font-bold text-[#2C1810] uppercase tracking-wide">
+                          ¿Cuánto antes?
+                        </p>
+                        <p className="text-sm text-[#6B5E53] mt-0.5">
+                          {selected.informacion.anticipacion}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Col 3: Acciones */}
+                  <div className="p-5 space-y-3">
+                    <a
+                      href="tel:+51915049850"
+                      className="flex items-center gap-2.5 w-full px-4 py-3 rounded-xl text-white text-sm font-semibold transition-opacity hover:opacity-90"
+                      style={{ backgroundColor: selected.color }}
+                    >
+                      <Phone size={16} />
+                      Contactar secretaría
+                    </a>
+                    <a
+                      href={`${SITE_URL}/contacto`}
+                      className="flex items-center gap-2.5 w-full px-4 py-3 rounded-xl border-2 text-sm font-semibold transition-colors hover:bg-[#FAF7F2]"
+                      style={{
+                        borderColor: selected.color,
+                        color: selected.color,
+                      }}
+                    >
+                      <Mail size={16} />
+                      Inscribirme
+                    </a>
+                    {/* PLACEHOLDER: Enlace para descargar requisitos en PDF.
+                        Reemplazar href con la ruta real del archivo PDF. */}
+                    <a
+                      href={`/assets/requisitos-${selected.id}.pdf`}
+                      className="flex items-center gap-2.5 w-full px-4 py-3 rounded-xl bg-[#F5F0E8] text-[#2C1810] text-sm font-semibold transition-colors hover:bg-[#EDE7DB]"
+                    >
+                      <FileText size={16} className="text-[#C8A45C]" />
+                      Descargar requisitos (PDF)
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* ════════════════ PREGUNTAS FRECUENTES ════════════════ */}
+      <section className="py-16 md:py-20 px-5 lg:px-8 bg-white">
+        <div className="max-w-5xl mx-auto">
+          <Reveal className="text-center mb-10">
+            <div className="flex items-center justify-center gap-3 mb-3">
+              <span className="block w-8 h-[2px] bg-[#C8A45C]" />
+              <span className="text-[#C8A45C] text-xs uppercase tracking-[0.3em] font-semibold">
+                Dudas comunes
+              </span>
+              <span className="block w-8 h-[2px] bg-[#C8A45C]" />
+            </div>
+            <h2 className="font-display text-3xl md:text-4xl font-medium text-[#2C1810]">
+              Preguntas frecuentes
             </h2>
-            <p className="mt-4 text-muted-foreground max-w-xl mx-auto">
-              Las puertas de la parroquia están abiertas. Llámanos o acércate para acompañarte en este paso de fe.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-3 justify-center">
+          </Reveal>
+
+          <Reveal>
+            <div className="grid md:grid-cols-3 gap-5">
+              {(selected.faq ?? []).map((item, i) => (
+                <div
+                  key={i}
+                  className="bg-[#FBF8F1] rounded-2xl border border-[#E8E2D8] p-6"
+                >
+                  <div className="flex items-start gap-3 mb-3">
+                    <span
+                      className="h-8 w-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0"
+                      style={{ backgroundColor: selected.color }}
+                    >
+                      ?
+                    </span>
+                    <h4 className="font-display text-sm font-semibold text-[#2C1810] leading-snug">
+                      {item.q}
+                    </h4>
+                  </div>
+                  <p className="text-sm text-[#6B5E53] leading-relaxed pl-11">
+                    {item.a}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* ════════════════ TIEMPOS RECOMENDADOS ════════════════ */}
+      <section className="py-16 md:py-20 px-5 lg:px-8 bg-[#FAF7F2]">
+        <div className="max-w-6xl mx-auto">
+          <Reveal className="text-center mb-10">
+            <div className="flex items-center justify-center gap-3 mb-3">
+              <span className="block w-8 h-[2px] bg-[#C8A45C]" />
+              <span className="text-[#C8A45C] text-xs uppercase tracking-[0.3em] font-semibold">
+                Planifica
+              </span>
+              <span className="block w-8 h-[2px] bg-[#C8A45C]" />
+            </div>
+            <h2 className="font-display text-3xl md:text-4xl font-medium text-[#2C1810]">
+              Tiempos recomendados
+            </h2>
+          </Reveal>
+
+          <Reveal>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+              {sacramentos.map((s) => {
+                const Icon = s.icon;
+                return (
+                  <div
+                    key={s.id}
+                    className="bg-white rounded-2xl border border-[#E8E2D8] p-5 text-center"
+                  >
+                    <span
+                      className="inline-flex h-12 w-12 rounded-full items-center justify-center mb-3"
+                      style={{ backgroundColor: s.color + "15" }}
+                    >
+                      <Icon size={22} style={{ color: s.color }} />
+                    </span>
+                    <h4 className="font-display text-xs font-bold text-[#2C1810] mb-1.5">
+                      {s.title}
+                    </h4>
+                    <p className="text-[11px] text-[#6B5E53] leading-snug">
+                      {s.tiempo}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* ════════════════ CTA CONTACTO ════════════════ */}
+      <section className="py-16 px-5 lg:px-8 bg-white">
+        <div className="max-w-4xl mx-auto">
+          <Reveal>
+            <div className="bg-[#FBF8F1] border border-[#E8E2D8] rounded-2xl p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-6">
+              <div>
+                <h3 className="font-display text-2xl font-medium text-[#2C1810]">
+                  ¿Necesitas ayuda o tienes dudas?
+                </h3>
+                <p className="mt-2 text-sm text-[#6B5E53] max-w-md">
+                  Estamos para acompañarte en tu camino de fe. Llámanos o
+                  acércate a la secretaría parroquial.
+                </p>
+              </div>
               <a
                 href="tel:+51915049850"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-gold text-primary-foreground font-semibold shadow-card hover:shadow-elegant transition-shadow"
+                className="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-[#C8A45C] text-white font-semibold text-sm shadow-md hover:bg-[#B8943E] transition-colors shrink-0"
               >
-                <Phone size={18} /> +51 915 049 850
+                <Phone size={18} />
+                +51 915 049 850
               </a>
             </div>
           </Reveal>
         </div>
       </section>
 
-      {/* FOOTER mínimo */}
-      <footer className="bg-primary text-primary-foreground py-10 px-5 lg:px-8">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <img src="/assets/logo.png" alt="" className="h-9 w-9" />
+      {/* ════════════════ FOOTER ════════════════ */}
+      <footer className="bg-[#2C1810] text-white/80 py-12 px-5 lg:px-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
+            {/* Columna 1: Logo & misión */}
             <div>
-              <p className="font-display text-base text-white">Santísima Trinidad</p>
-              <p className="text-[11px] text-white/60 uppercase tracking-widest">Tingo · Arequipa</p>
+              <div className="flex items-center gap-3 mb-4">
+                <img
+                  src="/assets/logo.png"
+                  alt=""
+                  className="h-10 w-10"
+                />
+                <div>
+                  <p className="font-display text-sm text-white font-semibold">
+                    Parroquia Santísima
+                  </p>
+                  <p className="font-display text-sm text-white font-semibold">
+                    Trinidad de Tingo
+                  </p>
+                </div>
+              </div>
+              <p className="text-xs text-white/50 leading-relaxed">
+                Amar a Dios, servir a los demás y anunciar el Evangelio.
+              </p>
+            </div>
+
+            {/* Columna 2: Enlaces rápidos */}
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-[#C8A45C] font-semibold mb-4">
+                Enlaces rápidos
+              </p>
+              <ul className="space-y-2 text-sm">
+                {[
+                  "Inicio",
+                  "Parroquia",
+                  "Sacramentos",
+                  "Devociones",
+                  "Galería",
+                  "Contacto",
+                ].map((link) => (
+                  <li key={link}>
+                    <a
+                      href={`/${link.toLowerCase()}`}
+                      className="text-white/60 hover:text-[#C8A45C] transition-colors"
+                    >
+                      {link}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Columna 3: Contáctanos */}
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-[#C8A45C] font-semibold mb-4">
+                Contáctanos
+              </p>
+              <ul className="space-y-3 text-sm">
+                <li className="flex items-start gap-2 text-white/60">
+                  <MapPin size={14} className="mt-0.5 shrink-0 text-[#C8A45C]" />
+                  {/* PLACEHOLDER: Reemplazar con dirección real si es diferente */}
+                  <span>Calle Principal, Tingo, Cayma — Arequipa, Perú</span>
+                </li>
+                <li className="flex items-center gap-2 text-white/60">
+                  <Phone size={14} className="shrink-0 text-[#C8A45C]" />
+                  <span>(054) 123-456</span>
+                </li>
+                <li className="flex items-center gap-2 text-white/60">
+                  <Mail size={14} className="shrink-0 text-[#C8A45C]" />
+                  <span>parroquiasantisimatrinidad@gmail.com</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Columna 4: Síguenos */}
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-[#C8A45C] font-semibold mb-4">
+                Síguenos
+              </p>
+              {/* PLACEHOLDER: Reemplazar con enlaces reales de redes sociales */}
+              <div className="flex items-center gap-3">
+                {["Facebook", "Instagram", "YouTube"].map((network) => (
+                  <a
+                    key={network}
+                    href="#"
+                    aria-label={network}
+                    className="h-9 w-9 rounded-full bg-white/10 flex items-center justify-center text-white/60 hover:bg-[#C8A45C] hover:text-white transition-colors text-xs font-bold"
+                  >
+                    {network[0]}
+                  </a>
+                ))}
+              </div>
             </div>
           </div>
-          <p className="text-xs text-white/60">
-            © {new Date().getFullYear()} Parroquia Santísima Trinidad de Tingo
-          </p>
+
+          <div className="border-t border-white/10 pt-6 text-center">
+            <p className="text-xs text-white/40">
+              © {new Date().getFullYear()} Parroquia Santísima Trinidad de
+              Tingo — Todos los derechos reservados.
+            </p>
+          </div>
         </div>
       </footer>
-
-      <WhatsAppFab />
     </div>
   );
 }

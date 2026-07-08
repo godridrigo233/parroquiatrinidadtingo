@@ -289,7 +289,7 @@ function SacramentosPage() {
   const [selected, setSelected] = useState(sacramentos[0]);
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] text-[#2C1810]">
+    <div className="min-h-screen bg-[#F0F4F8] text-[#0F1B2D]">
       <Navbar />
 
       {/* ════════════════ HERO ════════════════ */}
@@ -301,7 +301,7 @@ function SacramentosPage() {
             alt="Manos sosteniendo el cáliz sagrado"
             className="absolute inset-0 w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#2C1810]/80 via-[#2C1810]/40 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0F1B2D]/80 via-[#0F1B2D]/40 to-transparent" />
           <div className="relative h-full flex flex-col justify-end pb-10 px-6 lg:px-8 max-w-6xl mx-auto">
             <div className="flex items-center gap-3 mb-3">
               <span className="block w-10 h-[2px] bg-[#C8A45C]" />
@@ -333,7 +333,7 @@ function SacramentosPage() {
               </span>
               <span className="block w-8 h-[2px] bg-[#C8A45C]" />
             </div>
-            <h2 className="font-display text-3xl md:text-4xl font-medium text-[#2C1810]">
+            <h2 className="font-display text-3xl md:text-4xl font-medium text-[#0F1B2D]">
               Nuestros Sacramentos
             </h2>
           </Reveal>
@@ -349,8 +349,8 @@ function SacramentosPage() {
                     onClick={() => setSelected(s)}
                     className={`group flex flex-col items-center text-center p-5 rounded-2xl border transition-all duration-200 ${
                       isActive
-                        ? "border-[#C8A45C] bg-[#FBF8F1] shadow-md"
-                        : "border-[#E8E2D8] bg-white hover:border-[#C8A45C]/50 hover:shadow-sm"
+                        ? "border-[#C8A45C] bg-[#E8EEF4] shadow-md"
+                        : "border-[#CBD5E1] bg-white hover:border-[#C8A45C]/50 hover:shadow-sm"
                     }`}
                   >
                     <span
@@ -359,10 +359,10 @@ function SacramentosPage() {
                     >
                       <Icon size={28} style={{ color: s.color }} />
                     </span>
-                    <h3 className="font-display text-sm font-semibold text-[#2C1810] leading-tight mb-1.5">
+                    <h3 className="font-display text-sm font-semibold text-[#0F1B2D] leading-tight mb-1.5">
                       {s.title}
                     </h3>
-                    <p className="text-[11px] text-[#6B5E53] leading-snug mb-3 line-clamp-3">
+                    <p className="text-[11px] text-[#5A6A7E] leading-snug mb-3 line-clamp-3">
                       {s.intro}
                     </p>
                     <span
@@ -380,7 +380,7 @@ function SacramentosPage() {
       </section>
 
       {/* ════════════════ DETALLE DEL SACRAMENTO SELECCIONADO ════════════════ */}
-      <section className="py-16 md:py-20 px-5 lg:px-8 bg-[#FAF7F2]">
+      <section className="py-16 md:py-20 px-5 lg:px-8 bg-[#F0F4F8]">
         <div className="max-w-6xl mx-auto">
           <Reveal key={selected.id}>
             <div className="grid lg:grid-cols-[380px_1fr] gap-8 items-start">
@@ -392,7 +392,7 @@ function SacramentosPage() {
                   alt={selected.title}
                   className="absolute inset-0 w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#2C1810]/60 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0F1B2D]/60 to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-6">
                   <h3
                     className="font-display text-3xl text-white font-medium"
@@ -407,47 +407,47 @@ function SacramentosPage() {
               </div>
 
               {/* Contenido detallado */}
-              <div className="bg-white rounded-2xl border border-[#E8E2D8] shadow-sm overflow-hidden">
+              <div className="bg-white rounded-2xl border border-[#CBD5E1] shadow-sm overflow-hidden">
                 {/* Tabs de cabecera */}
-                <div className="flex border-b border-[#E8E2D8]">
-                  <div className="flex-1 flex items-center gap-2 px-5 py-4 border-b-2 border-[#C8A45C] bg-[#FBF8F1]">
+                <div className="flex border-b border-[#CBD5E1]">
+                  <div className="flex-1 flex items-center gap-2 px-5 py-4 border-b-2 border-[#C8A45C] bg-[#E8EEF4]">
                     <CheckCircle2
                       size={16}
                       className="text-[#C8A45C] shrink-0"
                     />
-                    <span className="text-xs uppercase tracking-[0.15em] font-bold text-[#2C1810]">
+                    <span className="text-xs uppercase tracking-[0.15em] font-bold text-[#0F1B2D]">
                       Requisitos
                     </span>
                   </div>
                   <div className="flex-1 flex items-center gap-2 px-5 py-4">
                     <HelpCircle
                       size={16}
-                      className="text-[#9B8E80] shrink-0"
+                      className="text-[#7B8A9E] shrink-0"
                     />
-                    <span className="text-xs uppercase tracking-[0.15em] font-bold text-[#9B8E80]">
+                    <span className="text-xs uppercase tracking-[0.15em] font-bold text-[#7B8A9E]">
                       Información
                     </span>
                   </div>
                   <div className="flex-1 flex items-center gap-2 px-5 py-4">
                     <FileText
                       size={16}
-                      className="text-[#9B8E80] shrink-0"
+                      className="text-[#7B8A9E] shrink-0"
                     />
-                    <span className="text-xs uppercase tracking-[0.15em] font-bold text-[#9B8E80]">
+                    <span className="text-xs uppercase tracking-[0.15em] font-bold text-[#7B8A9E]">
                       Acciones
                     </span>
                   </div>
                 </div>
 
                 {/* Contenido en 3 columnas */}
-                <div className="grid md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-[#E8E2D8]">
+                <div className="grid md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-[#CBD5E1]">
                   {/* Col 1: Requisitos */}
                   <div className="p-5">
                     <ul className="space-y-3">
                       {selected.requisitos.map((r, i) => (
                         <li
                           key={i}
-                          className="flex items-start gap-2.5 text-sm text-[#3D2B1F]/85"
+                          className="flex items-start gap-2.5 text-sm text-[#1A2940]/85"
                         >
                           <CheckCircle2
                             size={15}
@@ -459,7 +459,7 @@ function SacramentosPage() {
                       ))}
                     </ul>
                     {selected.nota && (
-                      <p className="mt-4 text-xs italic text-[#9B8E80] border-l-2 border-[#C8A45C] pl-3">
+                      <p className="mt-4 text-xs italic text-[#7B8A9E] border-l-2 border-[#C8A45C] pl-3">
                         {selected.nota}
                       </p>
                     )}
@@ -473,10 +473,10 @@ function SacramentosPage() {
                         className="text-[#C8A45C] mt-0.5 shrink-0"
                       />
                       <div>
-                        <p className="text-xs font-bold text-[#2C1810] uppercase tracking-wide">
+                        <p className="text-xs font-bold text-[#0F1B2D] uppercase tracking-wide">
                           ¿Cuándo?
                         </p>
-                        <p className="text-sm text-[#6B5E53] mt-0.5">
+                        <p className="text-sm text-[#5A6A7E] mt-0.5">
                           {selected.informacion.cuando}
                         </p>
                       </div>
@@ -487,10 +487,10 @@ function SacramentosPage() {
                         className="text-[#C8A45C] mt-0.5 shrink-0"
                       />
                       <div>
-                        <p className="text-xs font-bold text-[#2C1810] uppercase tracking-wide">
+                        <p className="text-xs font-bold text-[#0F1B2D] uppercase tracking-wide">
                           ¿Dónde?
                         </p>
-                        <p className="text-sm text-[#6B5E53] mt-0.5">
+                        <p className="text-sm text-[#5A6A7E] mt-0.5">
                           {selected.informacion.donde}
                         </p>
                       </div>
@@ -501,10 +501,10 @@ function SacramentosPage() {
                         className="text-[#C8A45C] mt-0.5 shrink-0"
                       />
                       <div>
-                        <p className="text-xs font-bold text-[#2C1810] uppercase tracking-wide">
+                        <p className="text-xs font-bold text-[#0F1B2D] uppercase tracking-wide">
                           ¿Padrinos?
                         </p>
-                        <p className="text-sm text-[#6B5E53] mt-0.5">
+                        <p className="text-sm text-[#5A6A7E] mt-0.5">
                           {selected.informacion.padrinos}
                         </p>
                       </div>
@@ -515,10 +515,10 @@ function SacramentosPage() {
                         className="text-[#C8A45C] mt-0.5 shrink-0"
                       />
                       <div>
-                        <p className="text-xs font-bold text-[#2C1810] uppercase tracking-wide">
+                        <p className="text-xs font-bold text-[#0F1B2D] uppercase tracking-wide">
                           ¿Cuánto antes?
                         </p>
-                        <p className="text-sm text-[#6B5E53] mt-0.5">
+                        <p className="text-sm text-[#5A6A7E] mt-0.5">
                           {selected.informacion.anticipacion}
                         </p>
                       </div>
@@ -537,7 +537,7 @@ function SacramentosPage() {
                     </a>
                     <a
                       href={`${SITE_URL}/contacto`}
-                      className="flex items-center gap-2.5 w-full px-4 py-3 rounded-xl border-2 text-sm font-semibold transition-colors hover:bg-[#FAF7F2]"
+                      className="flex items-center gap-2.5 w-full px-4 py-3 rounded-xl border-2 text-sm font-semibold transition-colors hover:bg-[#F0F4F8]"
                       style={{
                         borderColor: selected.color,
                         color: selected.color,
@@ -550,7 +550,7 @@ function SacramentosPage() {
                         Reemplazar href con la ruta real del archivo PDF. */}
                     <a
                       href={`/assets/requisitos-${selected.id}.pdf`}
-                      className="flex items-center gap-2.5 w-full px-4 py-3 rounded-xl bg-[#F5F0E8] text-[#2C1810] text-sm font-semibold transition-colors hover:bg-[#EDE7DB]"
+                      className="flex items-center gap-2.5 w-full px-4 py-3 rounded-xl bg-[#E1E8F0] text-[#0F1B2D] text-sm font-semibold transition-colors hover:bg-[#D4DCE8]"
                     >
                       <FileText size={16} className="text-[#C8A45C]" />
                       Descargar requisitos (PDF)
@@ -574,7 +574,7 @@ function SacramentosPage() {
               </span>
               <span className="block w-8 h-[2px] bg-[#C8A45C]" />
             </div>
-            <h2 className="font-display text-3xl md:text-4xl font-medium text-[#2C1810]">
+            <h2 className="font-display text-3xl md:text-4xl font-medium text-[#0F1B2D]">
               Preguntas frecuentes
             </h2>
           </Reveal>
@@ -584,7 +584,7 @@ function SacramentosPage() {
               {(selected.faq ?? []).map((item, i) => (
                 <div
                   key={i}
-                  className="bg-[#FBF8F1] rounded-2xl border border-[#E8E2D8] p-6"
+                  className="bg-[#E8EEF4] rounded-2xl border border-[#CBD5E1] p-6"
                 >
                   <div className="flex items-start gap-3 mb-3">
                     <span
@@ -593,11 +593,11 @@ function SacramentosPage() {
                     >
                       ?
                     </span>
-                    <h4 className="font-display text-sm font-semibold text-[#2C1810] leading-snug">
+                    <h4 className="font-display text-sm font-semibold text-[#0F1B2D] leading-snug">
                       {item.q}
                     </h4>
                   </div>
-                  <p className="text-sm text-[#6B5E53] leading-relaxed pl-11">
+                  <p className="text-sm text-[#5A6A7E] leading-relaxed pl-11">
                     {item.a}
                   </p>
                 </div>
@@ -608,7 +608,7 @@ function SacramentosPage() {
       </section>
 
       {/* ════════════════ TIEMPOS RECOMENDADOS ════════════════ */}
-      <section className="py-16 md:py-20 px-5 lg:px-8 bg-[#FAF7F2]">
+      <section className="py-16 md:py-20 px-5 lg:px-8 bg-[#F0F4F8]">
         <div className="max-w-6xl mx-auto">
           <Reveal className="text-center mb-10">
             <div className="flex items-center justify-center gap-3 mb-3">
@@ -618,7 +618,7 @@ function SacramentosPage() {
               </span>
               <span className="block w-8 h-[2px] bg-[#C8A45C]" />
             </div>
-            <h2 className="font-display text-3xl md:text-4xl font-medium text-[#2C1810]">
+            <h2 className="font-display text-3xl md:text-4xl font-medium text-[#0F1B2D]">
               Tiempos recomendados
             </h2>
           </Reveal>
@@ -630,7 +630,7 @@ function SacramentosPage() {
                 return (
                   <div
                     key={s.id}
-                    className="bg-white rounded-2xl border border-[#E8E2D8] p-5 text-center"
+                    className="bg-white rounded-2xl border border-[#CBD5E1] p-5 text-center"
                   >
                     <span
                       className="inline-flex h-12 w-12 rounded-full items-center justify-center mb-3"
@@ -638,10 +638,10 @@ function SacramentosPage() {
                     >
                       <Icon size={22} style={{ color: s.color }} />
                     </span>
-                    <h4 className="font-display text-xs font-bold text-[#2C1810] mb-1.5">
+                    <h4 className="font-display text-xs font-bold text-[#0F1B2D] mb-1.5">
                       {s.title}
                     </h4>
-                    <p className="text-[11px] text-[#6B5E53] leading-snug">
+                    <p className="text-[11px] text-[#5A6A7E] leading-snug">
                       {s.tiempo}
                     </p>
                   </div>
@@ -656,12 +656,12 @@ function SacramentosPage() {
       <section className="py-16 px-5 lg:px-8 bg-white">
         <div className="max-w-4xl mx-auto">
           <Reveal>
-            <div className="bg-[#FBF8F1] border border-[#E8E2D8] rounded-2xl p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="bg-[#E8EEF4] border border-[#CBD5E1] rounded-2xl p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-6">
               <div>
-                <h3 className="font-display text-2xl font-medium text-[#2C1810]">
+                <h3 className="font-display text-2xl font-medium text-[#0F1B2D]">
                   ¿Necesitas ayuda o tienes dudas?
                 </h3>
-                <p className="mt-2 text-sm text-[#6B5E53] max-w-md">
+                <p className="mt-2 text-sm text-[#5A6A7E] max-w-md">
                   Estamos para acompañarte en tu camino de fe. Llámanos o
                   acércate a la secretaría parroquial.
                 </p>
@@ -679,7 +679,7 @@ function SacramentosPage() {
       </section>
 
       {/* ════════════════ FOOTER ════════════════ */}
-      <footer className="bg-[#2C1810] text-white/80 py-12 px-5 lg:px-8">
+      <footer className="bg-[#0F1B2D] text-white/80 py-12 px-5 lg:px-8">
         <div className="max-w-6xl mx-auto">
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
             {/* Columna 1: Logo & misión */}
@@ -739,15 +739,15 @@ function SacramentosPage() {
                 <li className="flex items-start gap-2 text-white/60">
                   <MapPin size={14} className="mt-0.5 shrink-0 text-[#C8A45C]" />
                   {/* PLACEHOLDER: Reemplazar con dirección real si es diferente */}
-                  <span>Calle Principal, Tingo, Cayma — Arequipa, Perú</span>
+                  <span>Américas 1820, Arequipa 04011 — Entrada de Jacobo Hunter, Tingo</span>
                 </li>
                 <li className="flex items-center gap-2 text-white/60">
                   <Phone size={14} className="shrink-0 text-[#C8A45C]" />
-                  <span>(054) 123-456</span>
+                  <span>+51 915 049 850</span>
                 </li>
                 <li className="flex items-center gap-2 text-white/60">
                   <Mail size={14} className="shrink-0 text-[#C8A45C]" />
-                  <span>parroquiasantisimatrinidad@gmail.com</span>
+                  <span>pstrinidadtingo@gmail.com</span>
                 </li>
               </ul>
             </div>

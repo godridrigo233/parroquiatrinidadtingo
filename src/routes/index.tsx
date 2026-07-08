@@ -574,33 +574,7 @@ function Home() {
           {/* Grid moderno de publicaciones de Facebook */}
           <Reveal className="mt-12">
             <h3 className="font-display text-2xl md:text-3xl text-primary mb-6">Últimas publicaciones</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-              {[
-                { src: "https://images.unsplash.com/photo-1548625149-fc4a29cf7092?auto=format&fit=crop&w=800&q=80", alt: "Comunidad parroquial reunida" },
-                { src: "https://images.unsplash.com/photo-1519834785169-98be25ec3f84?auto=format&fit=crop&w=800&q=80", alt: "Celebración litúrgica" },
-                { src: "https://images.unsplash.com/photo-1504052434569-70ad5836ab65?auto=format&fit=crop&w=800&q=80", alt: "Familia en la fe" },
-              ].map((post, i) => (
-                <a
-                  key={i}
-                  href="https://www.facebook.com/parroquiasantisimatrinidadtingo"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group block rounded-xl bg-card border border-border shadow-sm overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all duration-300"
-                >
-                  <div className="h-56 overflow-hidden">
-                    <OptimizedImage
-                      src={post.src}
-                      alt={post.alt}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                  </div>
-                  <div className="p-4 flex items-center gap-2 text-sm text-muted-foreground">
-                    <Facebook size={16} className="text-primary" />
-                    <span>Ver publicación</span>
-                  </div>
-                </a>
-              ))}
-            </div>
+            <FacebookPostsGrid />
           </Reveal>
         </div>
       </section>

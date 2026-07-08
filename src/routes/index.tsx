@@ -546,7 +546,11 @@ function Home() {
               </div>
             </Reveal>
           )}
-
+          {/* Grid moderno de publicaciones de Facebook */}
+          <Reveal className="mt-12">
+            <h3 className="font-display text-2xl md:text-3xl text-primary mb-6">Últimas publicaciones</h3>
+            <FacebookPostsGrid />
+          </Reveal>
           {/* Canal oficial de WhatsApp - Diseño Premium e Intuitivo */}
           <Reveal className="mt-12">
             <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#25D366]/5 via-card to-card border border-[#25D366]/20 p-6 md:p-10 shadow-elegant group">
@@ -605,11 +609,7 @@ function Home() {
             </div>
           </Reveal>
 
-          {/* Grid moderno de publicaciones de Facebook */}
-          <Reveal className="mt-12">
-            <h3 className="font-display text-2xl md:text-3xl text-primary mb-6">Últimas publicaciones</h3>
-            <FacebookPostsGrid />
-          </Reveal>
+          
         </div>
       </section>
       

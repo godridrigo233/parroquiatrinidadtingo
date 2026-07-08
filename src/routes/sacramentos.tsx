@@ -15,6 +15,7 @@ import {
   Users,
   FileText,
   ChevronRight,
+  Facebook, Instagram,
   Mail,
   HelpCircle,
 } from "lucide-react";
@@ -703,34 +704,7 @@ function SacramentosPage() {
                 Amar a Dios, servir a los demás y anunciar el Evangelio.
               </p>
             </div>
-
-            {/* Columna 2: Enlaces rápidos */}
-            <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-[#C8A45C] font-semibold mb-4">
-                Enlaces rápidos
-              </p>
-              <ul className="space-y-2 text-sm">
-                {[
-                  "Inicio",
-                  "Parroquia",
-                  "Sacramentos",
-                  "Devociones",
-                  "Galería",
-                  "Contacto",
-                ].map((link) => (
-                  <li key={link}>
-                    <a
-                      href={`/${link.toLowerCase()}`}
-                      className="text-white/60 hover:text-[#C8A45C] transition-colors"
-                    >
-                      {link}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Columna 3: Contáctanos */}
+                {/* Columna 3: Contáctanos */}
             <div>
               <p className="text-xs uppercase tracking-[0.2em] text-[#C8A45C] font-semibold mb-4">
                 Contáctanos
@@ -757,19 +731,27 @@ function SacramentosPage() {
               <p className="text-xs uppercase tracking-[0.2em] text-[#C8A45C] font-semibold mb-4">
                 Síguenos
               </p>
-              {/* PLACEHOLDER: Reemplazar con enlaces reales de redes sociales */}
-              <div className="flex items-center gap-3">
-                {["Facebook", "Instagram", "YouTube"].map((network) => (
-                  <a
-                    key={network}
-                    href="#"
-                    aria-label={network}
-                    className="h-9 w-9 rounded-full bg-white/10 flex items-center justify-center text-white/60 hover:bg-[#C8A45C] hover:text-white transition-colors text-xs font-bold"
-                  >
-                    {network[0]}
-                  </a>
-                ))}
-              </div>
+              <li className="flex items-start gap-4">
+                <span className="h-11 w-11 rounded-xl bg-white/10 flex items-center justify-center text-gold shrink-0"><Facebook size={20} /></span>
+                <div>
+                  <p className="font-semibold text-white">Facebook</p>
+                  <a href="https://www.facebook.com/parroquiasantisimatrinidadtingo/" target="_blank" rel="noopener noreferrer" className="text-white/75 text-sm hover:text-gold">@parroquiasantisimatrinidadtingo</a>
+                </div>
+              </li>
+              <li className="flex items-start gap-4">
+                <span className="h-11 w-11 rounded-xl bg-white/10 flex items-center justify-center text-gold shrink-0"><Instagram size={20} /></span>
+                <div>
+                  <p className="font-semibold text-white">Instagram</p>
+                  <a href="https://www.instagram.com/stma_trinidad_tingo/" target="_blank" rel="noopener noreferrer" className="text-white/75 text-sm hover:text-gold">@stma_trinidad_tingo</a>
+                </div>
+              </li>
+              <li className="flex items-start gap-4">
+                <span className="h-11 w-11 rounded-xl bg-white/10 flex items-center justify-center text-gold shrink-0"><Mail size={20} /></span>
+                <div>
+                  <p className="font-semibold text-white">Correo</p>
+                  <p className="text-white/75 text-sm">pstrinidadtingo@gmail.com</p>
+                </div>
+              </li>
             </div>
           </div>
 

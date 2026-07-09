@@ -147,7 +147,7 @@ export function EventsManager({ showToast }: { showToast?: (m: string, t?: "succ
       const path = `events/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
       const { error: upErr } = await supabase.storage
         .from("parroquia-images")
-        .upload(path, imageFile, { contentType: imageFile.type, upsert: false });
+        .upload(path, imageFile, { contentType: imageFile.type, upsert: false, cacheControl: '31536000' });
       if (upErr) {
         setSaving(false);
         toast.error("No se pudo subir la imagen", { description: upErr.message });

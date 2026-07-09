@@ -440,7 +440,7 @@ function MinistriesManager({ showToast }: { showToast: (m: string, t?: "success"
   const uploadImage = async (f: File) => {
     const compressed = await imageCompression(f, { maxSizeMB: 0.8, maxWidthOrHeight: 1200, useWebWorker: true });
     const path = `ministerios/${Math.random()}.${compressed.name.split('.').pop() || 'jpg'}`;
-    const { error } = await supabase.storage.from('parroquia-images').upload(path, compressed);
+    const { error } = await supabase.storage.from('parroquia-images').upload(path, compressed, { cacheControl: '31536000' });
     if (error) throw error;
     return supabase.storage.from('parroquia-images').getPublicUrl(path).data.publicUrl;
   };
@@ -547,7 +547,7 @@ function GalleryManager({ showToast }: { showToast: (m: string, t?: "success" | 
   const uploadImage = async (f: File) => {
     const compressed = await imageCompression(f, { maxSizeMB: 0.8, maxWidthOrHeight: 1200, useWebWorker: true });
     const path = `galeria/${Math.random()}.${compressed.name.split('.').pop() || 'jpg'}`;
-    const { error } = await supabase.storage.from('parroquia-images').upload(path, compressed);
+    const { error } = await supabase.storage.from('parroquia-images').upload(path, compressed, { cacheControl: '31536000' });
     if (error) throw error;
     return supabase.storage.from('parroquia-images').getPublicUrl(path).data.publicUrl;
   };
@@ -689,7 +689,7 @@ function DonationsManager({ showToast }: { showToast: (m: string, t?: "success" 
   const uploadImage = async (f: File) => {
     const compressed = await imageCompression(f, { maxSizeMB: 0.5, maxWidthOrHeight: 800, useWebWorker: true });
     const path = `donaciones/${Math.random()}.${compressed.name.split('.').pop() || 'jpg'}`;
-    const { error } = await supabase.storage.from('parroquia-images').upload(path, compressed);
+    const { error } = await supabase.storage.from('parroquia-images').upload(path, compressed, { cacheControl: '31536000' });
     if (error) throw error;
     return supabase.storage.from('parroquia-images').getPublicUrl(path).data.publicUrl;
   };

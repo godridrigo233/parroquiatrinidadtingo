@@ -1,24 +1,24 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import {
-  Church, Clock, BookOpen, Flame, Heart, Users, Music, GraduationCap,
-  Sparkles, MapPin, Phone, Facebook, Instagram, Mail, Calendar, ArrowRight, Quote, Briefcase,
-  MessageCircle,
-} from "lucide-react";
+import { Sparkles, Clock, ArrowRight } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/site/Navbar";
-import { Reveal } from "@/components/site/Reveal";
 import { WhatsAppFab } from "@/components/site/WhatsAppFab";
-import { OptimizedImage } from "@/components/site/OptimizedImage";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { DonacionesSection, DonationRow } from "@/components/site/DonacionesSection";
-import { AddToCalendar } from "@/components/site/AddToCalendar";
-import { SkeletonCard } from "@/components/ui/SkeletonCard";
+import { DonationRow } from "@/components/site/DonacionesSection";
 import { Preloader } from "@/components/ui/Preloader";
 import * as Sentry from "@sentry/react";
+
+// Lazy-loaded below-the-fold sections (code-splitting)
+const AboutSection = lazy(() => import("@/components/site/sections/AboutSection"));
+const HorariosSection = lazy(() => import("@/components/site/sections/HorariosSection"));
+const GaleriaSection = lazy(() => import("@/components/site/sections/GaleriaSection"));
+const DonacionesSection = lazy(() =>
+  import("@/components/site/DonacionesSection").then((m) => ({ default: m.DonacionesSection })),
+);
+const EventosSection = lazy(() => import("@/components/site/sections/EventosSection"));
+const ContactoSection = lazy(() => import("@/components/site/sections/ContactoSection"));
 
 const SITE_URL = "https://parroquiatrinidadtingo.vercel.app";
 const HOME_OG_IMAGE =
@@ -58,62 +58,14 @@ type Ministry = { id: string; name: string; description: string | null; leader: 
 type Eventt = { id: string; title: string; description: string | null; event_date: string; location: string | null };
 type GalleryImage = { id: string; title: string | null; category: string | null; image_url: string; sort_order: number };
 
-const categoryMeta: Record<string, { label: string; icon: typeof Church }> = {
-  misa: { label: "Santa Misa", icon: Church },
-  confesion: { label: "Confesiones", icon: Heart },
-  catequesis: { label: "Catequesis", icon: BookOpen },
-  adoracion: { label: "Adoración", icon: Flame },
-  pastoral: { label: "Consejo Parroquial", icon: Users },
-  secretaria: { label: "Secretaría", icon: Briefcase },
-};
-
-const ministryIcons = [Music, BookOpen, Users, Sparkles, Heart, GraduationCap];
-
-const ministryPhotos = [
-  "/assets/ministries/alas-de-fe.png",
-  "/assets/ministries/siervos-de-luz.png",
-  "/assets/ministries/acolitos.png",
-  "/assets/ministries/senor-de-los-milagros.png",
-  "/assets/ministries/legion-de-maria.png",
-  null,
-];
-
-const testimonios = [
-  { text: "La parroquia es mi segundo hogar. Aquí encuentro paz y comunidad.", author: "María C." },
-  { text: "Un excelente lugar para compartir experiencias de fe y crecer espiritualmente.", author: "Carlos M." },
-  { text: "Lugar santo, las personas son muy amables y acogedoras.", author: "Lucía R." },
-  { text: "Hermosa parroquia, muy bien ubicada. Excelente lugar para acercarse a Dios.", author: "José A." },
-];
-
-const galleryImgs = [
-  { src: "/assets/gallery-primera-comunion-misa.jpg", label: "Primera Comunión" },
-  { src: "/assets/gallery-ninos-primera-comunion.jpg", label: "Niños de Primera Comunión" },
-  { src: "/assets/gallery-bendicion-ninos.jpg", label: "Bendición de los niños" },
-  { src: "/assets/gallery-comunidad-oracion.jpg", label: "Comunidad en oración" },
-  { src: "/assets/gallery-confirmacion-jovenes.jpg", label: "Catequistas" },
-  { src: "/assets/gallery-peregrinos-esperanza.jpg", label: "Peregrinos de Esperanza · Jubileo 2025" },
-  { src: "/assets/gallery-alas-de-fe.jpg", label: "Ministerio Alas de Fe" },
-  { src: "/assets/gallery-siervos-de-luz.jpg", label: "Ministerio Siervos de Luz" },
-  { src: "/assets/gallery-hermandad-dolores.jpg", label: "Hermandad Virgen de los Dolores" },
-];
-
-const sacerdotes = [
-  {
-    img: "/assets/padre-tommy.jpg",
-    name: "Rvdo P. Tommy Varghese, CMI",
-    role: "Párroco",
-    desc: "Pastor de la comunidad, dedicado a la celebración de los sacramentos, la formación de los fieles y el acompañamiento espiritual de la familia parroquial.",
-  },
-  {
-    img: "/assets/padre-manesh.jpg",
-    name: "Padre Manesh Joseph, CMI",
-    role: "Vicario parroquial",
-    desc: "Colabora en la vida pastoral de la parroquia, animando los ministerios, la catequesis y la cercanía con los jóvenes y las familias.",
-  },
-];
+// Skeleton fallback with fixed approximate heights to prevent CLS
+function SectionSkeleton({ height = "h-[600px]" }: { height?: string }) {
+  return (
+    <div className={`w-full ${height} animate-pulse bg-secondary/40`} aria-hidden="true" />
+  );
+}
 
 function Home() {
-  const [lightbox, setLightbox] = useState<{ url: string; title?: string | null } | null>(null);
   const [scrollY, setScrollY] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -192,7 +144,7 @@ function Home() {
       <Preloader isLoading={globalLoading} />
       <Navbar />
 
-      {/* HERO SECTION */}
+      {/* HERO SECTION (above the fold — loaded eagerly) */}
       <section id="inicio" className="relative h-[100svh] min-h-[640px] w-full overflow-hidden">
         <div className="absolute inset-0 will-change-transform" style={{ transform: isMobile ? "none" : `translate3d(0, ${scrollY * 0.35}px, 0)` }}>
           <img
@@ -245,610 +197,32 @@ function Home() {
         </div>
       </section>
 
-      {/* SOBRE LA PARROQUIA */}
-      <section id="parroquia" className="py-24 md:py-32 px-5 lg:px-8">
-        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
-          <Reveal>
-            <div className="relative">
-              {/* 👇 Inyección de OptimizedImage para decodificación asíncrona */}
-              <OptimizedImage src="/assets/church-interior.webp" alt="Interior de la parroquia" className="rounded-2xl shadow-elegant w-full aspect-[4/5] object-cover" />
-              <div className="absolute -bottom-8 -right-8 hidden md:block bg-card rounded-2xl shadow-card p-6 max-w-[220px] border border-border">
-                <p className="font-display text-3xl text-gold">+50</p>
-                <p className="text-sm text-muted-foreground mt-1">Años sembrando fe en Tingo</p>
-              </div>
-            </div>
-          </Reveal>
-          <Reveal delay={150}>
-            <p className="text-gold uppercase tracking-[0.25em] text-xs font-semibold">Nuestra parroquia</p>
-            <h2 className="mt-3 font-display text-4xl md:text-5xl font-medium leading-tight">
-              Una casa de oración<br />en el corazón de <span className="italic text-gold">Tingo</span>
-            </h2>
-            <p className="mt-6 text-muted-foreground leading-relaxed text-lg">
-              La Parroquia Santísima Trinidad es una comunidad católica acogedora ubicada en la entrada de Jacobo Hunter, animada pastoralmente por las <strong className="text-foreground">Carmelitas de María Inmaculada (CMI)</strong>. Aquí celebramos los sacramentos, formamos discípulos y servimos a la familia parroquial bajo la protección de Nuestra Señora de los Dolores.
-            </p>
+      {/* BELOW-THE-FOLD (code-split, lazy-loaded) */}
+      <Suspense fallback={<SectionSkeleton height="h-[1800px]" />}>
+        <AboutSection ministries={ministries} loadingMinistries={loadingMinistries} />
+      </Suspense>
 
-            <div className="mt-10 grid sm:grid-cols-3 gap-4">
-              {[
-                { t: "Misión", d: "Anunciar el Evangelio y celebrar la fe." },
-                { t: "Visión", d: "Ser comunidad viva, misionera y mariana." },
-                { t: "Valores", d: "Fe, caridad, servicio y unidad." },
-              ].map((v) => (
-                <div key={v.t} className="rounded-xl border border-border bg-card p-5 shadow-card">
-                  <p className="font-display text-xl text-primary">{v.t}</p>
-                  <p className="text-sm text-muted-foreground mt-2">{v.d}</p>
-                </div>
-              ))}
-            </div>
-          </Reveal>
-        </div>
-      </section>
+      <Suspense fallback={<SectionSkeleton height="h-[900px]" />}>
+        <HorariosSection groupedSchedules={groupedSchedules} loadingSchedules={loadingSchedules} />
+      </Suspense>
 
-      {/* SACERDOTES */}
-      <section id="sacerdotes" className="py-24 md:py-28 px-5 lg:px-8 bg-secondary/40">
-        <div className="max-w-6xl mx-auto">
-          <Reveal className="text-center max-w-2xl mx-auto">
-            <p className="text-gold uppercase tracking-[0.25em] text-xs font-semibold">Al servicio de la comunidad</p>
-            <h2 className="mt-3 font-display text-4xl md:text-5xl font-medium">Nuestros sacerdotes</h2>
-          </Reveal>
+      <Suspense fallback={<SectionSkeleton height="h-[700px]" />}>
+        <GaleriaSection gallery={gallery} />
+      </Suspense>
 
-          <div className="mt-16 grid sm:grid-cols-2 gap-8 md:gap-12">
-            {sacerdotes.map((p, i) => (
-              <Reveal key={p.name} delay={i * 120}>
-                <article className="group relative bg-card rounded-2xl overflow-hidden border border-border shadow-card hover:shadow-elegant transition-shadow will-change-transform">
-                  <div className="aspect-[3/4] overflow-hidden">
-                    <OptimizedImage
-                      src={`${p.img}?v=1`}
-                      alt={`${p.role} ${p.name}`}
-                      className="w-full h-full object-cover object-top group-hover:scale-[1.03] transition-transform duration-700 will-change-transform"
-                    />
-                  </div>
-                  <div className="p-7">
-                    <p className="text-gold uppercase tracking-[0.2em] text-xs font-semibold">{p.role}</p>
-                    <h3 className="mt-2 font-display text-3xl text-primary">{p.name}</h3>
-                    <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{p.desc}</p>
-                  </div>
-                </article>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
+      <Suspense fallback={<SectionSkeleton height="h-[500px]" />}>
+        <DonacionesSection items={donations} />
+      </Suspense>
 
-      {/* DEVOCIONES */}
-      <section id="devociones" className="py-24 px-5 lg:px-8">
-        <div className="max-w-6xl mx-auto">
-          <Reveal className="text-center max-w-2xl mx-auto">
-            <p className="text-gold uppercase tracking-[0.25em] text-xs font-semibold">Devociones</p>
-            <h2 className="mt-3 font-display text-4xl md:text-5xl font-medium">Nuestra fe y espiritualidad</h2>
-          </Reveal>
+      <Suspense fallback={<SectionSkeleton height="h-[1400px]" />}>
+        <EventosSection events={events} loadingEvents={loadingEvents} />
+      </Suspense>
 
-          <div className="mt-16 grid md:grid-cols-2 gap-8">
-            {[
-              { img: "/assets/virgen-dolorosa.jpg", title: "Nuestra Señora de los Dolores", text: "Madre fiel que acompaña al pie de la cruz. La parroquia mantiene viva esta devoción mariana con el rezo del rosario y celebraciones especiales." },
-              { img: "/assets/trinidad.jpg", title: "Santísima Trinidad", text: "Misterio central de nuestra fe: Padre, Hijo y Espíritu Santo. Bajo su nombre celebramos cada eucaristía y vivimos como comunidad." },
-            ].map((d, i) => (
-              <Reveal key={d.title} delay={i * 100}>
-                <div className="group relative rounded-2xl overflow-hidden shadow-elegant aspect-[4/5]">
-                  <OptimizedImage src={`${d.img}?v=1`} alt={d.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-primary via-primary/60 to-transparent" />
-                  <div className="absolute bottom-0 inset-x-0 p-8 text-primary-foreground">
-                    <h3 className="font-display text-3xl text-white">{d.title}</h3>
-                    <p className="mt-3 text-sm text-white/85 leading-relaxed">{d.text}</p>
-                  </div>
-                </div>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* MINISTERIOS */}
-      <section id="ministerios" className="py-24 px-5 lg:px-8 bg-secondary/50">
-        <div className="max-w-7xl mx-auto">
-          <Reveal className="text-center max-w-2xl mx-auto">
-            <p className="text-gold uppercase tracking-[0.25em] text-xs font-semibold">Servir y caminar juntos</p>
-            <h2 className="mt-3 font-display text-4xl md:text-5xl font-medium">Ministerios y grupos</h2>
-            <p className="mt-4 text-muted-foreground">Carismas al servicio de la comunidad parroquial.</p>
-          </Reveal>
-
-          <div className="mt-16 grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {loadingMinistries ? (
-              Array.from({ length: 3 }).map((_, i) => (
-                <Reveal key={`skel-min-${i}`} delay={i * 80}><SkeletonCard /></Reveal>
-              ))
-            ) : (
-              ministries.map((m, i) => {
-                const Icon = ministryIcons[i % ministryIcons.length];
-                const ministryImage = m.image_url || ministryPhotos[i];
-                return (
-                  <Reveal key={m.id} delay={i * 80}>
-                    <article className="group h-full flex flex-col bg-card rounded-2xl border border-border shadow-card hover:shadow-elegant hover:-translate-y-1 transition-all overflow-hidden will-change-transform">
-                      <div className="relative aspect-[16/10] overflow-hidden bg-secondary">
-                        {ministryImage && (
-                          <OptimizedImage src={`${ministryImage}?v=1`} alt={m.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 will-change-transform" />
-                        )}
-                        <span className="absolute top-3 left-3 h-9 w-9 rounded-lg bg-card/95 backdrop-blur flex items-center justify-center shadow-card">
-                          <Icon size={16} className="text-gold" />
-                        </span>
-                      </div>
-                      <div className="p-6 flex-1 flex flex-col">
-                        <h3 className="font-display text-2xl text-primary">{m.name}</h3>
-                        {m.description && <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{m.description}</p>}
-                        {(m.leader || m.schedule) && (
-                          <div className="mt-5 pt-5 border-t border-border space-y-1.5 text-sm">
-                            {m.leader && <p className="text-foreground"><span className="text-muted-foreground">Encargado:</span> {m.leader}</p>}
-                            {m.schedule && <p className="text-foreground flex items-center gap-1.5"><Clock size={14} className="text-gold" /> {m.schedule}</p>}
-                          </div>
-                        )}
-                      </div>
-                    </article>
-                  </Reveal>
-                );
-              })
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* HORARIOS */}
-      <section id="horarios" className="py-24 px-5 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <Reveal className="text-center max-w-2xl mx-auto">
-            <p className="text-gold uppercase tracking-[0.25em] text-xs font-semibold">Vida sacramental</p>
-            <h2 className="mt-3 font-display text-4xl md:text-5xl font-medium">Horarios parroquiales</h2>
-          </Reveal>
-
-          <div className="mt-16 flex flex-wrap justify-center gap-6">
-            {loadingSchedules ? (
-              Array.from({ length: 4 }).map((_, i) => (
-                <Reveal key={`skel-horario-${i}`} className="w-full sm:w-[calc(50%-12px)] lg:w-[calc(25%-18px)]">
-                  <div className="h-[280px] bg-card rounded-2xl p-7 border border-border flex flex-col animate-pulse">
-                    <div className="h-14 w-14 rounded-xl bg-gray-200 mb-5" />
-                    <div className="h-6 bg-gray-200 rounded-md w-3/4 mb-6" />
-                    <div className="space-y-4">
-                      <div className="h-4 bg-gray-100 rounded w-full" />
-                      <div className="h-4 bg-gray-100 rounded w-5/6" />
-                    </div>
-                  </div>
-                </Reveal>
-              ))
-            ) : (
-              Object.entries(groupedSchedules)
-                .filter(([cat]) => cat !== "catequesis")
-                .map(([cat, items], i) => {
-                  const meta = categoryMeta[cat] ?? { label: cat, icon: Church };
-                  const Icon = meta.icon;
-                  return (
-                    <Reveal key={cat} delay={i * 80} className="w-full sm:w-[calc(50%-12px)] lg:w-[calc(25%-18px)]">
-                      <div className="h-full bg-card rounded-2xl p-7 border border-border shadow-card hover:shadow-elegant transition-all group">
-                        <div className="h-14 w-14 rounded-xl bg-gradient-gold flex items-center justify-center text-primary-foreground shadow-card group-hover:scale-110 transition-transform">
-                          <Icon size={26} />
-                        </div>
-                        <h3 className="mt-5 font-display text-2xl text-primary">{meta.label}</h3>
-                        <ul className="mt-4 space-y-3">
-                          {items.map((it) => (
-                            <li key={it.id} className="border-l-2 border-gold pl-3">
-                              <p className="text-sm font-semibold text-foreground">{it.day_label}</p>
-                              <p className="text-sm text-muted-foreground">{it.time_label}</p>
-                              {it.notes && <p className="text-xs text-muted-foreground/80 italic mt-0.5">{it.notes}</p>}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </Reveal>
-                  );
-                })
-            )}
-          </div>
-
-          <Reveal className="mt-14 text-center">
-            <Link to="/sacramentos" className="inline-flex items-center gap-3 px-9 py-4 text-lg rounded-full bg-gradient-gold text-primary-foreground font-semibold shadow-card hover:shadow-elegant transition-shadow">
-              Ver requisitos de sacramentos <ArrowRight size={18} />
-            </Link>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* GALERÍA */}
-      <section id="galeria" className="py-24 px-5 lg:px-8 bg-secondary/50">
-        <div className="max-w-7xl mx-auto">
-          <Reveal className="text-center max-w-2xl mx-auto">
-            <p className="text-gold uppercase tracking-[0.25em] text-xs font-semibold">Comunidad en imágenes</p>
-            <h2 className="mt-3 font-display text-4xl md:text-5xl font-medium">Galería</h2>
-          </Reveal>
-
-          <Reveal className="mt-12">
-            {(() => {
-              const items = gallery.length
-                ? gallery.map((g) => ({ id: g.id, src: g.image_url, label: g.title }))
-                : galleryImgs.map((g, i) => ({ id: String(i), src: g.src, label: g.label }));
-              if (!items.length) return null;
-              return (
-                <Carousel opts={{ align: "start", loop: true }} className="relative px-10 sm:px-12">
-                  <CarouselContent className="-ml-4">
-                    {items.map((g) => (
-                      <CarouselItem key={g.id} className="pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
-                        <button type="button" onClick={() => setLightbox({ url: g.src, title: g.label })} className="group relative block w-full aspect-square overflow-hidden rounded-2xl shadow-card focus:outline-none focus:ring-2 focus:ring-gold">
-                          <OptimizedImage src={`${g.src}?v=1`} alt={g.label ?? ""} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                          {g.label && (
-                            <span className="absolute inset-x-0 bottom-0 p-3 text-white text-sm font-medium bg-gradient-to-t from-primary/90 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                              {g.label}
-                            </span>
-                          )}
-                        </button>
-                      </CarouselItem>
-                    ))}
-                  </CarouselContent>
-                  <CarouselPrevious className="left-0 bg-card border-border" />
-                  <CarouselNext className="right-0 bg-card border-border" />
-                </Carousel>
-              );
-            })()}
-          </Reveal>
-        </div>
-
-        <Dialog open={!!lightbox} onOpenChange={(o) => !o && setLightbox(null)}>
-          <DialogContent className="max-w-5xl p-0 bg-transparent border-0 shadow-none">
-            {lightbox && (
-              <div className="relative">
-                <OptimizedImage src={lightbox.url} alt={lightbox.title ?? ""} className="w-full max-h-[85vh] object-contain rounded-2xl bg-black" />
-                {lightbox.title && <p className="mt-3 text-center text-white font-display text-xl drop-shadow">{lightbox.title}</p>}
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
-      </section>
-
-      <DonacionesSection items={donations} />
-      
-      {/* NOTICIAS / AVISOS */}
-      <section id="noticias" className="py-24 px-5 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <Reveal className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
-            <div>
-              <p className="text-gold uppercase tracking-[0.25em] text-xs font-semibold">Vida parroquial</p>
-              <h2 className="mt-3 font-display text-4xl md:text-5xl font-medium">Eventos y avisos</h2>
-            </div>
-            <a href="https://www.facebook.com/parroquiasantisimatrinidadtingo/" target="_blank" rel="noopener noreferrer" className="text-primary font-semibold inline-flex items-center gap-2 hover:text-gold transition-colors">
-              <Facebook size={18} /> Síguenos en Facebook
-            </a>
-          </Reveal>
-
-          {loadingEvents ? (
-            <Reveal className="mt-10">
-              <div className="rounded-2xl bg-gradient-to-br from-primary to-primary/80 p-8 w-full animate-pulse h-48" />
-            </Reveal>
-          ) : events.length > 0 && (
-            <Reveal className="mt-10">
-              <div className="rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground p-8 shadow-elegant">
-                <p className="uppercase tracking-[0.2em] text-xs text-gold font-semibold">Próximos eventos</p>
-                <div className="mt-5 grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {events.map((e) => {
-                    const d = new Date(e.event_date);
-                    return (
-                      <div key={e.id} className="border-l-2 border-gold pl-4">
-                        <p className="font-display text-xl">{e.title}</p>
-                        <p className="text-sm text-primary-foreground/80 mt-1 flex items-center gap-1.5">
-                          <Calendar size={14} /> {d.toLocaleDateString("es-PE", { day: "numeric", month: "long" })}
-                          <span className="opacity-60">·</span>
-                          <Clock size={14} /> {d.toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" })}
-                        </p>
-                        {e.location && (
-                          <p className="text-sm text-primary-foreground/80 mt-1 flex items-center gap-1.5">
-                            <MapPin size={14} /> {e.location}
-                          </p>
-                        )}
-                        {e.description && <p className="text-sm text-primary-foreground/70 mt-2">{e.description}</p>}
-                        <AddToCalendar event={e} />
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </Reveal>
-          )}
-          {/* Grid moderno de publicaciones de Facebook */}
-          <Reveal className="mt-12">
-            <h3 className="font-display text-2xl md:text-3xl text-primary mb-6">Últimas publicaciones</h3>
-            <FacebookPostsGrid />
-          </Reveal>
-          {/* Canal oficial de WhatsApp - Diseño Premium e Intuitivo */}
-          <Reveal className="mt-12">
-            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#25D366]/5 via-card to-card border border-[#25D366]/20 p-6 md:p-10 shadow-elegant group">
-              <div className="absolute -right-16 -bottom-16 w-64 h-64 bg-[#25D366]/5 rounded-full blur-3xl pointer-events-none group-hover:bg-[#25D366]/10 transition-colors duration-500" />
-              
-              <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-8">
-                <div className="flex flex-col md:flex-row items-start gap-5">
-                  <div className="shrink-0 h-16 w-16 rounded-2xl bg-[#25D366] text-white flex items-center justify-center shadow-[0_8px_25px_rgba(37,211,102,0.3)] group-hover:scale-105 transition-transform duration-300">
-                    <MessageCircle size={32} fill="currentColor" className="text-white" />
-                  </div>
-                  
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="bg-[#25D366]/10 text-[#1e9e4b] text-xs font-bold tracking-wider px-3 py-1 rounded-full uppercase">
-                        Canal Oficial
-                      </span>
-                    </div>
-                    
-                    <h3 className="font-display text-2xl md:text-3xl text-primary font-semibold tracking-tight">
-                      Mantente conectado con nuestra comunidad!
-                    </h3>
-                    
-                    <p className="text-sm md:text-base text-muted-foreground max-w-2xl leading-relaxed">
-                      Únete para recibir de forma directa, instantánea y privada en tu celular:
-                    </p>
-                    
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1 text-sm text-foreground/80 font-semibold">
-                      <div className="flex items-center gap-2 bg-black/5 dark:bg-white/5 px-3 py-2 rounded-xl border border-border/40">
-                        <span className="text-base">🔔</span> Avisos Parroquiales
-                      </div>
-                      <div className="flex items-center gap-2 bg-black/5 dark:bg-white/5 px-3 py-2 rounded-xl border border-border/40">
-                        <span className="text-base">📆</span> Horarios de Misa
-                      </div>
-                      <div className="flex items-center gap-2 bg-black/5 dark:bg-white/5 px-3 py-2 rounded-xl border border-border/40">
-                        <span className="text-base">✨</span> Eventos Especiales
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="shrink-0 w-full lg:w-auto">
-                  <a
-                    href="https://whatsapp.com/channel/0029Vb8tmDx90x2wWaZDB71a"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-3 w-full lg:w-auto px-8 py-4 rounded-2xl bg-[#25D366] text-white font-bold hover:bg-[#20ba59] shadow-[0_10px_25px_rgba(37,211,102,0.25)] hover:shadow-[0_10px_30px_rgba(37,211,102,0.4)] hover:-translate-y-1 transition-all duration-300 active:translate-y-0 text-center select-none"
-                  >
-                    Unirse al Canal de WhatsApp
-                    <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform duration-300" />
-                  </a>
-                </div>
-              </div>
-            </div>
-          </Reveal>
-
-          
-        </div>
-      </section>
-      
-      {/* CONTACTO */}
-      <section id="contacto" className="py-24 px-5 lg:px-8 bg-primary text-primary-foreground">
-        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-start">
-          <Reveal>
-            <p className="text-gold uppercase tracking-[0.25em] text-xs font-semibold">Visítanos</p>
-            <h2 className="mt-3 font-display text-4xl md:text-5xl font-medium text-white">Estamos aquí para ti</h2>
-            <p className="mt-5 text-white/80 leading-relaxed max-w-lg">
-              Las puertas de la parroquia están abiertas. Acércate, conversa con nosotros y forma parte de esta gran familia.
-            </p>
-
-            <div className="mt-6 p-5 rounded-xl bg-white/10 border border-white/15 backdrop-blur">
-              <div className="flex items-start gap-4">
-                <span className="h-10 w-10 rounded-lg bg-white/10 flex items-center justify-center text-gold shrink-0"><Clock size={20} /></span>
-                <div>
-                  <p className="font-semibold text-white">Horario de atención en secretaría</p>
-                  <p className="text-white/75 text-sm">Lunes a sábado · 3:00 PM – 6:00 PM</p>
-                </div>
-              </div>
-            </div>
-
-            <ul className="mt-10 space-y-5">
-              <li className="flex items-start gap-4">
-                <span className="h-11 w-11 rounded-xl bg-white/10 flex items-center justify-center text-gold shrink-0"><MapPin size={20} /></span>
-                <div>
-                  <p className="font-semibold text-white">Dirección</p>
-                  <p className="text-white/75 text-sm">Américas 1820, Arequipa 04011 — Entrada de Jacobo Hunter, Tingo</p>
-                </div>
-              </li>
-              <li className="flex items-start gap-4">
-                <span className="h-11 w-11 rounded-xl bg-white/10 flex items-center justify-center text-gold shrink-0"><Phone size={20} /></span>
-                <div>
-                  <p className="font-semibold text-white">Teléfono</p>
-                  <a href="tel:+51915049850" className="text-white/75 text-sm hover:text-gold">+51 915 049 850</a>
-                </div>
-              </li>
-              <li className="flex items-start gap-4">
-                <span className="h-11 w-11 rounded-xl bg-white/10 flex items-center justify-center text-gold shrink-0"><Facebook size={20} /></span>
-                <div>
-                  <p className="font-semibold text-white">Facebook</p>
-                  <a href="https://www.facebook.com/parroquiasantisimatrinidadtingo/" target="_blank" rel="noopener noreferrer" className="text-white/75 text-sm hover:text-gold">@parroquiasantisimatrinidadtingo</a>
-                </div>
-              </li>
-              <li className="flex items-start gap-4">
-                <span className="h-11 w-11 rounded-xl bg-white/10 flex items-center justify-center text-gold shrink-0"><Instagram size={20} /></span>
-                <div>
-                  <p className="font-semibold text-white">Instagram</p>
-                  <a href="https://www.instagram.com/stma_trinidad_tingo/" target="_blank" rel="noopener noreferrer" className="text-white/75 text-sm hover:text-gold">@stma_trinidad_tingo</a>
-                </div>
-              </li>
-              <li className="flex items-start gap-4">
-                <span className="h-11 w-11 rounded-xl bg-white/10 flex items-center justify-center text-gold shrink-0"><Mail size={20} /></span>
-                <div>
-                  <p className="font-semibold text-white">Correo</p>
-                  <p className="text-white/75 text-sm">pstrinidadtingo@gmail.com</p>
-                </div>
-              </li>
-            </ul>
-          </Reveal>
-
-          <Reveal delay={150}>
-            <div className="rounded-2xl overflow-hidden shadow-elegant border border-white/10 aspect-[4/3] bg-white/5">
-              <iframe title="Mapa parroquia" src="https://www.google.com/maps?q=Americas+1820,+Arequipa+04011,+Peru&output=embed" className="w-full h-full" loading="lazy" />
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* FOOTER */}
-      <footer className="bg-primary text-primary-foreground border-t border-white/10 py-12 px-5 lg:px-8">
-        <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-10">
-          <div>
-            <div className="flex items-center gap-3">
-              <img src="/assets/logo.png" alt="" className="h-12 w-12" loading="lazy" />
-              <div>
-                <p className="font-display text-lg text-white">Santísima Trinidad</p>
-                <p className="text-xs text-white/60 uppercase tracking-widest">Tingo · Arequipa</p>
-              </div>
-            </div>
-          </div>
-          <div>
-            <p className="font-semibold text-white uppercase tracking-widest text-xs">Horarios y Contacto</p>
-            
-            <ul className="mt-4 space-y-2 text-sm text-white/75">
-              <li>Domingos · 8:00 AM y 6:00 PM</li>
-              <li>Lun – Vie · 6:00 PM</li>
-              <li>Sábado · 6:00 PM (vigilia)</li>
-            </ul>
-
-            <div className="my-3 border-t border-white/10" />
-
-            <ul className="space-y-2 text-sm text-white/75">
-              <li>Secretaría: Lun – Sáb · 3:00 – 6:00 PM</li>
-              <li>
-                Tel: <a href="tel:+51915049850" className="hover:text-white hover:underline transition-colors">+51 915 049 850</a>{" "}
-                <span className="text-white/50">(solo llamadas)</span>
-              </li>
-            </ul>
-          </div>
-          <div>
-            <p className="font-semibold text-white uppercase tracking-widest text-xs">Redes Sociales</p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <a href="https://www.facebook.com/parroquiasantisimatrinidadtingo/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 text-sm">
-                <Facebook size={16} /> Facebook
-              </a>
-            </div>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <a href="https://www.instagram.com/stma_trinidad_tingo/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 text-sm">
-                <Instagram size={16} /> Instagram
-              </a>
-            </div>
-          </div>
-        </div>
-        <div className="max-w-7xl mx-auto mt-10 pt-6 border-t border-white/10 text-center text-xs text-white/50">
-          © {new Date().getFullYear()} Parroquia Santísima Trinidad de Tingo.
-        </div>
-      </footer>
+      <Suspense fallback={<SectionSkeleton height="h-[1200px]" />}>
+        <ContactoSection />
+      </Suspense>
 
       <WhatsAppFab />
-    </div>
-  );
-}
-type FacebookPost = {
-  id: string;
-  image_url: string | null;
-  post_url: string | null;
-  description: string | null;
-};
-function FacebookPostsGrid() {
-  const [posts, setPosts] = useState<FacebookPost[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchFacebookFeed = async () => {
-      try {
-        // Hacemos el fetch directamente a tu endpoint JSON, mucho más rápido y sin intermediarios
-        const response = await fetch("https://rss.app/feeds/v1.1/vXpVb6k0mdMFJzil.json");
-        const data = await response.json();
-
-        if (data.items) {
-          // Mapeamos los datos exactamente como vienen en tu JSON
-          const formattedPosts = data.items.slice(0, 3).map((item: any) => ({
-            id: item.id,
-            post_url: item.url,
-            // Usamos content_text para la descripción sin etiquetas HTML
-            description: item.content_text || "Mira nuestra última publicación.",
-            // Jalamos la imagen directa del campo "image"
-            image_url: item.image || "https://images.unsplash.com/photo-1438032005730-c779502df39b?q=80&w=600"
-          }));
-          
-          setPosts(formattedPosts);
-        }
-      } catch (error) {
-        console.error("Error jalando el feed de Facebook en vivo:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchFacebookFeed();
-  }, []);
-
-  if (isLoading) {
-    return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-        {[0, 1, 2].map((i) => (
-          <div key={i} className="rounded-xl bg-white border border-border shadow-sm overflow-hidden animate-pulse">
-            <div className="h-56 bg-gray-200" />
-            <div className="p-4 space-y-2">
-              <div className="h-3 bg-gray-200 rounded w-11/12" />
-              <div className="h-3 bg-gray-200 rounded w-10/12" />
-              <div className="h-3 bg-gray-200 rounded w-8/12" />
-              <div className="h-4 bg-gray-200 rounded w-1/3 mt-4" />
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  if (posts.length === 0) {
-    return (
-      <div className="rounded-xl border border-dashed border-border bg-card/50 py-12 px-6 text-center">
-        <p className="text-muted-foreground mb-4">Aún no hay publicaciones recientes.</p>
-        <a
-          href="https://www.facebook.com/parroquiasantisimatrinidadtingo/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 text-primary font-semibold hover:text-gold transition-colors"
-        >
-          <Facebook size={18} /> Visita nuestra página de Facebook
-        </a>
-      </div>
-    );
-  }
-
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
-      {posts.map((post) => (
-        <a
-          key={post.id}
-          href={post.post_url ?? "https://www.facebook.com/parroquiasantisimatrinidadtingo/"}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="group flex flex-col h-full rounded-2xl bg-white border border-border/60 shadow-md hover:shadow-xl hover:-translate-y-1.5 transition-all duration-500 overflow-hidden"
-        >
-          {/* Contenedor de Imagen con efecto de zoom sutil */}
-          <div className="relative h-60 overflow-hidden bg-muted">
-            {post.image_url ? (
-              <img
-                src={post.image_url}
-                loading="lazy"
-                alt="Publicación de Facebook"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-muted-foreground bg-primary/5">
-                <Facebook size={48} className="opacity-20" />
-              </div>
-            )}
-            {/* Pequeño overlay gradiente para darle profundidad */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-          </div>
-
-          {/* Contenedor de Texto y Botón */}
-          <div className="flex flex-col flex-1 p-6 md:p-7">
-            {/* El flex-1 asegura que el texto empuje el botón hacia abajo */}
-            <p className="text-sm md:text-base text-foreground/80 leading-relaxed mb-6 line-clamp-4 flex-1">
-              {post.description}
-            </p>
-            
-            {/* Botón estilo "Call to Action" usando el color primario de la parroquia */}
-            <div className="mt-auto w-full py-3 px-4 rounded-xl bg-primary/5 group-hover:bg-primary text-primary group-hover:text-primary-foreground font-semibold flex items-center justify-center gap-2 transition-colors duration-300">
-              Ver publicación
-              <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-300" />
-            </div>
-          </div>
-        </a>
-      ))}
     </div>
   );
 }

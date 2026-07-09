@@ -299,6 +299,7 @@ function SacramentosPage() {
         <div className="relative h-[340px] md:h-[420px] w-full">
           <img
             src="/assets/hero-sacramentos.jpg"
+            loading="lazy"
             alt="Manos sosteniendo el cáliz sagrado"
             className="absolute inset-0 w-full h-full object-cover"
           />
@@ -391,6 +392,7 @@ function SacramentosPage() {
                 <img
                   src={`/assets/sacramento-${selected.id}.jpg`}
                   alt={selected.title}
+                  loading="lazy"
                   className="absolute inset-0 w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#0F1B2D]/60 to-transparent" />
@@ -679,6 +681,7 @@ function SacramentosPage() {
                 <img
                   src="/assets/logo.png"
                   alt=""
+                  loading="lazy"
                   className="h-10 w-10"
                 />
                 <div>

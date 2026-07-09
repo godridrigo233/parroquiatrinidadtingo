@@ -196,7 +196,7 @@ function Home() {
       <section id="inicio" className="relative h-[100svh] min-h-[640px] w-full overflow-hidden">
         <div className="absolute inset-0 will-change-transform" style={{ transform: isMobile ? "none" : `translate3d(0, ${scrollY * 0.35}px, 0)` }}>
           <img
-            src="/assets/hero-church.jpg"
+            src="/assets/hero-church.webp"
             alt="Parroquia Santísima Trinidad"
             className="ken-burns absolute inset-0 h-[115%] w-full object-cover"
             fetchPriority="high"
@@ -251,7 +251,7 @@ function Home() {
           <Reveal>
             <div className="relative">
               {/* 👇 Inyección de OptimizedImage para decodificación asíncrona */}
-              <OptimizedImage src="/assets/church-interior.jpg" alt="Interior de la parroquia" className="rounded-2xl shadow-elegant w-full aspect-[4/5] object-cover" />
+              <OptimizedImage src="/assets/church-interior.webp" alt="Interior de la parroquia" className="rounded-2xl shadow-elegant w-full aspect-[4/5] object-cover" />
               <div className="absolute -bottom-8 -right-8 hidden md:block bg-card rounded-2xl shadow-card p-6 max-w-[220px] border border-border">
                 <p className="font-display text-3xl text-gold">+50</p>
                 <p className="text-sm text-muted-foreground mt-1">Años sembrando fe en Tingo</p>

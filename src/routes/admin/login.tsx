@@ -131,7 +131,7 @@ function LoginInterface() {
           <div className="absolute top-0 left-0 w-full h-1 bg-red-500 animate-pulse"></div>
         )}
 
-        <img src="/assets/logo.png" alt="Logo Parroquia" className="h-16 w-16 mx-auto mb-4" />
+        <img src="/assets/logo.webp" alt="Logo Parroquia" className="h-16 w-16 mx-auto mb-4" />
         <h2 className="font-display text-2xl text-primary flex items-center justify-center gap-2 mb-1">
           <Lock size={20} /> {isLoginMode ? "Panel administrador" : "Crear cuenta administrativa"}
         </h2>

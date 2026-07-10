@@ -74,7 +74,7 @@ export default function ContactoSection() {
         <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-10">
           <div>
             <div className="flex items-center gap-3">
-              <img src="/assets/logo.png" alt="" className="h-12 w-12" loading="lazy" />
+              <img src="/assets/logo.webp" alt="" className="h-12 w-12" loading="lazy" />
               <div>
                 <p className="font-display text-lg text-white">Santísima Trinidad</p>
                 <p className="text-xs text-white/60 uppercase tracking-widest">Tingo · Arequipa</p>

@@ -35,7 +35,7 @@ export function Preloader({ isLoading }: { isLoading: boolean }) {
         {/* Logo con animación de resplandor sutil */}
         <div className="relative h-24 w-24 md:h-28 md:w-28 animate-pulse duration-1000">
           <img 
-            src="/assets/logo.png" 
+            src="/assets/logo.webp" 
             alt="Logo Parroquia" 
             className="h-full w-full object-contain filter drop-shadow-[0_0_20px_rgba(212,175,55,0.4)]"
           />

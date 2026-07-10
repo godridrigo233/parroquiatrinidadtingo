@@ -57,7 +57,7 @@ export function Navbar() {
           className="flex items-center gap-3 select-none"
           aria-label="Logo parroquia"
         >
-          <img src={"/assets/logo.png"} alt="" className="h-10 w-10 object-contain" />
+          <img src={"/assets/logo.webp"} alt="" className="h-10 w-10 object-contain" />
           <div className="hidden sm:block leading-tight text-left">
             <p className={`font-display text-base font-semibold ${scrolled ? "text-foreground" : "text-white"}`}>
               Santísima Trinidad

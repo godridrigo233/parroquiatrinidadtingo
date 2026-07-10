@@ -679,7 +679,7 @@ function SacramentosPage() {
             <div>
               <div className="flex items-center gap-3 mb-4">
                 <img
-                  src="/assets/logo.png"
+                  src="/assets/logo.webp"
                   alt=""
                   loading="lazy"
                   className="h-10 w-10"

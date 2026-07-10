@@ -96,7 +96,7 @@ function AdminDashboard() {
       <header className="bg-card border-b border-border sticky top-0 z-20 shadow-sm">
         <div className="max-w-7xl mx-auto px-5 h-16 flex items-center justify-between gap-4">
           <Link to="/" className="flex items-center gap-3 shrink-0">
-            <img src="/assets/logo.png" alt="" className="h-9 w-9" />
+            <img src="/assets/logo.webp" alt="" className="h-9 w-9" />
             <div className="leading-tight hidden sm:block">
               <p className="font-display text-sm text-primary font-semibold">
                 {userRole === "admin" ? "Panel Administrador" : "Panel de Asistencia"}

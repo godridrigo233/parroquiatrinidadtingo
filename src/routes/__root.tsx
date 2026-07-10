@@ -146,7 +146,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         type: "application/ld+json",
         children: JSON.stringify(ORG_JSONLD),
       },
+      {
+        // Swap non-blocking Google Fonts stylesheet from media=print to all
+        children:
+          "document.querySelectorAll('link[rel=stylesheet][media=print]').forEach(function(l){l.addEventListener('load',function(){l.media='all'});if(l.sheet)l.media='all';});",
+      },
     ],
+
   }),
   shellComponent: RootShell,
   component: RootComponent,

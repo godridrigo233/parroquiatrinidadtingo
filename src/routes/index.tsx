@@ -61,9 +61,10 @@ type GalleryImage = { id: string; title: string | null; category: string | null;
 // Skeleton fallback with fixed approximate heights to prevent CLS
 function SectionSkeleton({ height = "h-[600px]" }: { height?: string }) {
   return (
-    <div className={`w-full ${height} animate-pulse bg-secondary/40`} aria-hidden="true" />
+    <div className={`w-full ${height} bg-muted animate-pulse rounded-xl my-6`} aria-hidden="true" />
   );
 }
+
 
 function Home() {
   const [scrollY, setScrollY] = useState(0);

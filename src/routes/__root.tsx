@@ -122,14 +122,25 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "stylesheet", href: appCss },
       { rel: "manifest", href: "/manifest.webmanifest" },
       { rel: "apple-touch-icon", href: "/pwa-192x192.png" },
+      // Preload LCP candidates (mobile = logo in Preloader, desktop = hero)
+      { rel: "preload", as: "image", href: "/assets/logo.webp", fetchPriority: "high" } as any,
+      { rel: "preload", as: "image", href: "/assets/hero-church.webp", fetchPriority: "high" } as any,
+      // Fonts: preconnect + non-blocking stylesheet (media=print swap trick)
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      
+      {
+        rel: "preload",
+        as: "style",
+        href: "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600;700&display=swap",
+      },
       {
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600;700&display=swap",
-      },
+        media: "print",
+        onLoad: "this.media='all'",
+      } as any,
     ],
+
     scripts: [
       {
         type: "application/ld+json",

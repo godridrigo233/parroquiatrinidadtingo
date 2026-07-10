@@ -150,10 +150,13 @@ function Home() {
         <div className="absolute inset-0 will-change-transform" style={{ transform: isMobile ? "none" : `translate3d(0, ${scrollY * 0.35}px, 0)` }}>
           <img
             src="/assets/hero-church.webp"
-            alt="Parroquia Santísima Trinidad"
+            alt="Fachada de la Parroquia Santísima Trinidad de Tingo al atardecer"
             className="ken-burns absolute inset-0 h-[115%] w-full object-cover"
             fetchPriority="high"
+            loading="eager"
+            decoding="async"
           />
+
         </div>
 
         <div className="absolute inset-0 bg-gradient-to-b from-primary/70 via-primary/40 to-primary/85" />

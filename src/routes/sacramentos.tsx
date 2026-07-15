@@ -44,7 +44,7 @@ const sacramentos = [
       "Asistir a la charla pre-bautismal (padres y padrinos).",
     ],
     informacion: {
-      cuando: "Todos los sábados desde las 15:00 pm, previa programación.",
+      cuando: "Todos los sábados desde las 3:00 pm, previa programación.",
       donde: "En el templo parroquial.",
       padrinos: "Máximo 2 padrinos.",
       anticipacion: "Con al menos 1 mes de anticipación.",
@@ -387,7 +387,7 @@ function SacramentosPage() {
           <Reveal key={selected.id}>
             <div className="grid lg:grid-cols-[380px_1fr] gap-8 items-start">
               {/* Imagen lateral */}
-              <div className="relative rounded-2xl overflow-hidden h-[300px] lg:h-full min-h-[360px]">
+              <div className="relative rounded-2xl overflow-hidden aspect-[3/4] lg:aspect-auto lg:h-full min-h-[360px]">
                 {/* Reemplazar src con imagen real del sacramento */}
                 <img
                   src={`/assets/sacramento-${selected.id}.jpg`}
@@ -403,7 +403,7 @@ function SacramentosPage() {
                   >
                     {selected.title}
                   </h3>
-                  <p className="mt-1 text-white/80 text-sm">
+                  <p className="mt-1 text-white/80 text-sm text-justify">
                     {selected.descripcion}
                   </p>
                 </div>
@@ -590,7 +590,7 @@ function SacramentosPage() {
                       {item.q}
                     </h4>
                   </div>
-                  <p className="text-sm text-[#5A6A7E] leading-relaxed pl-11">
+                  <p className="text-sm text-[#5A6A7E] leading-relaxed pl-11 text-justify">
                     {item.a}
                   </p>
                 </div>
@@ -654,7 +654,7 @@ function SacramentosPage() {
                 <h3 className="font-display text-2xl font-medium text-[#0F1B2D]">
                   ¿Necesitas ayuda o tienes dudas?
                 </h3>
-                <p className="mt-2 text-sm text-[#5A6A7E] max-w-md">
+                <p className="mt-2 text-sm text-[#5A6A7E] max-w-md text-justify">
                   Estamos para acompañarte en tu camino de fe. Llámanos o
                   acércate a la secretaría parroquial.
                 </p>
@@ -682,7 +682,7 @@ function SacramentosPage() {
                   src="/assets/logo.webp"
                   alt=""
                   loading="lazy"
-                  className="h-10 w-10"
+                  className="h-10 w-10 rounded-full overflow-hidden object-cover"
                 />
                 <div>
                   <p className="font-display text-sm text-white font-semibold">
@@ -706,7 +706,7 @@ function SacramentosPage() {
                 <li className="flex items-start gap-2 text-white/60">
                   <MapPin size={14} className="mt-0.5 shrink-0 text-[#C8A45C]" />
                   {/* PLACEHOLDER: Reemplazar con dirección real si es diferente */}
-                  <span>Américas 1820, Arequipa 04011 — Entrada de Jacobo Hunter, Tingo</span>
+                  <span>Calle Ferrocarril 200, Av. Alfonso Ugarte Tingo - Cercado</span>
                 </li>
                 <li className="flex items-center gap-2 text-white/60">
                   <Phone size={14} className="shrink-0 text-[#C8A45C]" />

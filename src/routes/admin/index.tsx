@@ -96,7 +96,7 @@ function AdminDashboard() {
       <header className="bg-card border-b border-border sticky top-0 z-20 shadow-sm">
         <div className="max-w-7xl mx-auto px-5 h-16 flex items-center justify-between gap-4">
           <Link to="/" className="flex items-center gap-3 shrink-0">
-            <img src="/assets/logo.webp" alt="" className="h-9 w-9" />
+            <img src="/assets/logo.webp" alt="" className="h-9 w-9 rounded-full overflow-hidden object-cover" />
             <div className="leading-tight hidden sm:block">
               <p className="font-display text-sm text-primary font-semibold">
                 {userRole === "admin" ? "Panel Administrador" : "Panel de Asistencia"}
@@ -317,7 +317,6 @@ function SchedulesManager({ showToast }: { showToast: (m: string, t?: "success" 
     confesion: "bg-purple-50 text-purple-700 border-purple-200",
     catequesis: "bg-blue-50 text-blue-700 border-blue-200",
     adoracion: "bg-rose-50 text-rose-700 border-rose-200",
-    pastoral: "bg-green-50 text-green-700 border-green-200",
     secretaria: "bg-gray-50 text-gray-700 border-gray-200",
   };
 
@@ -351,7 +350,6 @@ function SchedulesManager({ showToast }: { showToast: (m: string, t?: "success" 
             <option value="confesion">Confesiones</option>
             <option value="catequesis">Catequesis</option>
             <option value="adoracion">Adoración</option>
-            <option value="pastoral">Pastoral</option>
             <option value="secretaria">Secretaría</option>
           </select>
           <Input required placeholder="Día (ej: Domingos)" value={form.day_label} onChange={e => setForm({ ...form, day_label: e.target.value })} />
@@ -399,7 +397,6 @@ function SchedulesManager({ showToast }: { showToast: (m: string, t?: "success" 
                 <option value="confesion">Confesiones</option>
                 <option value="catequesis">Catequesis</option>
                 <option value="adoracion">Adoración</option>
-                <option value="pastoral">Pastoral</option>
                 <option value="secretaria">Secretaría</option>
               </select>
             </div>
@@ -646,7 +643,7 @@ function GalleryManager({ showToast }: { showToast: (m: string, t?: "success" | 
         {editing && (
           <form onSubmit={saveEdit} className="space-y-4">
             <div className="aspect-video rounded-xl overflow-hidden bg-secondary border border-border">
-              <img src={editing.image_url} alt="" className="w-full h-full object-cover" />
+              <img src={file ? URL.createObjectURL(file) : editing.image_url} alt="" className="w-full h-full object-cover" />
             </div>
             <div>
               <label className="text-[11px] uppercase font-bold text-muted-foreground tracking-wider mb-1 block">Reemplazar imagen (opcional)</label>

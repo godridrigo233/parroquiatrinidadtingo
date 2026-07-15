@@ -3,7 +3,7 @@ import { Facebook, Calendar, Clock, MapPin, MessageCircle, ArrowRight } from "lu
 import { Reveal } from "@/components/site/Reveal";
 import { AddToCalendar } from "@/components/site/AddToCalendar";
 
-type Eventt = { id: string; title: string; description: string | null; event_date: string; location: string | null };
+type Eventt = { id: string; title: string; description: string | null; event_date: string; location: string | null; image_url?: string | null };
 
 type FacebookPost = {
   id: string;
@@ -46,7 +46,7 @@ function FacebookPostsGrid() {
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
         {[0, 1, 2].map((i) => (
           <div key={i} className="rounded-xl bg-white border border-border shadow-sm overflow-hidden animate-pulse">
-            <div className="h-56 bg-gray-200" />
+            <div className="aspect-video bg-gray-200" />
             <div className="p-4 space-y-2">
               <div className="h-3 bg-gray-200 rounded w-11/12" />
               <div className="h-3 bg-gray-200 rounded w-10/12" />
@@ -85,7 +85,7 @@ function FacebookPostsGrid() {
           rel="noopener noreferrer"
           className="group flex flex-col h-full rounded-2xl bg-white border border-border/60 shadow-md hover:shadow-xl hover:-translate-y-1.5 transition-all duration-500 overflow-hidden"
         >
-          <div className="relative h-60 overflow-hidden bg-muted">
+          <div className="relative aspect-video overflow-hidden bg-muted">
             {post.image_url ? (
               <img
                 src={post.image_url}
@@ -149,6 +149,11 @@ export default function EventosSection({
                   const d = new Date(e.event_date);
                   return (
                     <div key={e.id} className="border-l-2 border-gold pl-4">
+                      {e.image_url && (
+                        <div className="mb-3 aspect-video w-full overflow-hidden rounded-xl">
+                          <img src={e.image_url} alt={e.title} loading="lazy" className="w-full h-full object-cover" />
+                        </div>
+                      )}
                       <p className="font-display text-xl">{e.title}</p>
                       <p className="text-sm text-primary-foreground/80 mt-1 flex items-center gap-1.5">
                         <Calendar size={14} /> {d.toLocaleDateString("es-PE", { day: "numeric", month: "long" })}

@@ -9,7 +9,6 @@ const categoryMeta: Record<string, { label: string; icon: typeof Church }> = {
   confesion: { label: "Confesiones", icon: Heart },
   catequesis: { label: "Catequesis", icon: BookOpen },
   adoracion: { label: "Adoración", icon: Flame },
-  pastoral: { label: "Consejo Parroquial", icon: Users },
   secretaria: { label: "Secretaría", icon: Briefcase },
 };
 

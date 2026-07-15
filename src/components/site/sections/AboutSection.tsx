@@ -19,13 +19,13 @@ const ministryPhotos = [
 const sacerdotes = [
   {
     img: "/assets/padre-tommy.jpg",
-    name: "Rvdo P. Tommy Varghese, CMI",
+    name: "Rvdo.P. Tomy Thengumparambil, CMI ",
     role: "Párroco",
     desc: "Pastor de la comunidad, dedicado a la celebración de los sacramentos, la formación de los fieles y el acompañamiento espiritual de la familia parroquial.",
   },
   {
     img: "/assets/padre-manesh.jpg",
-    name: "Padre Manesh Joseph, CMI",
+    name: "Rvdo. P. Manesh Kunnakkattu, CMI",
     role: "Vicario parroquial",
     desc: "Colabora en la vida pastoral de la parroquia, animando los ministerios, la catequesis y la cercanía con los jóvenes y las familias.",
   },
@@ -57,7 +57,7 @@ export default function AboutSection({
             <h2 className="mt-3 font-display text-4xl md:text-5xl font-medium leading-tight">
               Una casa de oración<br />en el corazón de <span className="italic text-gold">Tingo</span>
             </h2>
-            <p className="mt-6 text-muted-foreground leading-relaxed text-lg">
+            <p className="mt-6 text-muted-foreground leading-relaxed text-lg text-justify">
               La Parroquia Santísima Trinidad es una comunidad católica acogedora ubicada en la entrada de Jacobo Hunter, animada pastoralmente por las <strong className="text-foreground">Carmelitas de María Inmaculada (CMI)</strong>. Aquí celebramos los sacramentos, formamos discípulos y servimos a la familia parroquial bajo la protección de Nuestra Señora de los Dolores.
             </p>
 

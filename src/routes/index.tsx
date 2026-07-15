@@ -55,7 +55,7 @@ export const Route = createFileRoute("/")({
 
 type Schedule = { id: string; category: string; day_label: string; time_label: string; notes: string | null; sort_order: number };
 type Ministry = { id: string; name: string; description: string | null; leader: string | null; schedule: string | null; image_url: string | null };
-type Eventt = { id: string; title: string; description: string | null; event_date: string; location: string | null };
+type Eventt = { id: string; title: string; description: string | null; event_date: string; location: string | null; image_url?: string | null };
 type GalleryImage = { id: string; title: string | null; category: string | null; image_url: string; sort_order: number };
 
 // Skeleton fallback with fixed approximate heights to prevent CLS

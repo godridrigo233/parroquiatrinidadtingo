@@ -28,7 +28,7 @@ export default function ContactoSection() {
                 <span className="h-11 w-11 rounded-xl bg-white/10 flex items-center justify-center text-gold shrink-0"><MapPin size={20} /></span>
                 <div>
                   <p className="font-semibold text-white">Dirección</p>
-                  <p className="text-white/75 text-sm">Américas 1820, Arequipa 04011 — Entrada de Jacobo Hunter, Tingo</p>
+                  <p className="text-white/75 text-sm">Calle Ferrocarril 200, Av. Alfonso Ugarte Tingo - Cercado</p>
                 </div>
               </li>
               <li className="flex items-start gap-4">
@@ -74,7 +74,7 @@ export default function ContactoSection() {
         <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-10">
           <div>
             <div className="flex items-center gap-3">
-              <img src="/assets/logo.webp" alt="" className="h-12 w-12" loading="lazy" />
+              <img src="/assets/logo.webp" alt="" className="h-12 w-12 rounded-full overflow-hidden object-cover" loading="lazy" />
               <div>
                 <p className="font-display text-lg text-white">Santísima Trinidad</p>
                 <p className="text-xs text-white/60 uppercase tracking-widest">Tingo · Arequipa</p>

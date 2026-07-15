@@ -50,10 +50,10 @@ export function Preloader({ isLoading }: { isLoading: boolean }) {
         {/* Textos con mayor espaciado (elegancia) */}
         <div className="space-y-2">
           <h2 className="font-display text-2xl font-medium tracking-wider text-white drop-shadow-md">
-            Santísima Trinidad
+            Parroquia Santísima Trinidad
           </h2>
           <p className="text-[10px] uppercase tracking-[0.4em] text-gold/90 font-semibold">
-            Parroquia · Tingo
+            Tingo - Arequipa
           </p>
         </div>
 

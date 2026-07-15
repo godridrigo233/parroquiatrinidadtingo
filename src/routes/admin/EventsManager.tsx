@@ -128,8 +128,22 @@ export function EventsManager({ showToast }: { showToast?: (m: string, t?: "succ
   const empty = { title: "", description: "", event_date: "", location: "" };
   const [form, setForm] = useState(empty);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [editImageFile, setEditImageFile] = useState<File | null>(null);
   const [editing, setEditing] = useState<EventRow | null>(null);
   const [saving, setSaving] = useState(false);
+
+  const uploadPoster = async (f: File) => {
+    const ext = f.name.split(".").pop()?.toLowerCase() || "jpg";
+    if (!["png", "jpg", "jpeg"].includes(ext)) {
+      throw new Error("Formato no permitido. Usa PNG, JPG o JPEG.");
+    }
+    const path = `events/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const { error: upErr } = await supabase.storage
+      .from("parroquia-images")
+      .upload(path, f, { contentType: f.type, upsert: false, cacheControl: '31536000' });
+    if (upErr) throw upErr;
+    return supabase.storage.from("parroquia-images").getPublicUrl(path).data.publicUrl;
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -138,22 +152,13 @@ export function EventsManager({ showToast }: { showToast?: (m: string, t?: "succ
     // Subir afiche (si existe) al bucket público de imágenes
     let image_url: string | null = null;
     if (imageFile) {
-      const ext = imageFile.name.split(".").pop()?.toLowerCase() || "jpg";
-      if (!["png", "jpg", "jpeg"].includes(ext)) {
+      try {
+        image_url = await uploadPoster(imageFile);
+      } catch (err: any) {
         setSaving(false);
-        toast.error("Formato no permitido", { description: "Usa PNG, JPG o JPEG." });
+        toast.error("No se pudo subir la imagen", { description: err.message });
         return;
       }
-      const path = `events/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-      const { error: upErr } = await supabase.storage
-        .from("parroquia-images")
-        .upload(path, imageFile, { contentType: imageFile.type, upsert: false, cacheControl: '31536000' });
-      if (upErr) {
-        setSaving(false);
-        toast.error("No se pudo subir la imagen", { description: upErr.message });
-        return;
-      }
-      image_url = supabase.storage.from("parroquia-images").getPublicUrl(path).data.publicUrl;
     }
 
     const { data, error } = await supabase
@@ -209,11 +214,23 @@ export function EventsManager({ showToast }: { showToast?: (m: string, t?: "succ
     if (!editing) return;
     setSaving(true);
 
+    let image_url = editing.image_url ?? null;
+    if (editImageFile) {
+      try {
+        image_url = await uploadPoster(editImageFile);
+      } catch (err: any) {
+        setSaving(false);
+        toast.error("No se pudo subir la imagen", { description: err.message });
+        return;
+      }
+    }
+
     const { error } = await supabase.from("events").update({
       title: editing.title,
       description: editing.description,
       location: editing.location,
       event_date: new Date(editing.event_date).toISOString(),
+      image_url,
     }).eq("id", editing.id);
 
     setSaving(false);
@@ -235,6 +252,7 @@ export function EventsManager({ showToast }: { showToast?: (m: string, t?: "succ
     });
 
     setEditing(null);
+    setEditImageFile(null);
     load();
   };
 
@@ -285,6 +303,11 @@ export function EventsManager({ showToast }: { showToast?: (m: string, t?: "succ
               <span className="block text-[10px] uppercase font-bold text-blue-400">{new Date(e.event_date).toLocaleDateString('es-PE', { month: 'short' })}</span>
               <span className="block text-xl font-display text-blue-700 leading-none">{new Date(e.event_date).getDate()}</span>
             </div>
+            {e.image_url && (
+              <div className="shrink-0 w-20 aspect-video rounded-lg overflow-hidden border border-border bg-secondary hidden sm:block">
+                <img src={e.image_url} alt="" className="w-full h-full object-cover" />
+              </div>
+            )}
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-sm text-primary leading-tight">{e.title}</p>
               <p className="text-xs text-muted-foreground mt-0.5">{new Date(e.event_date).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit', hour12: true })}{e.location ? ` · 📍 ${e.location}` : ""}</p>
@@ -300,13 +323,32 @@ export function EventsManager({ showToast }: { showToast?: (m: string, t?: "succ
         ))}
       </div>
 
-      <EditModal open={!!editing} onClose={() => setEditing(null)} title="Editar evento">
+      <EditModal open={!!editing} onClose={() => { setEditing(null); setEditImageFile(null); }} title="Editar evento">
         {editing && (
           <form onSubmit={saveEdit} className="space-y-3">
             <Input required value={editing.title} onChange={e => setEditing({ ...editing, title: e.target.value })} />
             <Input required type="datetime-local" value={editing.event_date} onChange={e => setEditing({ ...editing, event_date: e.target.value })} />
             <Input placeholder="Lugar" value={editing.location ?? ""} onChange={e => setEditing({ ...editing, location: e.target.value })} />
             <Textarea rows={3} value={editing.description ?? ""} onChange={e => setEditing({ ...editing, description: e.target.value })} />
+            <div>
+              <label className="block text-xs text-muted-foreground mb-1.5">Afiche del evento (PNG, JPG)</label>
+              {(editImageFile || editing.image_url) && (
+                <div className="aspect-video w-full rounded-xl overflow-hidden bg-secondary border border-border mb-2">
+                  <img
+                    src={editImageFile ? URL.createObjectURL(editImageFile) : editing.image_url!}
+                    alt=""
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/jpg"
+                onChange={e => setEditImageFile(e.target.files?.[0] ?? null)}
+                className="w-full text-xs file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-gradient-gold file:text-primary file:font-semibold file:cursor-pointer cursor-pointer text-muted-foreground"
+              />
+              {editImageFile && <p className="text-xs text-gold mt-1.5">📎 {editImageFile.name}</p>}
+            </div>
             <PrimaryBtn type="submit" disabled={saving}>
               <Save size={15} /> {saving ? "Guardando…" : "Guardar cambios"}
             </PrimaryBtn>

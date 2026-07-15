@@ -61,21 +61,26 @@ export function DonacionesSection({ items }: { items: DonationRow[] }) {
                   
                   {/* Billeteras Digitales */}
                   
+                  {/* Bloque Único para copiar el número */}
                   {(item.bank_name === "Yape" || item.bank_name === "Plin") && (
                     <div 
-                      onClick={() => copyToClipboard(item.account_number!.replace(/\s/g, ''), item.id)}
-                      className="w-full flex items-center justify-between p-4 mb-4 rounded-2xl bg-secondary/50 border border-border cursor-pointer hover:border-gold transition-all group"
+                      onClick={() => copyToClipboard((item.account_number || '').replace(/\s/g, ''), item.id + 'num')}
+                      className="w-full flex items-center justify-between p-4 mb-6 rounded-2xl bg-secondary/30 border border-border cursor-pointer hover:border-gold transition-all group active:scale-[0.98]"
                     >
                       <div className="flex flex-col items-start">
-                        <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Número de {item.bank_name}</span>
-                        <span className="font-mono text-lg font-bold text-primary">{item.account_number}</span>
+                        <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-0.5">
+                          Número de {item.bank_name}
+                        </span>
+                        <span className="font-mono text-lg font-bold text-primary tracking-wide">
+                          {item.account_number || "No registrado"}
+                        </span>
                       </div>
                       
-                      {/* El botón de copiar es visible y está alineado a la derecha */}
-                      <div className="p-2 rounded-full bg-white shadow-sm border border-border text-gold">
-                        {copiedId === item.id 
-                          ? <Check size={18} className="text-green-600" /> 
-                          : <Copy size={18} />
+                      {/* Icono de copia integrado y elegante */}
+                      <div className="p-2.5 rounded-xl bg-white shadow-sm border border-border group-hover:text-gold transition-colors">
+                        {copiedId === item.id + 'num' 
+                          ? <Check size={20} className="text-green-600" /> 
+                          : <Copy size={20} className="text-gold" />
                         }
                       </div>
                     </div>

@@ -45,13 +45,17 @@ function FacebookPostsGrid() {
             // Imagen de respaldo por si la publicación es puramente textual
             if (!imageUrl) {
               imageUrl = "https://images.unsplash.com/photo-1548625361-16a00e971cfd?q=80&w=600";
+            }else {
+              // 🛡️ EL ESCUDO ANTI-403: Pasamos la URL de Facebook por el proxy gratuito wsrv.nl
+              // Esto limpia la protección de CDN y optimiza la imagen a formato moderno WebP al instante
+              imageUrl = `https://wsrv.nl/?url=${encodeURIComponent(imageUrl)}&w=600&output=webp`;
             }
 
             // Limpieza de etiquetas HTML y remoción de marcas de agua del generador RSS
             const cleanDescription = (item.content || item.description || "")
               .replace(/<[^>]*>?/gm, '')
               .replace(/\(Feed generated with FetchRSS\)/gi, '')
-              .trim() || "Mira nuestra última actividad o aviso parroquial en nuestra página oficial.";
+              .trim() || "Mira nuestra última actividad/ aviso parroquial en nuestra página oficial!.";
 
             return {
               id: item.guid || item.link || Math.random().toString(),

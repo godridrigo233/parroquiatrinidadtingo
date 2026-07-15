@@ -19,11 +19,9 @@ function FacebookPostsGrid() {
   useEffect(() => {
     const fetchFacebookFeed = async () => {
       try {
-        // Enlace de FetchRSS gratuito procesado a través del proxy rss2json para evitar problemas de CORS
         const rssUrl = "https://fetchrss.com/feed/1wk26cD118cU1wk26x4gR7gD.rss"; 
         const response = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`);
 
-        // Blindaje HTTP: Evita que el navegador intente procesar errores como si fueran JSON
         if (!response.ok) {
           throw new Error(`El servicio externo respondió con estado ${response.status}`);
         }
@@ -32,7 +30,7 @@ function FacebookPostsGrid() {
 
         if (data.status === "ok" && data.items) {
           const formattedPosts = data.items.slice(0, 3).map((item: any) => {
-            // Extractor robusto de imágenes: Busca en enclosure -> thumbnail -> contenido HTML
+            // 1. Intentamos extraer la mejor URL de imagen disponible en el RSS
             let imageUrl = item.enclosure?.link || item.thumbnail;
             
             if (!imageUrl && item.content) {
@@ -42,20 +40,16 @@ function FacebookPostsGrid() {
               }
             }
 
-            // Imagen de respaldo por si la publicación es puramente textual
+            // Si el RSS de plano no tiene foto, asignamos la foto parroquial por defecto
             if (!imageUrl) {
               imageUrl = "https://images.unsplash.com/photo-1548625361-16a00e971cfd?q=80&w=600";
-            }else {
-              // 🛡️ EL ESCUDO ANTI-403: Pasamos la URL de Facebook por el proxy gratuito wsrv.nl
-              // Esto limpia la protección de CDN y optimiza la imagen a formato moderno WebP al instante
-              imageUrl = `https://wsrv.nl/?url=${encodeURIComponent(imageUrl)}&w=600&output=webp`;
             }
 
-            // Limpieza de etiquetas HTML y remoción de marcas de agua del generador RSS
+            // 2. Limpiamos el texto para que quede presentable
             const cleanDescription = (item.content || item.description || "")
               .replace(/<[^>]*>?/gm, '')
               .replace(/\(Feed generated with FetchRSS\)/gi, '')
-              .trim() || "Mira nuestra última actividad/ aviso parroquial en nuestra página oficial!.";
+              .trim() || "Mira nuestra última actividad o aviso parroquial en nuestra página oficial.";
 
             return {
               id: item.guid || item.link || Math.random().toString(),
@@ -68,7 +62,6 @@ function FacebookPostsGrid() {
           setPosts(formattedPosts);
         }
       } catch (error) {
-        // Advertencia en consola en lugar de error rojo para mantener limpio el entorno
         console.warn("Feed de Facebook temporalmente en modo de enlace directo:", error);
       } finally {
         setIsLoading(false);
@@ -129,6 +122,11 @@ function FacebookPostsGrid() {
                 loading="lazy"
                 alt="Publicación de Facebook"
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                /* 🛡️ EL ESCUDO DEFINITIVO: Si Facebook da error 403 al intentar cargar la foto, 
+                   React la sustituye inmediatamente por una hermosa imagen de templo católica */
+                onError={(e) => {
+                  e.currentTarget.src = "https://images.unsplash.com/photo-1548625361-16a00e971cfd?q=80&w=600";
+                }}
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-muted-foreground bg-primary/5">

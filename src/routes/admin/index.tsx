@@ -422,17 +422,31 @@ function SchedulesManager({ showToast }: { showToast: (m: string, t?: "success" 
 }
 
 // ────────────────────────────────────────────────
-//  SECCIÓN: MINISTERIOS
+//  SECCIÓN: MINISTERIOS (CON SOPORTE DE CAPILLAS)
 // ────────────────────────────────────────────────
-type MinistryRow = { id: string; name: string; description: string | null; leader: string | null; schedule: string | null; image_url: string | null };
+type MinistryRow = { 
+  id: string; 
+  name: string; 
+  description: string | null; 
+  leader: string | null; 
+  schedule: string | null; 
+  image_url: string | null;
+  location: string;
+};
+
 function MinistriesManager({ showToast }: { showToast: (m: string, t?: "success" | "error") => void }) {
   const confirm = useConfirm();
   const { items, load, remove } = useTable<MinistryRow>("ministries", "created_at", true);
-  const empty = { name: "", description: "", leader: "", schedule: "", image_url: "" };
+  
+  // Valor por defecto para la ubicación: Sede Central
+  const empty = { name: "", description: "", leader: "", schedule: "", image_url: "", location: "Sede Central" };
   const [form, setForm] = useState(empty);
   const [editing, setEditing] = useState<MinistryRow | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
+  
+  // Estado para el filtro de pestañas en la vista de lista
+  const [filterLocation, setFilterLocation] = useState<"TODOS" | "Sede Central" | "Capilla María de la Merced">("TODOS");
 
   const uploadImage = async (f: File) => {
     const compressed = await imageCompression(f, { maxSizeMB: 0.8, maxWidthOrHeight: 1200, useWebWorker: true });
@@ -446,7 +460,15 @@ function MinistriesManager({ showToast }: { showToast: (m: string, t?: "success"
     e.preventDefault(); setSaving(true);
     try {
       const url = file ? await uploadImage(file) : null;
-      const { error } = await supabase.from("ministries").insert({ name: form.name, description: form.description || null, leader: form.leader || null, schedule: form.schedule || null, image_url: url });
+      // 2. Se envía la ubicación (form.location) al guardar en Supabase
+      const { error } = await supabase.from("ministries").insert({ 
+        name: form.name, 
+        description: form.description || null, 
+        leader: form.leader || null, 
+        schedule: form.schedule || null, 
+        image_url: url,
+        location: form.location
+      });
       if (error) throw error;
       setForm(empty); setFile(null); showToast("Ministerio agregado"); load();
     } catch (err: any) { showToast(err.message, "error"); } finally { setSaving(false); }
@@ -456,53 +478,139 @@ function MinistriesManager({ showToast }: { showToast: (m: string, t?: "success"
     e.preventDefault(); if (!editing) return; setSaving(true);
     try {
       const finalUrl = file ? await uploadImage(file) : editing.image_url;
-      const { error } = await supabase.from("ministries").update({ name: editing.name, description: editing.description || null, leader: editing.leader || null, schedule: editing.schedule || null, image_url: finalUrl }).eq("id", editing.id);
+      // 3. Se actualiza la ubicación en la edición
+      const { error } = await supabase.from("ministries").update({ 
+        name: editing.name, 
+        description: editing.description || null, 
+        leader: editing.leader || null, 
+        schedule: editing.schedule || null, 
+        image_url: finalUrl,
+        location: editing.location
+      }as any).eq("id", editing.id);
       if (error) throw error;
       setEditing(null); setFile(null); showToast("Ministerio actualizado"); load();
     } catch (err: any) { showToast(err.message, "error"); } finally { setSaving(false); }
   };
-
+  // Filtrado dinámico según la pestaña seleccionada
+  const filteredItems = items.filter(m => 
+    filterLocation === "TODOS" ? true : (m.location || "Sede Central") === filterLocation
+  );
   return (
     <div className="grid lg:grid-cols-3 gap-6">
       <Card>
         <h2 className="font-display text-lg text-primary mb-1">Nuevo ministerio</h2>
         <p className="text-xs text-muted-foreground mb-4">Grupo o comunidad parroquial.</p>
         <form onSubmit={submit} className="space-y-3">
+          
+          {/* SELECTOR DE UBICACIÓN AL CREAR */}
+          <div>
+            <label className="text-[10px] uppercase font-bold text-muted-foreground tracking-wide block mb-1">Pertenece a:</label>
+            <select 
+              value={form.location} 
+              onChange={e => setForm({ ...form, location: e.target.value })}
+              className="w-full px-3 py-2.5 rounded-lg border border-input bg-background text-sm font-semibold text-primary outline-none focus:border-gold"
+            >
+              <option value="Sede Central">⛪ Parroquia Principal (Sede)</option>
+              <option value="Capilla María de la Merced">🛐 Capilla María de la Merced</option>
+            </select>
+          </div>
+
           <Input required placeholder="Nombre del ministerio" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
           <Input placeholder="Encargado" value={form.leader} onChange={e => setForm({ ...form, leader: e.target.value })} />
+          <Input placeholder="Horario (ej: Sábados 4pm)" value={form.schedule} onChange={e => setForm({ ...form, schedule: e.target.value })} />
+          
           <div className="border border-input rounded-lg p-2.5 bg-background">
             <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1.5 tracking-wide">Foto</p>
             <input type="file" accept="image/*" className="w-full text-xs text-muted-foreground" onChange={e => { if (e.target.files?.[0]) setFile(e.target.files[0]); }} />
           </div>
+          
           <Textarea placeholder="Descripción breve…" rows={3} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
           <PrimaryBtn type="submit" disabled={saving}><Plus size={15} /> {saving ? "Guardando…" : "Agregar"}</PrimaryBtn>
         </form>
       </Card>
 
       <div className="lg:col-span-2 space-y-3">
-        {items.map(m => (
-          <div key={m.id} className="bg-card rounded-xl p-4 border border-border flex gap-4 items-center shadow-sm hover:border-gold/40 transition-colors">
-            <div className="w-16 h-16 shrink-0 rounded-xl overflow-hidden bg-secondary flex items-center justify-center border">
-              {m.image_url ? <img src={m.image_url} alt="" className="w-full h-full object-cover" /> : <ImageIcon className="text-muted-foreground/30" size={22} />}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-semibold text-sm text-primary">{m.name}</p>
-              <p className="text-xs text-muted-foreground">{[m.leader, m.schedule].filter(Boolean).join(' · ')}</p>
-              {m.description && <p className="text-xs text-muted-foreground/70 mt-1 line-clamp-1">{m.description}</p>}
-            </div>
-            <div className="flex gap-1 shrink-0">
-              <button onClick={() => { setEditing(m); setFile(null); }} className="p-2 text-primary hover:bg-secondary rounded-lg transition-colors"><Pencil size={15} /></button>
-              <button onClick={async () => { const ok = await remove(m.id, confirm.ask); if (ok) showToast("Eliminado"); }} className="p-2 text-destructive hover:bg-destructive/10 rounded-lg transition-colors"><Trash2 size={15} /></button>
-            </div>
-          </div>
-        ))}
-      </div>
+        
+        {/* PESTAÑAS PARA FILTRAR LA LISTA */}
+        <div className="flex gap-1.5 p-1 bg-card rounded-xl border border-border w-fit">
+          <button 
+            type="button"
+            onClick={() => setFilterLocation("TODOS")}
+            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${filterLocation === "TODOS" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            Todos ({items.length})
+          </button>
+          <button 
+            type="button"
+            onClick={() => setFilterLocation("Sede Central")}
+            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${filterLocation === "Sede Central" ? "bg-gold text-primary font-bold shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            Sede Central ({items.filter(i => (i.location || "Sede Central") === "Sede Central").length})
+          </button>
+          <button 
+            type="button"
+            onClick={() => setFilterLocation("Capilla María de la Merced")}
+            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${filterLocation === "Capilla María de la Merced" ? "bg-blue-600 text-white shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            Capilla La Merced ({items.filter(i => i.location === "Capilla María de la Merced").length})
+          </button>
+        </div>
 
+        {filteredItems.length === 0 && (
+          <div className="text-center py-12 border-2 border-dashed border-border rounded-2xl text-muted-foreground text-sm">
+            No hay ministerios registrados en esta ubicación.
+          </div>
+        )}
+
+        {filteredItems.map(m => {
+          const isCapilla = m.location === "Capilla María de la Merced";
+          return (
+            <div key={m.id} className="bg-card rounded-xl p-4 border border-border flex gap-4 items-center shadow-sm hover:border-gold/40 transition-colors">
+              <div className="w-16 h-16 shrink-0 rounded-xl overflow-hidden bg-secondary flex items-center justify-center border">
+                {m.image_url ? <img src={m.image_url} alt="" className="w-full h-full object-cover" /> : <ImageIcon className="text-muted-foreground/30" size={22} />}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  {/* BADGE DE UBICACIÓN VISIBLE */}
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wider ${
+                    isCapilla 
+                      ? "bg-blue-50 text-blue-700 border-blue-200" 
+                      : "bg-amber-50 text-amber-800 border-amber-200"
+                  }`}>
+                    {isCapilla ? "🛐 Capilla La Merced" : "⛪ Sede Central"}
+                  </span>
+                </div>
+                <p className="font-semibold text-sm text-primary">{m.name}</p>
+                <p className="text-xs text-muted-foreground">{[m.leader, m.schedule].filter(Boolean).join(' · ')}</p>
+                {m.description && <p className="text-xs text-muted-foreground/70 mt-1 line-clamp-1">{m.description}</p>}
+              </div>
+              <div className="flex gap-1 shrink-0">
+                <button onClick={() => { setEditing({ ...m, location: m.location || "Sede Central" }); setFile(null); }} className="p-2 text-primary hover:bg-secondary rounded-lg transition-colors"><Pencil size={15} /></button>
+                <button onClick={async () => { const ok = await remove(m.id, confirm.ask); if (ok) showToast("Eliminado"); }} className="p-2 text-destructive hover:bg-destructive/10 rounded-lg transition-colors"><Trash2 size={15} /></button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
       <EditModal open={!!editing} onClose={() => setEditing(null)} title="Editar ministerio">
         {editing && (
           <form onSubmit={saveEdit} className="space-y-3">
-            <Input required value={editing.name} onChange={e => setEditing({ ...editing, name: e.target.value })} />
+            <div>
+              <label className="text-[11px] uppercase font-bold text-muted-foreground tracking-wider mb-1 block">Pertenece a:</label>
+              <select 
+                value={editing.location || "Sede Central"} 
+                onChange={e => setEditing({ ...editing, location: e.target.value })}
+                className="w-full px-3 py-2.5 rounded-lg border border-input bg-background text-sm font-semibold text-primary outline-none focus:border-gold"
+              >
+                <option value="Sede Central">⛪ Parroquia Principal (Sede)</option>
+                <option value="Capilla María de la Merced">🛐 Capilla María de la Merced</option>
+              </select>
+            </div>
+
+            <Input required placeholder="Nombre del ministerio" value={editing.name} onChange={e => setEditing({ ...editing, name: e.target.value })} />
             <Input placeholder="Encargado" value={editing.leader ?? ""} onChange={e => setEditing({ ...editing, leader: e.target.value })} />
+            <Input placeholder="Horario" value={editing.schedule ?? ""} onChange={e => setEditing({ ...editing, schedule: e.target.value })} />
+            
             {(file || editing.image_url) && (
               <div className="aspect-[4/3] w-full rounded-xl overflow-hidden bg-secondary border border-border">
                 <img src={file ? URL.createObjectURL(file) : editing.image_url!} alt="" className="w-full h-full object-cover" />

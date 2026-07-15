@@ -503,6 +503,11 @@ function MinistriesManager({ showToast }: { showToast: (m: string, t?: "success"
           <form onSubmit={saveEdit} className="space-y-3">
             <Input required value={editing.name} onChange={e => setEditing({ ...editing, name: e.target.value })} />
             <Input placeholder="Encargado" value={editing.leader ?? ""} onChange={e => setEditing({ ...editing, leader: e.target.value })} />
+            {(file || editing.image_url) && (
+              <div className="aspect-[4/3] w-full rounded-xl overflow-hidden bg-secondary border border-border">
+                <img src={file ? URL.createObjectURL(file) : editing.image_url!} alt="" className="w-full h-full object-cover" />
+              </div>
+            )}
             <input type="file" accept="image/*" className="w-full text-xs border p-2 rounded-lg" onChange={e => { if (e.target.files?.[0]) setFile(e.target.files[0]); }} />
             <Textarea rows={3} value={editing.description ?? ""} onChange={e => setEditing({ ...editing, description: e.target.value })} />
             <PrimaryBtn type="submit" disabled={saving}><Save size={15} /> Guardar cambios</PrimaryBtn>
@@ -804,7 +809,14 @@ function DonationsManager({ showToast }: { showToast: (m: string, t?: "success" 
                 <Input placeholder="CCI" value={editing.cci ?? ""} onChange={e => setEditing({ ...editing, cci: e.target.value })} />
               </>
             ) : (
-              <input type="file" accept="image/*" className="w-full text-xs border p-2 rounded-lg" onChange={e => { if (e.target.files?.[0]) setFile(e.target.files[0]); }} />
+              <>
+                {(file || editing.qr_image_url) && (
+                  <div className="aspect-square w-32 mx-auto rounded-xl overflow-hidden bg-secondary border border-border">
+                    <img src={file ? URL.createObjectURL(file) : editing.qr_image_url!} alt="" className="w-full h-full object-cover" />
+                  </div>
+                )}
+                <input type="file" accept="image/*" className="w-full text-xs border p-2 rounded-lg" onChange={e => { if (e.target.files?.[0]) setFile(e.target.files[0]); }} />
+              </>
             )}
             <PrimaryBtn type="submit" disabled={saving}><Save size={15} /> Guardar cambios</PrimaryBtn>
           </form>

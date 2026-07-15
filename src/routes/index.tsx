@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Sparkles, Clock, ArrowRight } from "lucide-react";
-
+import { ParishAIBotFab } from "@/components/site/ParishAIBotFab";
 import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/site/Navbar";
 import { WhatsAppFab } from "@/components/site/WhatsAppFab";
@@ -243,8 +243,8 @@ function Home() {
       <Suspense fallback={<SectionSkeleton height="h-[1200px]" />}>
         <ContactoSection />
       </Suspense>
-
-      <WhatsAppFab />
+      <ParishAIBotFab />
+      {/*<WhatsAppFab />*/} //SACAR
     </div>
   );
 }

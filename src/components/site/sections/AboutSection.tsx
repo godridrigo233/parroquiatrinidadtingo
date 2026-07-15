@@ -160,9 +160,7 @@ export default function AboutSection({
                         {ministryImage && (
                           <OptimizedImage src={`${ministryImage}?v=1`} alt={m.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 will-change-transform" />
                         )}
-                        <span className="absolute top-3 left-3 h-9 w-9 rounded-lg bg-card/95 backdrop-blur flex items-center justify-center shadow-card">
-                          
-                        </span>
+                        
                       </div>
                       <div className="p-6 flex-1 flex flex-col">
                         <h3 className="font-display text-2xl text-primary">{m.name}</h3>

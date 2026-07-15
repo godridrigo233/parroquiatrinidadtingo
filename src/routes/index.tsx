@@ -243,8 +243,8 @@ function Home() {
       <Suspense fallback={<SectionSkeleton height="h-[1200px]" />}>
         <ContactoSection />
       </Suspense>
-      <ParishAIBotFab />
       {/*<WhatsAppFab />*/} //SACAR
+      <ParishAIBotFab />
     </div>
   );
 }

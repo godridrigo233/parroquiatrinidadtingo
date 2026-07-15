@@ -61,7 +61,9 @@ export default function GaleriaSection({ gallery }: { gallery: GalleryImage[] })
         <DialogContent className="max-w-5xl p-0 bg-transparent border-0 shadow-none">
           {lightbox && (
             <div className="relative">
-              <OptimizedImage src={lightbox.url} alt={lightbox.title ?? ""} className="w-full max-h-[85vh] object-contain rounded-2xl bg-black" />
+              <div className="w-full aspect-square rounded-2xl overflow-hidden bg-black">
+                <OptimizedImage src={lightbox.url} alt={lightbox.title ?? ""} className="w-full h-full object-cover" />
+              </div>
               {lightbox.title && <p className="mt-3 text-center text-white font-display text-xl drop-shadow">{lightbox.title}</p>}
             </div>
           )}

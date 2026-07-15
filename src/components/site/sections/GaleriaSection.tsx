@@ -58,7 +58,7 @@ export default function GaleriaSection({ gallery }: { gallery: GalleryImage[] })
       </div>
 
       <Dialog open={!!lightbox} onOpenChange={(o) => !o && setLightbox(null)}>
-        <DialogContent className="max-w-5xl p-0 bg-transparent border-0 shadow-none">
+        <DialogContent className="max-w-md p-0 bg-transparent border-0 shadow-none">
           {lightbox && (
             <div className="relative">
               <div className="w-full aspect-square rounded-2xl overflow-hidden bg-black">

@@ -2,7 +2,7 @@ import { Church, Clock, BookOpen, Heart, Users, Music, Sparkles, GraduationCap }
 import { Reveal } from "@/components/site/Reveal";
 import { OptimizedImage } from "@/components/site/OptimizedImage";
 import { SkeletonCard } from "@/components/ui/SkeletonCard";
-
+import React, { useState } from "react";
 type Ministry = { id: string; name: string; description: string | null; leader: string | null; schedule: string | null; image_url: string | null; location: string };
 
 const ministryIcons = [Music, BookOpen, Users, Sparkles, Heart, GraduationCap];
@@ -38,6 +38,7 @@ export default function AboutSection({
   ministries: Ministry[];
   loadingMinistries: boolean;
 }) {
+  const [activeTab, setActiveTab] = useState<"Sede Central" | "Capilla María de la Merced">("Sede Central");
   return (
     <>
       {/* SOBRE LA PARROQUIA */}
@@ -135,8 +136,7 @@ export default function AboutSection({
           </div>
         </div>
       </section>
-
-      {/* MINISTERIOS Y CAPILLAS */}
+{/* MINISTERIOS Y CAPILLAS CON PESTAÑAS */}
       <section id="ministerios" className="py-24 px-5 lg:px-8 bg-secondary/50">
         <div className="max-w-7xl mx-auto">
           
@@ -147,124 +147,140 @@ export default function AboutSection({
             <p className="mt-4 text-muted-foreground">Carismas al servicio de nuestra parroquia y su jurisdicción.</p>
           </Reveal>
 
-          {/* ── 1. BLOQUE DE CAPILLA MARÍA DE LA MERCED (PERIFÉRICA) ── */}
-          <div className="mt-16 mb-20">
-            <Reveal>
-              <div className="flex items-center gap-3 mb-6">
-                <span className="text-xs font-bold tracking-[0.2em] bg-primary/10 text-primary uppercase px-3.5 py-1.5 rounded-full inline-flex items-center gap-1.5">
-                  🛐 Capilla de la Jurisdicción
+          {/* ── BARRA DE PESTAÑAS (TABS) ── */}
+          <Reveal delay={100} className="mt-10 flex justify-center">
+            <div className="inline-flex p-1.5 bg-card/80 backdrop-blur border border-border/80 rounded-full shadow-sm max-w-full overflow-x-auto">
+              
+              {/* Botón Sede Central */}
+              <button
+                onClick={() => setActiveTab("Sede Central")}
+                className={`flex items-center gap-2 px-6 py-3 rounded-full text-xs sm:text-sm font-semibold transition-all duration-300 whitespace-nowrap ${
+                  activeTab === "Sede Central"
+                    ? "bg-gradient-gold text-primary-foreground shadow-md scale-[1.02]"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
+                }`}
+              >
+                <span>⛪ Sede Parroquial Central</span>
+                <span className={`ml-1 px-2 py-0.5 rounded-full text-[10px] ${
+                  activeTab === "Sede Central" ? "bg-black/20 text-white" : "bg-secondary text-muted-foreground"
+                }`}>
+                  {ministries.filter(m => !m.location || m.location === "Sede Central").length}
                 </span>
-                <h3 className="font-display text-2xl md:text-3xl text-primary font-semibold">
-                  Capilla María de la Merced
-                </h3>
+              </button>
+
+              {/* Botón Capilla María de la Merced */}
+              <button
+                onClick={() => setActiveTab("Capilla María de la Merced")}
+                className={`flex items-center gap-2 px-6 py-3 rounded-full text-xs sm:text-sm font-semibold transition-all duration-300 whitespace-nowrap ${
+                  activeTab === "Capilla María de la Merced"
+                    ? "bg-primary text-white shadow-md scale-[1.02]"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
+                }`}
+              >
+                <span>🛐 Capilla María de la Merced</span>
+                <span className={`ml-1 px-2 py-0.5 rounded-full text-[10px] ${
+                  activeTab === "Capilla María de la Merced" ? "bg-white/20 text-white" : "bg-secondary text-muted-foreground"
+                }`}>
+                  {ministries.filter(m => m.location === "Capilla María de la Merced").length}
+                </span>
+              </button>
+
+            </div>
+          </Reveal>
+
+          {/* ── CONTENIDO DE LA PESTAÑA SELECCIONADA ── */}
+          <div className="mt-12 min-h-[400px]">
+            {loadingMinistries ? (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <Reveal key={`skel-min-${i}`} delay={i * 80}><SkeletonCard /></Reveal>
+                ))}
               </div>
-            </Reveal>
-            <div className="bg-primary/5 rounded-3xl p-6 md:p-8 border border-primary/15 shadow-sm">
-              {loadingMinistries ? (
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  <SkeletonCard />
-                </div>
-              ) : (
-                (() => {
-                  const capillaMinistries = ministries.filter(m => m.location === "Capilla María de la Merced");
-                  
-                  if (capillaMinistries.length === 0) {
-                    return (
-                      <div className="bg-white rounded-2xl p-8 text-center border border-dashed border-primary/20">
-                        <p className="text-primary font-display text-xl font-medium">Hermandad</p>
-                        <p className="text-sm text-muted-foreground mt-2 max-w-xl mx-auto text-justify sm:text-center">
-                          Templo de oración y sede en nuestra comunidad de Hunter. Atendida pastoralmente por los Padres Carmelitas de la Sede Central de Santísima Trinidad.
+            ) : (
+              (() => {
+                // Filtramos los ministerios según la pestaña seleccionada
+                const filtered = ministries.filter(m => {
+                  if (activeTab === "Sede Central") {
+                    return !m.location || m.location === "Sede Central";
+                  }
+                  return m.location === "Capilla María de la Merced";
+                });
+
+                // Si entran a la capilla y aún no han subido datos, mostramos el mensaje informativo
+                if (activeTab === "Capilla María de la Merced" && filtered.length === 0) {
+                  return (
+                    <Reveal>
+                      <div className="bg-white rounded-3xl p-8 md:p-12 text-center border border-primary/15 shadow-sm max-w-3xl mx-auto my-6">
+                        <span className="text-4xl block mb-4">🛐</span>
+                        <h3 className="text-primary font-display text-2xl md:text-3xl font-semibold">
+                          Capilla María de la Merced y Hermandad del Señor de los Milagros
+                        </h3>
+                        <p className="text-sm md:text-base text-muted-foreground mt-4 max-w-xl mx-auto leading-relaxed text-justify sm:text-center">
+                          Templo de oración y sede de la gran devoción al Señor de los Milagros en nuestra comunidad de Hunter. Atendida pastoralmente por los Padres Carmelitas de la Sede Central de Santísima Trinidad.
                         </p>
-                        <div className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-primary/80 bg-primary/5 px-4 py-2 rounded-xl">
-                          ℹ️ Trámites de secretaría e intenciones se centralizan en la Sede Parroquial.
+                        <div className="mt-6 pt-6 border-t border-border/60 flex flex-wrap justify-center gap-4 text-xs font-medium text-primary/80">
+                          <span className="bg-primary/5 px-4 py-2 rounded-xl border border-primary/10 flex items-center gap-1.5">
+                            📍 Ubicación: Sector La Merced, Hunter
+                          </span>
+                          <span className="bg-primary/5 px-4 py-2 rounded-xl border border-primary/10 flex items-center gap-1.5">
+                            ℹ️ Trámites y secretaría en Sede Central
+                          </span>
                         </div>
                       </div>
-                    );
-                  }
-
-                  return (
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {capillaMinistries.map((m, i) => (
-                        <article key={m.id} className="group h-full flex flex-col bg-white rounded-2xl border border-primary/20 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all overflow-hidden">
-                          <div className="relative aspect-[16/10] overflow-hidden bg-secondary">
-                            {m.image_url ? (
-                              <OptimizedImage src={`${m.image_url}?v=1`} alt={m.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center bg-primary/10 text-primary font-display font-medium">Capilla La Merced</div>
-                            )}
-                            <div className="absolute top-3 left-3 bg-primary text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">
-                              La Merced
-                            </div>
-                          </div>
-                          <div className="p-6 flex-1 flex flex-col">
-                            <h4 className="font-display text-2xl text-primary">{m.name}</h4>
-                            {m.description && <p className="mt-3 text-sm text-muted-foreground leading-relaxed text-justify">{m.description}</p>}
-                            {(m.leader || m.schedule) && (
-                              <div className="mt-5 pt-5 border-t border-border space-y-1.5 text-sm">
-                                {m.leader && <p className="text-foreground"><span className="text-muted-foreground">Encargado:</span> {m.leader}</p>}
-                                {m.schedule && <p className="text-foreground flex items-center gap-1.5"><Clock size={14} className="text-gold" /> {m.schedule}</p>}
-                              </div>
-                            )}
-                          </div>
-                        </article>
-                      ))}
-                    </div>
+                    </Reveal>
                   );
-                })()
-              )}
-            </div>
-          </div>
+                }
 
-          {/* ── 2. BLOQUE DE MINISTERIOS DE LA SEDE CENTRAL ── */}
-          <div>
-            <Reveal>
-              <div className="flex items-center gap-3 mb-8 border-t border-border/80 pt-12">
-                <span className="text-xs font-bold tracking-[0.2em] bg-gold/20 text-amber-800 uppercase px-3.5 py-1.5 rounded-full inline-flex items-center gap-1.5">
-                  ⛪ Sede Central
-                </span>
-                <div>
-                  <h3 className="font-display text-2xl md:text-3xl text-primary font-semibold">
-                    Ministerios y Grupos del Templo Principal
-                  </h3>
-                  <p className="text-sm text-muted-foreground">Grupos comunitarios que sirven en Tingo.</p>
-                </div>
-              </div>
-            </Reveal>
-
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {loadingMinistries ? (
-                Array.from({ length: 3 }).map((_, i) => (
-                  <Reveal key={`skel-min-${i}`} delay={i * 80}><SkeletonCard /></Reveal>
-                ))
-              ) : (
-                ministries
-                  .filter(m => !m.location || m.location === "Sede Central")
-                  .map((m, i) => {
-                    const ministryImage = m.image_url || ministryPhotos[i];
-                    return (
-                      <Reveal key={m.id} delay={i * 80}>
-                        <article className="group h-full flex flex-col bg-card rounded-2xl border border-border shadow-card hover:shadow-elegant hover:-translate-y-1 transition-all overflow-hidden will-change-transform">
-                          <div className="relative aspect-[16/10] overflow-hidden bg-secondary">
-                            {ministryImage && (
-                              <OptimizedImage src={`${ministryImage}?v=1`} alt={m.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 will-change-transform" />
-                            )}
-                          </div>
-                          <div className="p-6 flex-1 flex flex-col">
-                            <h4 className="font-display text-2xl text-primary">{m.name}</h4>
-                            {m.description && <p className="mt-3 text-sm text-muted-foreground leading-relaxed text-justify">{m.description}</p>}
-                            {(m.leader || m.schedule) && (
-                              <div className="mt-5 pt-5 border-t border-border space-y-1.5 text-sm">
-                                {m.leader && <p className="text-foreground"><span className="text-muted-foreground">Encargado:</span> {m.leader}</p>}
-                                {m.schedule && <p className="text-foreground flex items-center gap-1.5"><Clock size={14} className="text-gold" /> {m.schedule}</p>}
+                // Grilla de ministerios de la pestaña seleccionada
+                return (
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in-50 duration-500">
+                    {filtered.map((m, i) => {
+                      const ministryImage = m.image_url || ministryPhotos[i];
+                      return (
+                        <Reveal key={m.id} delay={i * 80}>
+                          <article className="group h-full flex flex-col bg-card rounded-2xl border border-border shadow-card hover:shadow-elegant hover:-translate-y-1 transition-all overflow-hidden will-change-transform">
+                            <div className="relative aspect-[16/10] overflow-hidden bg-secondary">
+                              {ministryImage ? (
+                                <OptimizedImage src={`${ministryImage}?v=1`} alt={m.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 will-change-transform" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center bg-primary/10 text-primary font-display font-medium text-sm">
+                                  {m.name}
+                                </div>
+                              )}
+                              
+                              {/* Etiqueta flotante en la esquina de la foto */}
+                              <div className="absolute top-3 left-3">
+                                <span className={`text-[10px] font-bold px-3 py-1 rounded-full backdrop-blur-md uppercase tracking-wider shadow-sm ${
+                                  activeTab === "Sede Central"
+                                    ? "bg-black/40 text-white border border-white/20"
+                                    : "bg-primary text-white"
+                                }`}>
+                                  {activeTab === "Sede Central" ? "⛪ Sede Central" : "🛐 Capilla La Merced"}
+                                </span>
                               </div>
-                            )}
-                          </div>
-                        </article>
-                      </Reveal>
-                    );
-                  })
-              )}
-            </div>
+                            </div>
+
+                            <div className="p-6 flex-1 flex flex-col justify-between">
+                              <div>
+                                <h4 className="font-display text-2xl text-primary">{m.name}</h4>
+                                {m.description && <p className="mt-3 text-sm text-muted-foreground leading-relaxed text-justify line-clamp-3">{m.description}</p>}
+                              </div>
+
+                              {(m.leader || m.schedule) && (
+                                <div className="mt-5 pt-5 border-t border-border space-y-1.5 text-sm">
+                                  {m.leader && <p className="text-foreground truncate"><span className="text-muted-foreground">Encargado:</span> {m.leader}</p>}
+                                  {m.schedule && <p className="text-foreground flex items-center gap-1.5 font-medium"><Clock size={14} className="text-gold shrink-0" /> {m.schedule}</p>}
+                                </div>
+                              )}
+                            </div>
+                          </article>
+                        </Reveal>
+                      );
+                    })}
+                  </div>
+                );
+              })()
+            )}
           </div>
 
         </div>

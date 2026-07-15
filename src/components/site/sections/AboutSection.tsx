@@ -152,7 +152,6 @@ export default function AboutSection({
               ))
             ) : (
               ministries.map((m, i) => {
-                const Icon = ministryIcons[i % ministryIcons.length];
                 const ministryImage = m.image_url || ministryPhotos[i];
                 return (
                   <Reveal key={m.id} delay={i * 80}>
@@ -162,7 +161,7 @@ export default function AboutSection({
                           <OptimizedImage src={`${ministryImage}?v=1`} alt={m.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 will-change-transform" />
                         )}
                         <span className="absolute top-3 left-3 h-9 w-9 rounded-lg bg-card/95 backdrop-blur flex items-center justify-center shadow-card">
-                          <Icon size={16} className="text-gold" />
+                          
                         </span>
                       </div>
                       <div className="p-6 flex-1 flex flex-col">

@@ -250,31 +250,36 @@ function FacebookPostsGrid() {
 
         if (data.status === "ok" && data.items) {
           const formattedPosts = data.items.slice(0, 3).map((item: any) => {
-            // 1. EXTRACTOR INTELIGENTE DE FOTOS:
-            // Buscamos en enclosure -> thumbnail -> o extraemos la primera etiqueta <img> dentro del contenido
-            let imageUrl = item.enclosure?.link || item.thumbnail;
+            // 1. Buscamos la URL de la imagen
+            let rawImageUrl = item.enclosure?.link || item.thumbnail;
             
-            if (!imageUrl && item.content) {
+            if (!rawImageUrl && item.content) {
               const imgMatch = item.content.match(/<img[^>]+src="([^">]+)"/);
               if (imgMatch && imgMatch[1]) {
-                imageUrl = imgMatch[1];
+                rawImageUrl = imgMatch[1];
               }
             }
+
+            // 2. 🛡️ LIMPIEZA CLAVE: Decodificamos entidades HTML (ej. &amp; -> &)
+            let imageUrl = rawImageUrl 
+              ? rawImageUrl.replace(/&amp;/g, '&') 
+              : null;
+
+            // Si aún no hay imagen, usamos el fallback
             if (!imageUrl) {
               imageUrl = "https://images.unsplash.com/photo-1548625361-16a00e971cfd?q=80&w=600";
             }
-            // 2. LIMPIEZA DE TEXTO:
-            // Quitamos todas las etiquetas HTML (como <br>, <img>, o enlaces) del texto para que se lea limpio
+
             const cleanDescription = (item.content || item.description || "")
               .replace(/<[^>]*>?/gm, '')
-              .replace(/\(Feed generated with FetchRSS\)/gi, '') // Ocultamos la marca de agua del texto
+              .replace(/\(Feed generated with FetchRSS\)/gi, '')
               .trim() || "Mira nuestra última actividad o aviso parroquial en nuestra página oficial.";
 
             return {
               id: item.guid || item.link || Math.random().toString(),
               post_url: item.link || "https://www.facebook.com/parroquiasantisimatrinidadtingo",
               description: cleanDescription,
-              image_url: imageUrl
+              image_url: imageUrl 
             };
           });
           

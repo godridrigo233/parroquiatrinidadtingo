@@ -208,7 +208,39 @@ export function EventsManager({ showToast }: { showToast?: (m: string, t?: "succ
     load();
   };
 
+  const handleRemoveImage = async () => {
+    if (!editing || !editing.image_url) return;
+    const fileName = editing.image_url.split('/').pop();
+  
+    if (fileName) {
+      const { error } = await supabase.storage
+        .from('parroquia-images') // Debe coincidir con tu bucket
+        .remove([fileName]);
+      
+      if (error) {
+        console.error("Error al borrar del servidor:", error);
+        toast.error("Error al borrar la imagen del servidor");
+        return;
+      }
+    }
 
+    // 3. Actualizar la base de datos para poner image_url en null
+    const { error: dbError } = await supabase
+      .from("events")
+      .update({ image_url: null })
+      .eq("id", editing.id);
+
+    if (dbError) {
+      toast.error("Error al actualizar la base de datos");
+      return;
+    }
+
+    // 4. Actualizar estado local para refrescar la UI
+    setEditing({ ...editing, image_url: null });
+    setEditImageFile(null); // Limpiamos el archivo nuevo si estaba seleccionado
+    toast.success("Imagen eliminada correctamente");
+    load(); // Recargamos la lista
+  };
   const saveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editing) return;
@@ -333,14 +365,21 @@ export function EventsManager({ showToast }: { showToast?: (m: string, t?: "succ
             <div>
               <label className="block text-xs text-muted-foreground mb-1.5">Afiche del evento (PNG, JPG)</label>
               {(editImageFile || editing.image_url) && (
-                <div className="aspect-video w-full rounded-xl overflow-hidden bg-secondary border border-border mb-2">
-                  <img
-                    src={editImageFile ? URL.createObjectURL(editImageFile) : editing.image_url!}
-                    alt=""
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              )}
+                  <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-secondary border border-border mb-2">
+                    <img
+                      src={editImageFile ? URL.createObjectURL(editImageFile) : editing.image_url!}
+                      alt="Preview"
+                      className="w-full h-full object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleRemoveImage}
+                      className="absolute top-2 right-2 p-2 bg-red-500/90 text-white rounded-full hover:bg-red-600 transition-colors shadow-sm"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                )}
               <input
                 type="file"
                 accept="image/png,image/jpeg,image/jpg"

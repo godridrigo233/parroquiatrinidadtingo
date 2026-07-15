@@ -238,21 +238,50 @@ function FacebookPostsGrid() {
   useEffect(() => {
     const fetchFacebookFeed = async () => {
       try {
-        const response = await fetch("https://rss.app/feeds/v1.1/vXpVb6k0mdMFJzil.json");
+        // Tu URL de FetchRSS pasada por el proxy gratuito rss2json
+        const rssUrl = "https://fetchrss.com/feed/1wk26cD118cU1wk26x4gR7gD.rss"; 
+        const response = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`);
+
+        if (!response.ok) {
+          throw new Error(`Error HTTP: ${response.status}`);
+        }
+
         const data = await response.json();
 
-        if (data.items) {
-          const formattedPosts = data.items.slice(0, 3).map((item: any) => ({
-            id: item.id,
-            post_url: item.url,
-            description: item.content_text || "Mira nuestra última publicación.",
-            image_url: item.image || "https://images.unsplash.com/photo-1438032005730-c779502df39b?q=80&w=600"
-          }));
+        if (data.status === "ok" && data.items) {
+          const formattedPosts = data.items.slice(0, 3).map((item: any) => {
+            // 1. EXTRACTOR INTELIGENTE DE FOTOS:
+            // Buscamos en enclosure -> thumbnail -> o extraemos la primera etiqueta <img> dentro del contenido
+            let imageUrl = item.enclosure?.link || item.thumbnail;
+            
+            if (!imageUrl && item.content) {
+              const imgMatch = item.content.match(/<img[^>]+src="([^">]+)"/);
+              if (imgMatch && imgMatch[1]) {
+                imageUrl = imgMatch[1];
+              }
+            }
+            if (!imageUrl) {
+              imageUrl = "https://images.unsplash.com/photo-1548625361-16a00e971cfd?q=80&w=600";
+            }
+            // 2. LIMPIEZA DE TEXTO:
+            // Quitamos todas las etiquetas HTML (como <br>, <img>, o enlaces) del texto para que se lea limpio
+            const cleanDescription = (item.content || item.description || "")
+              .replace(/<[^>]*>?/gm, '')
+              .replace(/\(Feed generated with FetchRSS\)/gi, '') // Ocultamos la marca de agua del texto
+              .trim() || "Mira nuestra última actividad o aviso parroquial en nuestra página oficial.";
+
+            return {
+              id: item.guid || item.link || Math.random().toString(),
+              post_url: item.link || "https://www.facebook.com/parroquiasantisimatrinidadtingo",
+              description: cleanDescription,
+              image_url: imageUrl
+            };
+          });
           
           setPosts(formattedPosts);
         }
       } catch (error) {
-        console.error("Error jalando el feed de Facebook en vivo:", error);
+        console.warn("Feed de Facebook no disponible temporalmente:", error);
       } finally {
         setIsLoading(false);
       }

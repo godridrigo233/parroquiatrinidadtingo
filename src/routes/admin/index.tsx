@@ -428,8 +428,7 @@ type MinistryRow = {
   id: string; 
   name: string; 
   description: string | null; 
-  leader: string | null; 
-  schedule: string | null; 
+  leader: string | null;
   image_url: string | null;
   location: string;
 };
@@ -439,7 +438,7 @@ function MinistriesManager({ showToast }: { showToast: (m: string, t?: "success"
   const { items, load, remove } = useTable<MinistryRow>("ministries", "created_at", true);
   
   // Valor por defecto para la ubicación: Sede Central
-  const empty = { name: "", description: "", leader: "", schedule: "", image_url: "", location: "Sede Central" };
+  const empty = { name: "", description: "", leader: "", image_url: "", location: "Sede Central" };
   const [form, setForm] = useState(empty);
   const [editing, setEditing] = useState<MinistryRow | null>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -465,7 +464,6 @@ function MinistriesManager({ showToast }: { showToast: (m: string, t?: "success"
         name: form.name, 
         description: form.description || null, 
         leader: form.leader || null, 
-        schedule: form.schedule || null, 
         image_url: url,
         location: form.location
       });
@@ -483,7 +481,6 @@ function MinistriesManager({ showToast }: { showToast: (m: string, t?: "success"
         name: editing.name, 
         description: editing.description || null, 
         leader: editing.leader || null, 
-        schedule: editing.schedule || null, 
         image_url: finalUrl,
         location: editing.location
       }as any).eq("id", editing.id);
@@ -491,7 +488,6 @@ function MinistriesManager({ showToast }: { showToast: (m: string, t?: "success"
       setEditing(null); setFile(null); showToast("Ministerio actualizado"); load();
     } catch (err: any) { showToast(err.message, "error"); } finally { setSaving(false); }
   };
-  // Filtrado dinámico según la pestaña seleccionada
   const filteredItems = items.filter(m => 
     filterLocation === "TODOS" ? true : (m.location || "Sede Central") === filterLocation
   );
@@ -517,7 +513,6 @@ function MinistriesManager({ showToast }: { showToast: (m: string, t?: "success"
 
           <Input required placeholder="Nombre del ministerio" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
           <Input placeholder="Encargado" value={form.leader} onChange={e => setForm({ ...form, leader: e.target.value })} />
-          <Input placeholder="Horario (ej: Sábados 4pm)" value={form.schedule} onChange={e => setForm({ ...form, schedule: e.target.value })} />
           
           <div className="border border-input rounded-lg p-2.5 bg-background">
             <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1.5 tracking-wide">Foto</p>
@@ -581,7 +576,7 @@ function MinistriesManager({ showToast }: { showToast: (m: string, t?: "success"
                   </span>
                 </div>
                 <p className="font-semibold text-sm text-primary">{m.name}</p>
-                <p className="text-xs text-muted-foreground">{[m.leader, m.schedule].filter(Boolean).join(' · ')}</p>
+                <p className="text-xs text-muted-foreground">{[m.leader].filter(Boolean).join(' · ')}</p>
                 {m.description && <p className="text-xs text-muted-foreground/70 mt-1 line-clamp-1">{m.description}</p>}
               </div>
               <div className="flex gap-1 shrink-0">
@@ -609,7 +604,7 @@ function MinistriesManager({ showToast }: { showToast: (m: string, t?: "success"
 
             <Input required placeholder="Nombre del ministerio" value={editing.name} onChange={e => setEditing({ ...editing, name: e.target.value })} />
             <Input placeholder="Encargado" value={editing.leader ?? ""} onChange={e => setEditing({ ...editing, leader: e.target.value })} />
-            <Input placeholder="Horario" value={editing.schedule ?? ""} onChange={e => setEditing({ ...editing, schedule: e.target.value })} />
+  
             
             {(file || editing.image_url) && (
               <div className="aspect-[4/3] w-full rounded-xl overflow-hidden bg-secondary border border-border">

@@ -265,13 +265,11 @@ export default function AboutSection({
                                 <h4 className="font-display text-2xl text-primary">{m.name}</h4>
                                 {m.description && <p className="mt-3 text-sm text-muted-foreground leading-relaxed text-justify line-clamp-3">{m.description}</p>}
                               </div>
-
-                              {(m.leader || m.schedule) && (
                                 <div className="mt-5 pt-5 border-t border-border space-y-1.5 text-sm">
                                   {m.leader && <p className="text-foreground truncate"><span className="text-muted-foreground">Encargado:</span> {m.leader}</p>}
-                                  {m.schedule && <p className="text-foreground flex items-center gap-1.5 font-medium"><Clock size={14} className="text-gold shrink-0" /> {m.schedule}</p>}
+                      
                                 </div>
-                              )}
+                            
                             </div>
                           </article>
                         </Reveal>

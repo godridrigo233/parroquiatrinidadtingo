@@ -109,7 +109,7 @@ Simplemente abre el enlace en tu navegador favorito y comienza a explorar.
 
 ## 📱 ¿Por Qué Digital?
 
-En el 2024, la presencia digital no es opcional, es **esencial**:
+En el 2026, la presencia digital no es opcional, es **esencial**:
 
 ### 🎯 Beneficios de Tener Esta Plataforma
 

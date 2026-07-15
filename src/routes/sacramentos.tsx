@@ -681,8 +681,13 @@ function SacramentosPage() {
                 <img
                   src="/assets/logo.webp"
                   alt=""
+<<<<<<< HEAD
+                  loading="lazy"
+                  className="h-10 w-10"
+=======
                   loading="lazy"
                   className="h-10 w-10 rounded-full overflow-hidden object-cover"
+>>>>>>> 170101d2c87ae1c96f464f15c60d024d634eb0a6
                 />
                 <div>
                   <p className="font-display text-sm text-white font-semibold">

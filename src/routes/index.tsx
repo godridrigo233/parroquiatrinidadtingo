@@ -230,3 +230,117 @@ function Home() {
     </div>
   );
 }
+
+<<<<<<< HEAD
+  useEffect(() => {
+    const fetchFacebookFeed = async () => {
+      try {
+        // Hacemos el fetch directamente a tu endpoint JSON, mucho más rápido y sin intermediarios
+        const response = await fetch("https://rss.app/feeds/v1.1/vXpVb6k0mdMFJzil.json");
+        const data = await response.json();
+
+        if (data.items) {
+          // Mapeamos los datos exactamente como vienen en tu JSON
+          const formattedPosts = data.items.slice(0, 3).map((item: any) => ({
+            id: item.id,
+            post_url: item.url,
+            // Usamos content_text para la descripción sin etiquetas HTML
+            description: item.content_text || "Mira nuestra última publicación.",
+            // Jalamos la imagen directa del campo "image"
+            image_url: item.image || "https://images.unsplash.com/photo-1438032005730-c779502df39b?q=80&w=600"
+          }));
+          
+          setPosts(formattedPosts);
+        }
+      } catch (error) {
+        console.error("Error jalando el feed de Facebook en vivo:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchFacebookFeed();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="rounded-xl bg-white border border-border shadow-sm overflow-hidden animate-pulse">
+            <div className="h-56 bg-gray-200" />
+            <div className="p-4 space-y-2">
+              <div className="h-3 bg-gray-200 rounded w-11/12" />
+              <div className="h-3 bg-gray-200 rounded w-10/12" />
+              <div className="h-3 bg-gray-200 rounded w-8/12" />
+              <div className="h-4 bg-gray-200 rounded w-1/3 mt-4" />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (posts.length === 0) {
+    return (
+      <div className="rounded-xl border border-dashed border-border bg-card/50 py-12 px-6 text-center">
+        <p className="text-muted-foreground mb-4">Aún no hay publicaciones recientes.</p>
+        <a
+          href="https://www.facebook.com/parroquiasantisimatrinidadtingo/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 text-primary font-semibold hover:text-gold transition-colors"
+        >
+          <Facebook size={18} /> Visita nuestra página de Facebook
+        </a>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+      {posts.map((post) => (
+        <a
+          key={post.id}
+          href={post.post_url ?? "https://www.facebook.com/parroquiasantisimatrinidadtingo/"}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group flex flex-col h-full rounded-2xl bg-white border border-border/60 shadow-md hover:shadow-xl hover:-translate-y-1.5 transition-all duration-500 overflow-hidden"
+        >
+          {/* Contenedor de Imagen con efecto de zoom sutil */}
+          <div className="relative h-60 overflow-hidden bg-muted">
+            {post.image_url ? (
+              <img
+                src={post.image_url}
+                loading="lazy"
+                alt="Publicación de Facebook"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-muted-foreground bg-primary/5">
+                <Facebook size={48} className="opacity-20" />
+              </div>
+            )}
+            {/* Pequeño overlay gradiente para darle profundidad */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          </div>
+
+          {/* Contenedor de Texto y Botón */}
+          <div className="flex flex-col flex-1 p-6 md:p-7">
+            {/* El flex-1 asegura que el texto empuje el botón hacia abajo */}
+            <p className="text-sm md:text-base text-foreground/80 leading-relaxed mb-6 line-clamp-4 flex-1">
+              {post.description}
+            </p>
+            
+            {/* Botón estilo "Call to Action" usando el color primario de la parroquia */}
+            <div className="mt-auto w-full py-3 px-4 rounded-xl bg-primary/5 group-hover:bg-primary text-primary group-hover:text-primary-foreground font-semibold flex items-center justify-center gap-2 transition-colors duration-300">
+              Ver publicación
+              <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-300" />
+            </div>
+          </div>
+        </a>
+      ))}
+    </div>
+  );
+}
+=======
+>>>>>>> 170101d2c87ae1c96f464f15c60d024d634eb0a6

@@ -572,7 +572,7 @@ function MinistriesManager({ showToast }: { showToast: (m: string, t?: "success"
                       ? "bg-blue-50 text-blue-700 border-blue-200" 
                       : "bg-amber-50 text-amber-800 border-amber-200"
                   }`}>
-                    {isCapilla ? "🛐 Capilla La Merced" : "⛪ Sede Central"}
+                    
                   </span>
                 </div>
                 <p className="font-semibold text-sm text-primary">{m.name}</p>

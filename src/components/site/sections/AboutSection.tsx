@@ -213,7 +213,7 @@ export default function AboutSection({
                       <div className="bg-white rounded-3xl p-8 md:p-12 text-center border border-primary/15 shadow-sm max-w-3xl mx-auto my-6">
                         <span className="text-4xl block mb-4">🛐</span>
                         <h3 className="text-primary font-display text-2xl md:text-3xl font-semibold">
-                          Capilla María de la Merced y Hermandad del Señor de los Milagros
+                          Capilla María de la Merced
                         </h3>
                         <p className="text-sm md:text-base text-muted-foreground mt-4 max-w-xl mx-auto leading-relaxed text-justify sm:text-center">
                           Templo de oración y sede de la gran devoción al Señor de los Milagros en nuestra comunidad de Hunter. Atendida pastoralmente por los Padres Carmelitas de la Sede Central de Santísima Trinidad.
@@ -255,7 +255,7 @@ export default function AboutSection({
                                     ? "bg-black/40 text-white border border-white/20"
                                     : "bg-primary text-white"
                                 }`}>
-                                  {activeTab === "Sede Central" ? "⛪ Sede Central" : "🛐 Capilla La Merced"}
+                                
                                 </span>
                               </div>
                             </div>

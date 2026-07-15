@@ -14,7 +14,7 @@ const links = [
   { href: "/sacramentos", label: "Sacramentos", route: true },
 ];
 
-export function Navbar() {
+export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const clicks = useRef(0);
@@ -38,15 +38,17 @@ export function Navbar() {
     }
   };
 
+  const bg = scrolled || forceBackground;
+
   const linkClass = (active = false) =>
     `text-sm font-medium transition-colors hover:text-gold ${
-      scrolled ? "text-foreground/80" : "text-white/90"
+      bg ? "text-foreground/80" : "text-white/90"
     } ${active ? "text-gold" : ""}`;
 
   return (
     <header
       className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
-        scrolled
+        bg
           ? "bg-background/90 backdrop-blur-md border-b border-border shadow-card"
           : "bg-transparent"
       }`}
@@ -59,10 +61,10 @@ export function Navbar() {
         >
           <img src={"/assets/logo.webp"} alt="" className="h-10 w-10 rounded-full overflow-hidden object-cover" />
           <div className="hidden sm:block leading-tight text-left">
-            <p className={`font-display text-base font-semibold ${scrolled ? "text-foreground" : "text-white"}`}>
+            <p className={`font-display text-base font-semibold ${bg ? "text-foreground" : "text-white"}`}>
               Parroquia Santísima Trinidad
             </p>
-            <p className={`text-[11px] uppercase tracking-widest ${scrolled ? "text-muted-foreground" : "text-white/80"}`}>
+            <p className={`text-[11px] uppercase tracking-widest ${bg ? "text-muted-foreground" : "text-white/80"}`}>
               Tingo - Arequipa
             </p>
           </div>
@@ -99,7 +101,7 @@ export function Navbar() {
         <div className="lg:hidden flex items-center gap-1">
           <button
             onClick={() => setOpen(!open)}
-            className={`p-2 ${scrolled ? "text-foreground" : "text-white"}`}
+            className={`p-2 ${bg ? "text-foreground" : "text-white"}`}
             aria-label="Menú"
           >
             {open ? <X size={24} /> : <Menu size={24} />}

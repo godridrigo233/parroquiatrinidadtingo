@@ -291,7 +291,7 @@ function SacramentosPage() {
 
   return (
     <div className="min-h-screen bg-[#F0F4F8] text-[#0F1B2D]">
-      <Navbar />
+      <Navbar forceBackground />
 
       {/* ════════════════ HERO ════════════════ */}
       <section className="relative pt-24 overflow-hidden">

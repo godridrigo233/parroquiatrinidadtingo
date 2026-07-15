@@ -179,9 +179,7 @@ export default function EventosSection({
             <p className="text-gold uppercase tracking-[0.25em] text-xs font-semibold">Vida parroquial</p>
             <h2 className="mt-3 font-display text-4xl md:text-5xl font-medium">Eventos y avisos</h2>
           </div>
-          <a href="https://www.facebook.com/parroquiasantisimatrinidadtingo/" target="_blank" rel="noopener noreferrer" className="text-primary font-semibold inline-flex items-center gap-2 hover:text-gold transition-colors">
-            <Facebook size={18} /> Síguenos en Facebook
-          </a>
+    
         </Reveal>
 
         {loadingEvents ? (
@@ -225,6 +223,9 @@ export default function EventosSection({
 
         <Reveal className="mt-12">
           <h3 className="font-display text-2xl md:text-3xl text-primary mb-6">Últimas publicaciones</h3>
+          <a href="https://www.facebook.com/parroquiasantisimatrinidadtingo/" target="_blank" rel="noopener noreferrer" className="text-primary font-semibold inline-flex items-center gap-2 hover:text-gold transition-colors">
+            <Facebook size={18} /> Síguenos en Facebook
+          </a>
           <FacebookPostsGrid />
         </Reveal>
 

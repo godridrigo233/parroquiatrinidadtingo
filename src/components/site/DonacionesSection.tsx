@@ -61,30 +61,56 @@ export function DonacionesSection({ items }: { items: DonationRow[] }) {
                   
                   {/* Billeteras Digitales */}
                   
-                  {/* Bloque Único para copiar el número */}
-                  {(item.bank_name === "Yape" || item.bank_name === "Plin") && (
-                    <div 
-                      onClick={() => copyToClipboard((item.account_number || '').replace(/\s/g, ''), item.id + 'num')}
-                      className="w-full flex items-center justify-between p-4 mb-6 rounded-2xl bg-secondary/30 border border-border cursor-pointer hover:border-gold transition-all group active:scale-[0.98]"
-                    >
-                      <div className="flex flex-col items-start">
-                        <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider mb-0.5">
-                          Número de {item.bank_name}
-                        </span>
-                        <span className="font-mono text-lg font-bold text-primary tracking-wide">
-                          {item.account_number || "No registrado"}
-                        </span>
+                  {items.map((item) => (
+                    <Reveal key={item.id} className="h-full w-full sm:w-[calc(50%-16px)] lg:w-[calc(33.333%-22px)] max-w-sm">
+                      <div className="h-full flex flex-col bg-white rounded-[2rem] border border-border shadow-sm p-6 hover:shadow-lg transition-all duration-300">
+                        
+                        {/* 1. Etiqueta (YAPE/BCP) y Título */}
+                        <div className="flex flex-col items-center text-center">
+                          <span className={`mb-3 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${bankColor[item.bank_name] || "bg-secondary text-primary"}`}>
+                            {item.bank_name}
+                          </span>
+                          <h3 className="font-display text-2xl text-primary mb-1">{item.title}</h3>
+                          {item.description && <p className="text-sm text-muted-foreground mb-4">{item.description}</p>}
+                        </div>
+
+                        {/* 2. Bloque de Número (Clickable para copiar) - FUSIÓN DE DISEÑO */}
+                        {item.account_number && (
+                          <div 
+                            onClick={() => copyToClipboard(item.account_number!.replace(/\s/g, ''), item.id + 'num')}
+                            className="w-full mb-6 p-4 rounded-2xl bg-secondary/30 border border-border flex items-center justify-between cursor-pointer hover:border-gold transition-all active:scale-[0.98] group"
+                          >
+                            <div className="flex flex-col">
+                              <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Número</span>
+                              <span className="font-mono text-lg font-bold text-primary tracking-wide">{item.account_number}</span>
+                            </div>
+                            <div className="p-2 rounded-xl bg-white shadow-sm border border-border">
+                              {copiedId === item.id + 'num' 
+                                ? <Check size={18} className="text-green-600" /> 
+                                : <Copy size={18} className="text-gold" />
+                              }
+                            </div>
+                          </div>
+                        )}
+
+                        {/* 3. Área de QR o Cuentas adicionales */}
+                        <div className="mt-auto flex justify-center">
+                          {item.qr_image_url ? (
+                            <div className="w-48 h-48 p-2 bg-white rounded-3xl border border-secondary shadow-sm">
+                              <img src={item.qr_image_url} alt="QR" className="w-full h-full object-contain" />
+                            </div>
+                          ) : (
+                            item.cci && (
+                              <div className="w-full text-center text-xs text-muted-foreground mt-2">
+                                CCI: <span className="font-mono">{item.cci}</span>
+                              </div>
+                            )
+                          )}
+                        </div>
+
                       </div>
-                      
-                      {/* Icono de copia integrado y elegante */}
-                      <div className="p-2.5 rounded-xl bg-white shadow-sm border border-border group-hover:text-gold transition-colors">
-                        {copiedId === item.id + 'num' 
-                          ? <Check size={20} className="text-green-600" /> 
-                          : <Copy size={20} className="text-gold" />
-                        }
-                      </div>
-                    </div>
-                  )}
+                    </Reveal>
+                  ))}
 
                   {item.description && <p className="text-sm text-muted-foreground mb-6">{item.description}</p>}
 

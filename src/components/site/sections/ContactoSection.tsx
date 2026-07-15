@@ -76,7 +76,7 @@ export default function ContactoSection() {
             <div className="flex items-center gap-3">
               <img src="/assets/logo.webp" alt="" className="h-12 w-12 rounded-full overflow-hidden object-cover" loading="lazy" />
               <div>
-                <p className="font-display text-lg text-white">Santísima Trinidad</p>
+                <p className="font-display text-lg text-white">Parroquia Santísima Trinidad</p>
                 <p className="text-xs text-white/60 uppercase tracking-widest">Tingo · Arequipa</p>
               </div>
             </div>

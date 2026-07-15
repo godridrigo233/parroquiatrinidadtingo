@@ -48,7 +48,7 @@ export default function AboutSection({
               <OptimizedImage src="/assets/church-interior.webp" alt="Interior de la parroquia" className="rounded-2xl shadow-elegant w-full aspect-[4/5] object-cover" />
               <div className="absolute -bottom-8 -right-8 hidden md:block bg-card rounded-2xl shadow-card p-6 max-w-[220px] border border-border">
                 <p className="font-display text-3xl text-gold">+50</p>
-                <p className="text-sm text-muted-foreground mt-1">Años sembrando fe en Tingo</p>
+                <p className="text-sm text-muted-foreground mt-1">Años de permanencia en el Perú</p>
               </div>
             </div>
           </Reveal>

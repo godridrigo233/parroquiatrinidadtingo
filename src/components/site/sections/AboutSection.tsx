@@ -171,7 +171,7 @@ export default function AboutSection({
                   if (capillaMinistries.length === 0) {
                     return (
                       <div className="bg-white rounded-2xl p-8 text-center border border-dashed border-primary/20">
-                        <p className="text-primary font-display text-xl font-medium">Hermandad del Señor de los Milagros</p>
+                        <p className="text-primary font-display text-xl font-medium">Hermandad</p>
                         <p className="text-sm text-muted-foreground mt-2 max-w-xl mx-auto text-justify sm:text-center">
                           Templo de oración y sede en nuestra comunidad de Hunter. Atendida pastoralmente por los Padres Carmelitas de la Sede Central de Santísima Trinidad.
                         </p>
@@ -224,7 +224,7 @@ export default function AboutSection({
                 </span>
                 <div>
                   <h3 className="font-display text-2xl md:text-3xl text-primary font-semibold">
-                    Ministerios del Templo Principal
+                    Ministerios y Grupos del Templo Principal
                   </h3>
                   <p className="text-sm text-muted-foreground">Grupos comunitarios que sirven en Tingo.</p>
                 </div>

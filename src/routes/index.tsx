@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Sparkles, Clock, ArrowRight } from "lucide-react";
+import { Sparkles, Clock, ArrowRight, Facebook } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/site/Navbar";
@@ -57,6 +57,7 @@ type Schedule = { id: string; category: string; day_label: string; time_label: s
 type Ministry = { id: string; name: string; description: string | null; leader: string | null; schedule: string | null; image_url: string | null };
 type Eventt = { id: string; title: string; description: string | null; event_date: string; location: string | null; image_url?: string | null };
 type GalleryImage = { id: string; title: string | null; category: string | null; image_url: string; sort_order: number };
+type FacebookPost = { id: string; post_url?: string; description: string; image_url?: string };
 
 // Skeleton fallback with fixed approximate heights to prevent CLS
 function SectionSkeleton({ height = "h-[600px]" }: { height?: string }) {
@@ -64,7 +65,6 @@ function SectionSkeleton({ height = "h-[600px]" }: { height?: string }) {
     <div className={`w-full ${height} bg-muted animate-pulse rounded-xl my-6`} aria-hidden="true" />
   );
 }
-
 
 function Home() {
   const [scrollY, setScrollY] = useState(0);
@@ -156,7 +156,6 @@ function Home() {
             loading="eager"
             decoding="async"
           />
-
         </div>
 
         <div className="absolute inset-0 bg-gradient-to-b from-primary/70 via-primary/40 to-primary/85" />
@@ -218,6 +217,22 @@ function Home() {
         <DonacionesSection items={donations} />
       </Suspense>
 
+      {/* SECCIÓN DE NOTICIAS DE FACEBOOK EN VIVO */}
+      <section id="noticias" className="py-16 px-6 max-w-7xl mx-auto">
+        <div className="text-center mb-10">
+          <span className="text-xs font-bold tracking-[0.2em] text-primary uppercase bg-primary/10 px-3 py-1 rounded-full">
+            Comunidad en línea
+          </span>
+          <h2 className="mt-3 font-display text-3xl md:text-4xl font-semibold text-foreground">
+            Últimas Noticias en Facebook
+          </h2>
+          <p className="mt-2 text-muted-foreground max-w-xl mx-auto text-sm md:text-base">
+            Mantente al día con los avisos parroquiales y actividades recientes directamente desde nuestras redes oficiales.
+          </p>
+        </div>
+        <FacebookPostsGrid />
+      </section>
+
       <Suspense fallback={<SectionSkeleton height="h-[1400px]" />}>
         <EventosSection events={events} loadingEvents={loadingEvents} />
       </Suspense>
@@ -231,22 +246,22 @@ function Home() {
   );
 }
 
-<<<<<<< HEAD
+// COMPONENTE CORRECTAMENTE DECLARADO Y AISLADO PARA EL FEED DE FACEBOOK
+function FacebookPostsGrid() {
+  const [posts, setPosts] = useState<FacebookPost[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
   useEffect(() => {
     const fetchFacebookFeed = async () => {
       try {
-        // Hacemos el fetch directamente a tu endpoint JSON, mucho más rápido y sin intermediarios
         const response = await fetch("https://rss.app/feeds/v1.1/vXpVb6k0mdMFJzil.json");
         const data = await response.json();
 
         if (data.items) {
-          // Mapeamos los datos exactamente como vienen en tu JSON
           const formattedPosts = data.items.slice(0, 3).map((item: any) => ({
             id: item.id,
             post_url: item.url,
-            // Usamos content_text para la descripción sin etiquetas HTML
             description: item.content_text || "Mira nuestra última publicación.",
-            // Jalamos la imagen directa del campo "image"
             image_url: item.image || "https://images.unsplash.com/photo-1438032005730-c779502df39b?q=80&w=600"
           }));
           
@@ -306,7 +321,6 @@ function Home() {
           rel="noopener noreferrer"
           className="group flex flex-col h-full rounded-2xl bg-white border border-border/60 shadow-md hover:shadow-xl hover:-translate-y-1.5 transition-all duration-500 overflow-hidden"
         >
-          {/* Contenedor de Imagen con efecto de zoom sutil */}
           <div className="relative h-60 overflow-hidden bg-muted">
             {post.image_url ? (
               <img
@@ -320,18 +334,14 @@ function Home() {
                 <Facebook size={48} className="opacity-20" />
               </div>
             )}
-            {/* Pequeño overlay gradiente para darle profundidad */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           </div>
 
-          {/* Contenedor de Texto y Botón */}
           <div className="flex flex-col flex-1 p-6 md:p-7">
-            {/* El flex-1 asegura que el texto empuje el botón hacia abajo */}
             <p className="text-sm md:text-base text-foreground/80 leading-relaxed mb-6 line-clamp-4 flex-1">
               {post.description}
             </p>
             
-            {/* Botón estilo "Call to Action" usando el color primario de la parroquia */}
             <div className="mt-auto w-full py-3 px-4 rounded-xl bg-primary/5 group-hover:bg-primary text-primary group-hover:text-primary-foreground font-semibold flex items-center justify-center gap-2 transition-colors duration-300">
               Ver publicación
               <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-300" />
@@ -342,5 +352,3 @@ function Home() {
     </div>
   );
 }
-=======
->>>>>>> 170101d2c87ae1c96f464f15c60d024d634eb0a6

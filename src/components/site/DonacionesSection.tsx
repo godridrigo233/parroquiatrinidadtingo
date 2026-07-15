@@ -60,23 +60,25 @@ export function DonacionesSection({ items }: { items: DonationRow[] }) {
                   <h3 className="font-display text-2xl text-primary mb-1">{item.title}</h3>
                   
                   {/* Billeteras Digitales */}
-                  {/* Sección especial para Yape y Plin */}
-                  {(item.bank_name === "Yape" || item.bank_name === "Plin") && item.account_number && (
-                    <div 
-                      onClick={() => copyToClipboard(item.account_number!.replace(/\s/g, ''), item.id + 'num')}
-                      className="flex items-center justify-center gap-2 mb-4 px-4 py-2.5 rounded-xl bg-purple-50 border border-purple-100 cursor-pointer hover:bg-purple-100 transition-all group"
-                    >
-                      <p className="text-sm text-purple-900 font-medium">
-                        Número: <span className="font-mono font-bold tracking-wider">{item.account_number}</span>
-                      </p>
-                      
-                      {/* Icono de copiar que cambia a check al hacer clic */}
-                      {copiedId === item.id + 'num' 
-                        ? <Check size={16} className="text-green-600" /> 
-                        : <Copy size={16} className="text-purple-600 group-hover:text-purple-800" />
-                      }
-                    </div>
-                  )}
+                    {(item.bank_name.toLowerCase() === "yape" || item.bank_name.toLowerCase() === "plin") && item.account_number && (
+                      <div 
+                        onClick={() => copyToClipboard(item.account_number!.replace(/\s/g, ''), item.id + 'num')}
+                        className="flex items-center justify-center gap-3 mb-4 px-5 py-3 rounded-2xl bg-secondary/50 border border-border cursor-pointer hover:border-gold transition-all"
+                      >
+                        <div className="flex flex-col items-center">
+                          <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">Número de {item.bank_name}</span>
+                          <span className="font-mono text-lg font-bold text-primary tracking-wide">{item.account_number}</span>
+                        </div>
+                        
+                        {/* El icono ahora es visible (sin opacidad) */}
+                        <div className="p-2 bg-white rounded-lg shadow-sm border border-border">
+                          {copiedId === item.id + 'num' 
+                            ? <Check size={18} className="text-green-600" /> 
+                            : <Copy size={18} className="text-gold" />
+                          }
+                        </div>
+                      </div>
+                    )}
 
                   {item.description && <p className="text-sm text-muted-foreground mb-6">{item.description}</p>}
 

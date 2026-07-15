@@ -217,30 +217,6 @@ function Home() {
         <DonacionesSection items={donations} />
       </Suspense>
 
-      {/* SECCIÓN DE NOTICIAS DE FACEBOOK EN VIVO */}
-      <section id="noticias" className="py-16 px-6 max-w-7xl mx-auto">
-        <div className="text-center mb-10">
-          <span className="text-xs font-bold tracking-[0.2em] text-primary uppercase bg-primary/10 px-3 py-1 rounded-full">
-            Comunidad en línea
-          </span>
-          <h2 className="mt-3 font-display text-3xl md:text-4xl font-semibold text-foreground">
-            Últimas Noticias en Facebook
-          </h2>
-          <p className="mt-2 text-muted-foreground max-w-xl mx-auto text-sm md:text-base">
-            Mantente al día con los avisos parroquiales y actividades recientes directamente desde nuestras redes oficiales.
-          </p>
-        </div>
-        <FacebookPostsGrid />
-      </section>
-
-      <Suspense fallback={<SectionSkeleton height="h-[1400px]" />}>
-        <EventosSection events={events} loadingEvents={loadingEvents} />
-      </Suspense>
-
-      <Suspense fallback={<SectionSkeleton height="h-[1200px]" />}>
-        <ContactoSection />
-      </Suspense>
-
       <WhatsAppFab />
     </div>
   );

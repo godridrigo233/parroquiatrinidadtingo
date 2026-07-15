@@ -216,9 +216,7 @@ function Home() {
       <Suspense fallback={<SectionSkeleton height="h-[500px]" />}>
         <DonacionesSection items={donations} />
       </Suspense>
-     
-        <FacebookPostsGrid />
-      
+           
       <Suspense fallback={<SectionSkeleton height="h-[1400px]" />}>
         <EventosSection events={events} loadingEvents={loadingEvents} />
       </Suspense>

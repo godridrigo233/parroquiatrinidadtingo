@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Sparkles, Clock, ArrowRight, Facebook } from "lucide-react";
+import { Sparkles, Clock, ArrowRight } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/site/Navbar";
@@ -10,7 +10,7 @@ import { DonationRow } from "@/components/site/DonacionesSection";
 import { Preloader } from "@/components/ui/Preloader";
 import * as Sentry from "@sentry/react";
 
-// Lazy-loaded below-the-fold sections (code-splitting)
+// Carga modular diferida (Lazy-loading / Code-splitting) para optimizar el rendimiento y evitar bloqueos
 const AboutSection = lazy(() => import("@/components/site/sections/AboutSection"));
 const HorariosSection = lazy(() => import("@/components/site/sections/HorariosSection"));
 const GaleriaSection = lazy(() => import("@/components/site/sections/GaleriaSection"));
@@ -57,9 +57,8 @@ type Schedule = { id: string; category: string; day_label: string; time_label: s
 type Ministry = { id: string; name: string; description: string | null; leader: string | null; schedule: string | null; image_url: string | null };
 type Eventt = { id: string; title: string; description: string | null; event_date: string; location: string | null; image_url?: string | null };
 type GalleryImage = { id: string; title: string | null; category: string | null; image_url: string; sort_order: number };
-type FacebookPost = { id: string; post_url?: string; description: string; image_url?: string };
 
-// Skeleton fallback with fixed approximate heights to prevent CLS
+// Skeleton de respaldo con alturas aproximadas fijas para evitar saltos visuales (CLS)
 function SectionSkeleton({ height = "h-[600px]" }: { height?: string }) {
   return (
     <div className={`w-full ${height} bg-muted animate-pulse rounded-xl my-6`} aria-hidden="true" />
@@ -94,7 +93,7 @@ function Home() {
       const { data } = await supabase.from("schedules").select("*").order("sort_order");
       return (data as Schedule[]) || [];
     },
-    ...staleConfig
+    ...staleConfig,
   });
 
   const { data: ministries = [], isLoading: loadingMinistries } = useQuery({
@@ -103,16 +102,21 @@ function Home() {
       const { data } = await supabase.from("ministries").select("*").order("created_at");
       return (data as Ministry[]) || [];
     },
-    ...staleConfig
+    ...staleConfig,
   });
 
   const { data: events = [], isLoading: loadingEvents } = useQuery({
     queryKey: ["home_events"],
     queryFn: async () => {
-      const { data } = await supabase.from("events").select("*").gte("event_date", new Date().toISOString()).order("event_date").limit(6);
+      const { data } = await supabase
+        .from("events")
+        .select("*")
+        .gte("event_date", new Date().toISOString())
+        .order("event_date")
+        .limit(6);
       return (data as Eventt[]) || [];
     },
-    ...staleConfig
+    ...staleConfig,
   });
 
   const { data: gallery = [], isLoading: loadingGallery } = useQuery({
@@ -121,7 +125,7 @@ function Home() {
       const { data } = await supabase.from("gallery_images").select("*").order("sort_order");
       return (data as GalleryImage[]) || [];
     },
-    ...staleConfig
+    ...staleConfig,
   });
 
   const { data: donations = [], isLoading: loadingDonations } = useQuery({
@@ -130,10 +134,11 @@ function Home() {
       const { data } = await supabase.from("donations_info" as any).select("*").order("sort_order");
       return ((data as unknown) as DonationRow[]) || [];
     },
-    ...staleConfig
+    ...staleConfig,
   });
 
-  const globalLoading = loadingSchedules || loadingMinistries || loadingEvents || loadingGallery || loadingDonations;
+  const globalLoading =
+    loadingSchedules || loadingMinistries || loadingEvents || loadingGallery || loadingDonations;
 
   const groupedSchedules = schedules.reduce<Record<string, Schedule[]>>((acc, s) => {
     (acc[s.category] ??= []).push(s);
@@ -145,9 +150,12 @@ function Home() {
       <Preloader isLoading={globalLoading} />
       <Navbar />
 
-      {/* HERO SECTION (above the fold — loaded eagerly) */}
+      {/* SECCIÓN HERO (Primer pantallazo — cargado de forma inmediata y prioritaria) */}
       <section id="inicio" className="relative h-[100svh] min-h-[640px] w-full overflow-hidden">
-        <div className="absolute inset-0 will-change-transform" style={{ transform: isMobile ? "none" : `translate3d(0, ${scrollY * 0.35}px, 0)` }}>
+        <div
+          className="absolute inset-0 will-change-transform"
+          style={{ transform: isMobile ? "none" : `translate3d(0, ${scrollY * 0.35}px, 0)` }}
+        >
           <img
             src="/assets/hero-church.webp"
             alt="Fachada de la Parroquia Santísima Trinidad de Tingo al atardecer"
@@ -161,8 +169,10 @@ function Home() {
         <div className="absolute inset-0 bg-gradient-to-b from-primary/70 via-primary/40 to-primary/85" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,oklch(0.18_0.03_265/0.55)_75%,oklch(0.14_0.03_265/0.9)_100%)]" />
 
-        <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6 max-w-5xl mx-auto"
-          style={{ transform: `translate3d(0, ${scrollY * -0.15}px, 0)`, opacity: Math.max(0, 1 - scrollY / 600) }}>
+        <div
+          className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6 max-w-5xl mx-auto"
+          style={{ transform: `translate3d(0, ${scrollY * -0.15}px, 0)`, opacity: Math.max(0, 1 - scrollY / 600) }}
+        >
           <span className="fade-up gold-divider text-white/90">
             <Sparkles size={14} className="text-gold" />
             <span>Arequipa · Perú</span>
@@ -182,13 +192,22 @@ function Home() {
             <span className="text-[11px] tracking-[0.3em] uppercase text-gold/90">Mateo 18, 20</span>
           </div>
           <div className="fade-up fade-up-delay-3 mt-11 flex flex-wrap gap-3 justify-center">
-            <a href="#horarios" className="px-7 py-3.5 rounded-full bg-gradient-gold text-primary-foreground font-semibold shadow-elegant hover:scale-105 transition-all flex items-center gap-2">
+            <a
+              href="#horarios"
+              className="px-7 py-3.5 rounded-full bg-gradient-gold text-primary-foreground font-semibold shadow-elegant hover:scale-105 transition-all flex items-center gap-2"
+            >
               <Clock size={18} /> Ver horarios
             </a>
-            <a href="#noticias" className="px-7 py-3.5 rounded-full bg-white/10 border border-white/30 backdrop-blur text-white font-semibold hover:bg-white/20 transition-colors">
+            <a
+              href="#noticias"
+              className="px-7 py-3.5 rounded-full bg-white/10 border border-white/30 backdrop-blur text-white font-semibold hover:bg-white/20 transition-colors"
+            >
               Eventos
             </a>
-            <a href="#contacto" className="px-7 py-3.5 rounded-full bg-white text-foreground font-semibold hover:bg-white/90 transition-colors flex items-center gap-2">
+            <a
+              href="#contacto"
+              className="px-7 py-3.5 rounded-full bg-white text-foreground font-semibold hover:bg-white/90 transition-colors flex items-center gap-2"
+            >
               Contacto <ArrowRight size={18} />
             </a>
           </div>
@@ -200,7 +219,7 @@ function Home() {
         </div>
       </section>
 
-      {/* BELOW-THE-FOLD (code-split, lazy-loaded) */}
+      {/* SECCIONES MODULARES (Cargadas progresivamente) */}
       <Suspense fallback={<SectionSkeleton height="h-[1800px]" />}>
         <AboutSection ministries={ministries} loadingMinistries={loadingMinistries} />
       </Suspense>
@@ -216,7 +235,7 @@ function Home() {
       <Suspense fallback={<SectionSkeleton height="h-[500px]" />}>
         <DonacionesSection items={donations} />
       </Suspense>
-           
+
       <Suspense fallback={<SectionSkeleton height="h-[1400px]" />}>
         <EventosSection events={events} loadingEvents={loadingEvents} />
       </Suspense>
@@ -226,148 +245,6 @@ function Home() {
       </Suspense>
 
       <WhatsAppFab />
-    </div>
-  );
-}
-
-// COMPONENTE CORRECTAMENTE DECLARADO Y AISLADO PARA EL FEED DE FACEBOOK
-function FacebookPostsGrid() {
-  const [posts, setPosts] = useState<FacebookPost[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchFacebookFeed = async () => {
-      try {
-        // Tu URL de FetchRSS pasada por el proxy gratuito rss2json
-        const rssUrl = "https://fetchrss.com/feed/1wk26cD118cU1wk26x4gR7gD.rss"; 
-        const response = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`);
-
-        if (!response.ok) {
-          throw new Error(`Error HTTP: ${response.status}`);
-        }
-
-        const data = await response.json();
-
-        if (data.status === "ok" && data.items) {
-          const formattedPosts = data.items.slice(0, 3).map((item: any) => {
-            // 1. Buscamos la URL de la imagen
-            let rawImageUrl = item.enclosure?.link || item.thumbnail;
-            
-            if (!rawImageUrl && item.content) {
-              const imgMatch = item.content.match(/<img[^>]+src="([^">]+)"/);
-              if (imgMatch && imgMatch[1]) {
-                rawImageUrl = imgMatch[1];
-              }
-            }
-
-            // 2. 🛡️ LIMPIEZA CLAVE: Decodificamos entidades HTML (ej. &amp; -> &)
-            let imageUrl = rawImageUrl 
-              ? rawImageUrl.replace(/&amp;/g, '&') 
-              : null;
-
-            // Si aún no hay imagen, usamos el fallback
-            if (!imageUrl) {
-              imageUrl = "https://images.unsplash.com/photo-1548625361-16a00e971cfd?q=80&w=600";
-            }
-
-            const cleanDescription = (item.content || item.description || "")
-              .replace(/<[^>]*>?/gm, '')
-              .replace(/\(Feed generated with FetchRSS\)/gi, '')
-              .trim() || "Mira nuestra última actividad o aviso parroquial en nuestra página oficial.";
-
-            return {
-              id: item.guid || item.link || Math.random().toString(),
-              post_url: item.link || "https://www.facebook.com/parroquiasantisimatrinidadtingo",
-              description: cleanDescription,
-              image_url: imageUrl 
-            };
-          });
-          
-          setPosts(formattedPosts);
-        }
-      } catch (error) {
-        console.warn("Feed de Facebook no disponible temporalmente:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchFacebookFeed();
-  }, []);
-
-  if (isLoading) {
-    return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-        {[0, 1, 2].map((i) => (
-          <div key={i} className="rounded-xl bg-white border border-border shadow-sm overflow-hidden animate-pulse">
-            <div className="h-56 bg-gray-200" />
-            <div className="p-4 space-y-2">
-              <div className="h-3 bg-gray-200 rounded w-11/12" />
-              <div className="h-3 bg-gray-200 rounded w-10/12" />
-              <div className="h-3 bg-gray-200 rounded w-8/12" />
-              <div className="h-4 bg-gray-200 rounded w-1/3 mt-4" />
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  if (posts.length === 0) {
-    return (
-      <div className="rounded-xl border border-dashed border-border bg-card/50 py-12 px-6 text-center">
-        <p className="text-muted-foreground mb-4">Aún no hay publicaciones recientes.</p>
-        <a
-          href="https://www.facebook.com/parroquiasantisimatrinidadtingo/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 text-primary font-semibold hover:text-gold transition-colors"
-        >
-          <Facebook size={18} /> Visita nuestra página de Facebook
-        </a>
-      </div>
-    );
-  }
-
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
-      {posts.map((post) => (
-        <a
-          key={post.id}
-          href={post.post_url ?? "https://www.facebook.com/parroquiasantisimatrinidadtingo/"}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="group flex flex-col h-full rounded-2xl bg-white border border-border/60 shadow-md hover:shadow-xl hover:-translate-y-1.5 transition-all duration-500 overflow-hidden"
-        >
-          <div className="relative h-60 overflow-hidden bg-muted">
-            {post.image_url ? (
-              <img
-                src={post.image_url}
-                loading="lazy"
-                alt="Publicación de Facebook"
-                referrerPolicy="no-referrer"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-muted-foreground bg-primary/5">
-                <Facebook size={48} className="opacity-20" />
-              </div>
-            )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-          </div>
-
-          <div className="flex flex-col flex-1 p-6 md:p-7">
-            <p className="text-sm md:text-base text-foreground/80 leading-relaxed mb-6 line-clamp-4 flex-1">
-              {post.description}
-            </p>
-            
-            <div className="mt-auto w-full py-3 px-4 rounded-xl bg-primary/5 group-hover:bg-primary text-primary group-hover:text-primary-foreground font-semibold flex items-center justify-center gap-2 transition-colors duration-300">
-              Ver publicación
-              <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-300" />
-            </div>
-          </div>
-        </a>
-      ))}
     </div>
   );
 }

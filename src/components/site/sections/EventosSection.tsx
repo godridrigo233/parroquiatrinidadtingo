@@ -12,6 +12,28 @@ type FacebookPost = {
   description: string | null;
 };
 
+// 🛡️ SUBCOMPONENTE DE IMAGEN BLINDADO
+// Si los servidores de Facebook o el CDN fallan con error 403, el estado cambia al instante a la foto parroquial
+function FacebookImage({ src }: { src: string }) {
+  const [imgSrc, setImgSrc] = useState(src);
+  const fallbackImg = "https://images.unsplash.com/photo-1548625361-16a00e971cfd?q=80&w=600";
+
+  return (
+    <img
+      src={imgSrc}
+      loading="lazy"
+      alt="Publicación de Facebook"
+      referrerPolicy="no-referrer"
+      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+      onError={() => {
+        if (imgSrc !== fallbackImg) {
+          setImgSrc(fallbackImg);
+        }
+      }}
+    />
+  );
+}
+
 function FacebookPostsGrid() {
   const [posts, setPosts] = useState<FacebookPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -23,29 +45,30 @@ function FacebookPostsGrid() {
         const response = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`);
 
         if (!response.ok) {
-          throw new Error(`El servicio externo respondió con estado ${response.status}`);
+          throw new Error(`Error HTTP: ${response.status}`);
         }
 
         const data = await response.json();
 
         if (data.status === "ok" && data.items) {
           const formattedPosts = data.items.slice(0, 3).map((item: any) => {
-            // 1. Intentamos extraer la mejor URL de imagen disponible en el RSS
-            let imageUrl = item.enclosure?.link || item.thumbnail;
+            let rawImageUrl = item.enclosure?.link || item.thumbnail;
             
-            if (!imageUrl && item.content) {
+            if (!rawImageUrl && item.content) {
               const imgMatch = item.content.match(/<img[^>]+src="([^">]+)"/);
               if (imgMatch && imgMatch[1]) {
-                imageUrl = imgMatch[1];
+                rawImageUrl = imgMatch[1];
               }
             }
 
-            // Si el RSS de plano no tiene foto, asignamos la foto parroquial por defecto
-            if (!imageUrl) {
-              imageUrl = "https://images.unsplash.com/photo-1548625361-16a00e971cfd?q=80&w=600";
-            }
+            // 1. LIMPIEZA CLAVE: Convertimos las entidades &amp; de vuelta a símbolos & reales
+            const cleanUrl = rawImageUrl ? rawImageUrl.replace(/&amp;/g, '&') : null;
 
-            // 2. Limpiamos el texto para que quede presentable
+            // 2. ESCUDO WESERV: Pasamos la URL limpia por el proxy anti-403 para evitar bloqueos
+            const finalImageUrl = cleanUrl 
+              ? `https://wsrv.nl/?url=${encodeURIComponent(cleanUrl)}&w=600&output=webp` 
+              : "https://images.unsplash.com/photo-1548625361-16a00e971cfd?q=80&w=600";
+
             const cleanDescription = (item.content || item.description || "")
               .replace(/<[^>]*>?/gm, '')
               .replace(/\(Feed generated with FetchRSS\)/gi, '')
@@ -55,7 +78,7 @@ function FacebookPostsGrid() {
               id: item.guid || item.link || Math.random().toString(),
               post_url: item.link || "https://www.facebook.com/parroquiasantisimatrinidadtingo",
               description: cleanDescription,
-              image_url: imageUrl
+              image_url: finalImageUrl
             };
           });
           
@@ -117,18 +140,7 @@ function FacebookPostsGrid() {
         >
           <div className="relative aspect-video overflow-hidden bg-muted">
             {post.image_url ? (
-              <img
-                src={post.image_url}
-                loading="lazy"
-                alt="Publicación de Facebook"
-                referrerPolicy="no-referrer"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                /* 🛡️ EL ESCUDO DEFINITIVO: Si Facebook da error 403 al intentar cargar la foto, 
-                   React la sustituye inmediatamente por una hermosa imagen de templo católica */
-                onError={(e) => {
-                  e.currentTarget.src = "https://images.unsplash.com/photo-1548625361-16a00e971cfd?q=80&w=600";
-                }}
-              />
+              <FacebookImage src={post.image_url} />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-muted-foreground bg-primary/5">
                 <Facebook size={48} className="opacity-20" />

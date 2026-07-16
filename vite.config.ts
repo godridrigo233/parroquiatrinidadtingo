@@ -8,12 +8,13 @@
   import type { Plugin } from "vite";
 
   const SYSTEM_PROMPT = `Eres el asistente virtual de la Parroquia Santísima Trinidad de Tingo, Arequipa, Perú.
-Tu nombre es "Asistente Parroquial". Respondes de forma amable, concisa y espiritual.
-Ayudas con: horarios de misas y sacramentos, información sobre eventos parroquiales,
-instrucciones para recibir sacramentos (bautismo, matrimonio, primera comunión, confirmación),
+Tu nombre es "Asistente Parroquial". Respondes de forma amable y espiritual.
+Ayudas con: horarios de misas y sacramentos, eventos parroquiales,
+instrucciones para sacramentos (bautismo, matrimonio, primera comunión, confirmación),
 información general de la parroquia y orientación espiritual básica.
-Si no sabes algo específico, indícalo con humildad y sugiere contactar directamente.
-Siempre responde en español. Mantén un tono cálido, pastoral y cercano.`;
+Si no sabes algo específico, indícalo con humildad y sugiere contactar directamente a la parroquia.
+Siempre responde en español con tono cálido y pastoral.
+IMPORTANTE: Sé breve y directo. Máximo 3 oraciones por respuesta salvo que la pregunta requiera más detalle.`;
 
   function chatDevPlugin(): Plugin {
     return {
@@ -30,15 +31,51 @@ Siempre responde en español. Mantén un tono cálido, pastoral y cercano.`;
             try {
               const { createGroq } = await import("@ai-sdk/groq");
               const { streamText, convertToModelMessages } = await import("ai");
-              const parsed = JSON.parse(body) as { messages: unknown[] };
-              console.log("[Chat dev] mensajes a enviar:", parsed.messages.length);
-              const modelMessages = await convertToModelMessages(parsed.messages as Parameters<typeof convertToModelMessages>[0]);
+              const parsed = JSON.parse(body) as { messages: unknown };
+              const raw = parsed?.messages;
+
+              if (!Array.isArray(raw) || raw.length === 0) {
+                res.statusCode = 400;
+                res.end(JSON.stringify({ error: "Formato inválido" }));
+                return;
+              }
+
+              const safeMessages = raw
+                .slice(-20)
+                .filter((m) => {
+                  if (typeof m !== "object" || m === null) return false;
+                  const role = (m as Record<string, unknown>).role;
+                  return role === "user" || role === "assistant";
+                })
+                .map((m) => {
+                  const msg = m as Record<string, unknown>;
+                  const parts = Array.isArray(msg.parts) ? msg.parts : [];
+                  return {
+                    ...msg,
+                    parts: parts
+                      .filter((p) => typeof p === "object" && p !== null && (p as Record<string, unknown>).type === "text")
+                      .map((p) => ({
+                        type: "text",
+                        text: String((p as Record<string, unknown>).text ?? "").slice(0, 500),
+                      })),
+                  };
+                })
+                .filter((m) => m.parts.length > 0);
+
+              if (safeMessages.length === 0) {
+                res.statusCode = 400;
+                res.end(JSON.stringify({ error: "Sin mensajes válidos" }));
+                return;
+              }
+
+              console.log("[Chat dev] mensajes a enviar:", safeMessages.length);
+              const modelMessages = await convertToModelMessages(safeMessages as Parameters<typeof convertToModelMessages>[0]);
               const groq = createGroq({ apiKey });
               const result = streamText({
                 model: groq("llama-3.3-70b-versatile"),
                 system: SYSTEM_PROMPT,
                 messages: modelMessages,
-                maxTokens: 500,
+                maxTokens: 350,
               });
               console.log("[Chat dev] llamando pipeUIMessageStreamToResponse");
               result.pipeUIMessageStreamToResponse(res as import("node:http").ServerResponse, {

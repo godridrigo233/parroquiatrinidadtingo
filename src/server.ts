@@ -141,20 +141,62 @@ export default {
           });
         }
         try {
-          const { messages } = await request.json() as { messages: unknown[] };
-          const modelMessages = await convertToModelMessages(messages as Parameters<typeof convertToModelMessages>[0]);
+          const body = await request.json() as { messages: unknown };
+          const raw = body?.messages;
+
+          // Seguridad: validar que sea array y no vacío
+          if (!Array.isArray(raw) || raw.length === 0) {
+            return new Response(JSON.stringify({ error: "Formato inválido" }), {
+              status: 400,
+              headers: { "content-type": "application/json" },
+            });
+          }
+
+          // Seguridad: solo últimos 20 mensajes, solo roles user/assistant,
+          // texto truncado a 500 chars para evitar inyección masiva
+          const safeMessages = raw
+            .slice(-20)
+            .filter((m) => {
+              if (typeof m !== "object" || m === null) return false;
+              const role = (m as Record<string, unknown>).role;
+              return role === "user" || role === "assistant";
+            })
+            .map((m) => {
+              const msg = m as Record<string, unknown>;
+              const parts = Array.isArray(msg.parts) ? msg.parts : [];
+              return {
+                ...msg,
+                parts: parts
+                  .filter((p) => typeof p === "object" && p !== null && (p as Record<string, unknown>).type === "text")
+                  .map((p) => ({
+                    type: "text",
+                    text: String((p as Record<string, unknown>).text ?? "").slice(0, 500),
+                  })),
+              };
+            })
+            .filter((m) => m.parts.length > 0);
+
+          if (safeMessages.length === 0) {
+            return new Response(JSON.stringify({ error: "Sin mensajes válidos" }), {
+              status: 400,
+              headers: { "content-type": "application/json" },
+            });
+          }
+
+          const modelMessages = await convertToModelMessages(safeMessages as Parameters<typeof convertToModelMessages>[0]);
           const groq = createGroq({ apiKey });
           const result = streamText({
             model: groq("llama-3.3-70b-versatile"),
             system: `Eres el asistente virtual de la Parroquia Santísima Trinidad de Tingo, Arequipa, Perú.
-Tu nombre es "Asistente Parroquial". Respondes de forma amable, concisa y espiritual.
-Ayudas con: horarios de misas y sacramentos, información sobre eventos parroquiales,
-instrucciones para recibir sacramentos (bautismo, matrimonio, primera comunión, confirmación),
+Tu nombre es "Asistente Parroquial". Respondes de forma amable y espiritual.
+Ayudas con: horarios de misas y sacramentos, eventos parroquiales,
+instrucciones para sacramentos (bautismo, matrimonio, primera comunión, confirmación),
 información general de la parroquia y orientación espiritual básica.
-Si no sabes algo específico de la parroquia, indícalo con humildad y sugiere contactar directamente.
-Siempre responde en español. Mantén un tono cálido, pastoral y cercano.`,
+Si no sabes algo específico, indícalo con humildad y sugiere contactar directamente a la parroquia.
+Siempre responde en español con tono cálido y pastoral.
+IMPORTANTE: Sé breve y directo. Máximo 3 oraciones por respuesta salvo que la pregunta requiera más detalle.`,
             messages: modelMessages,
-            maxTokens: 500,
+            maxTokens: 350,
           });
           return result.toUIMessageStreamResponse();
         } catch (err) {

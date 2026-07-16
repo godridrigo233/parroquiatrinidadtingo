@@ -161,9 +161,7 @@ export default function AboutSection({
                 }`}
               >
                 <span>⛪ Sede Parroquial Central</span>
-                <span className={`ml-1 px-2 py-0.5 rounded-full text-[10px] ${
-                  activeTab === "Sede Central" ? "bg-black/20 text-white" : "bg-secondary text-muted-foreground"
-                }`}>
+                <span className={`ml-1 px-2 py-0.5 rounded-full text-[10px]`}>
                   {ministries.filter(m => !m.location || m.location === "Sede Central").length}
                 </span>
               </button>
@@ -216,7 +214,7 @@ export default function AboutSection({
                           Capilla María de la Merced
                         </h3>
                         <p className="text-sm md:text-base text-muted-foreground mt-4 max-w-xl mx-auto leading-relaxed text-justify sm:text-center">
-                          Templo de oración y sede de la gran devoción al Señor de los Milagros en nuestra comunidad de Hunter. Atendida pastoralmente por los Padres Carmelitas de la Sede Central de Santísima Trinidad.
+                          Templo de oración y sede en nuestra comunidad de Hunter. Atendida pastoralmente por los Padres Carmelitas de la Sede Central de Santísima Trinidad.
                         </p>
                         <div className="mt-6 pt-6 border-t border-border/60 flex flex-wrap justify-center gap-4 text-xs font-medium text-primary/80">
                           <span className="bg-primary/5 px-4 py-2 rounded-xl border border-primary/10 flex items-center gap-1.5">

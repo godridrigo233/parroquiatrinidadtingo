@@ -4,6 +4,148 @@ import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
 import { createGroq } from "@ai-sdk/groq";
 import { streamText, convertToModelMessages } from "ai";
+import { createClient } from "@supabase/supabase-js";
+
+// ============================================================================
+// DATOS ESTÁTICOS DE LA PARROQUIA
+// ============================================================================
+const PARISH_STATIC_DATA = `
+== IDENTIDAD ==
+Nombre: Parroquia Santísima Trinidad de Tingo
+Dirección: Calle Ferrocarril 200, Av. Alfonso Ugarte Tingo - Cercado, Arequipa, Perú
+Teléfono (solo llamadas): +51 915 049 850
+Email: pstrinidadtingo@gmail.com
+Facebook: https://www.facebook.com/parroquiasantisimatrinidadtingo/
+Instagram: https://www.instagram.com/stma_trinidad_tingo/
+Canal WhatsApp: https://whatsapp.com/channel/0029Vb8tmDx90x2wWaZDB71a
+Congregación: Carmelitas de María Inmaculada (CMI)
+Patrona: Nuestra Señora de los Dolores
+Capilla filial: Capilla María de la Merced, Sector La Merced, Hunter (trámites y secretaría solo en Sede Central)
+
+== SACERDOTES ==
+- Párroco: Rvdo. P. Tomy Thengumparambil, CMI
+- Vicario parroquial: Rvdo. P. Manesh Kunnakkattu, CMI
+
+== SECRETARÍA ==
+Horario: Lunes a Sábado, 3:00 PM – 6:00 PM
+
+== HORARIOS DE MISA (base) ==
+- Domingos: 8:00 AM y 6:00 PM
+- Lunes a Viernes: 6:00 PM
+- Sábados (vigilia): 6:00 PM
+(Para horarios actualizados, consultar la sección Horarios del sitio web o comunicarse con secretaría)
+
+== SACRAMENTO: BAUTISMO ==
+Cuándo: Todos los sábados desde las 3:00 PM, previa programación
+Anticipación mínima: 1 mes
+Máximo padrinos: 2 (un padrino y una madrina)
+Requisitos:
+1. Copia de DNI de los padres y padrinos
+2. Recibo de agua y de luz reciente (del domicilio de los padres)
+3. Los padrinos deben estar casados por la Iglesia O ser solteros confirmados
+4. Asistir a la charla pre-bautismal (obligatoria)
+Nota: Niños mayores de 8 años deben completar catequesis previa antes del bautismo.
+
+== SACRAMENTO: PRIMERA COMUNIÓN ==
+Edad mínima: 9 años
+Catequesis: 1 año de duración, inicia en marzo de cada año
+Requisitos: pago de inscripción y documentación presentada en secretaría
+Para más información e inscripción, acercarse a secretaría (Lunes a Sábado 3:00–6:00 PM).
+
+== SACRAMENTO: MATRIMONIO ==
+Anticipación mínima: 3 meses (90 días)
+Atención para preparación: Lunes a Sábado, 3:00 PM – 6:00 PM | Tel: +51 915 049 850
+Requisitos:
+1. Partida de Bautismo original actualizada (de ambos contrayentes)
+2. Constancia de Confirmación (de ambos contrayentes)
+3. Partida de Nacimiento (de ambos)
+4. Partida de Matrimonio Civil
+5. Certificado de charla prematrimonial
+6. 2 testigos que no sean familiares directos
+7. DNI de los novios y de los testigos
+8. Fotos carné de ambos novios
+9. Padrinos casados por la Iglesia (con su partida de matrimonio religioso)
+10. Completar 2 entrevistas con el sacerdote
+
+== SACRAMENTO: CONFIRMACIÓN ==
+Contactar a la parroquia para informarse sobre el siguiente proceso de confirmación.
+
+== SACRAMENTO: RECONCILIACIÓN (CONFESIÓN) ==
+No requiere inscripción previa.
+Horario: Antes o después de cada misa, en el confesionario del templo.
+
+== SACRAMENTO: UNCIÓN DE LOS ENFERMOS ==
+Se solicita directamente al sacerdote en cualquier momento.
+Atención a domicilio o en el templo.
+Coordinar por teléfono (+51 915 049 850) o en secretaría.
+
+== VOCACIONES / ORDEN SACERDOTAL ==
+Conversar directamente con el párroco para el discernimiento vocacional.
+
+== MINISTERIOS Y GRUPOS PARROQUIALES ==
+- Señor de los Milagros (Coordinador: Hno. Ernesto)
+- Virgen Dolorosa (Coordinador: Hno. Luis)
+- Oración de María (Coordinadora: Hna. María)
+- Acólitos (Encargados: Rosita y Hilario)
+- Alas de Fé (Coordinadora: Hna. Karen)
+- Siervos de Luz (Coordinador: Hno. Edward)
+- Legión de María (Coordinadora: Hna. María)
+`.trim();
+
+async function buildParishContext(): Promise<string> {
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!url || !key) return "";
+
+  try {
+    const sb = createClient(url, key, { auth: { persistSession: false } });
+    const today = new Date().toISOString().split("T")[0];
+
+    const [{ data: schedules }, { data: events }] = await Promise.all([
+      sb.from("schedules").select("category, day_label, time_label, notes").order("sort_order"),
+      sb
+        .from("events")
+        .select("title, description, event_date, location")
+        .gte("event_date", today)
+        .order("event_date")
+        .limit(10),
+    ]);
+
+    let ctx = "";
+
+    if (schedules && schedules.length > 0) {
+      ctx += "\n\n== HORARIOS ACTUALIZADOS (base de datos) ==\n";
+      const byCategory: Record<string, typeof schedules> = {};
+      for (const s of schedules) {
+        const cat = s.category ?? "otros";
+        if (!byCategory[cat]) byCategory[cat] = [];
+        byCategory[cat].push(s);
+      }
+      for (const [cat, rows] of Object.entries(byCategory)) {
+        ctx += `\n[${cat.toUpperCase()}]\n`;
+        for (const r of rows) {
+          ctx += `  - ${r.day_label}: ${r.time_label}${r.notes ? ` (${r.notes})` : ""}\n`;
+        }
+      }
+    }
+
+    if (events && events.length > 0) {
+      ctx += "\n\n== PRÓXIMOS EVENTOS ==\n";
+      for (const e of events) {
+        ctx += `\n- ${e.title} | Fecha: ${e.event_date}`;
+        if (e.location) ctx += ` | Lugar: ${e.location}`;
+        if (e.description) ctx += `\n  ${e.description}`;
+        ctx += "\n";
+      }
+    }
+
+    return ctx;
+  } catch (err) {
+    console.error("[Chat] Error fetching parish context from Supabase:", err);
+    return "";
+  }
+}
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
@@ -183,18 +325,26 @@ export default {
             });
           }
 
-          const modelMessages = await convertToModelMessages(safeMessages as Parameters<typeof convertToModelMessages>[0]);
+          const [modelMessages, dynamicContext] = await Promise.all([
+            convertToModelMessages(safeMessages as Parameters<typeof convertToModelMessages>[0]),
+            buildParishContext(),
+          ]);
+
           const groq = createGroq({ apiKey });
           const result = streamText({
             model: groq("llama-3.3-70b-versatile"),
             system: `Eres el asistente virtual de la Parroquia Santísima Trinidad de Tingo, Arequipa, Perú.
-Tu nombre es "Asistente Parroquial". Respondes de forma amable y espiritual.
-Ayudas con: horarios de misas y sacramentos, eventos parroquiales,
-instrucciones para sacramentos (bautismo, matrimonio, primera comunión, confirmación),
-información general de la parroquia y orientación espiritual básica.
-Si no sabes algo específico, indícalo con humildad y sugiere contactar directamente a la parroquia.
-Siempre responde en español con tono cálido y pastoral.
-IMPORTANTE: Sé breve y directo. Máximo 3 oraciones por respuesta salvo que la pregunta requiera más detalle.`,
+Tu nombre es "Asistente Parroquial". Respondes de forma amable y pastoral.
+
+REGLA FUNDAMENTAL: Solo responde con información que figure explícitamente en los DATOS DE LA PARROQUIA que se te proporcionan abajo. Si alguien pregunta algo que no está en esos datos, responde exactamente: "No tengo esa información. Por favor, contacta directamente a la parroquia al +51 915 049 850 o visita secretaría (Lun–Sáb 3:00–6:00 PM)."
+
+ESTILO: Sé breve y directo. Máximo 3 oraciones por respuesta salvo que la pregunta requiera listar requisitos. Siempre en español.
+
+---
+DATOS DE LA PARROQUIA:
+
+${PARISH_STATIC_DATA}${dynamicContext}
+---`,
             messages: modelMessages,
             maxTokens: 350,
           });

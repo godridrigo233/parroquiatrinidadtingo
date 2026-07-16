@@ -32,11 +32,12 @@ Siempre responde en español. Mantén un tono cálido, pastoral y cercano.`;
               const { streamText, convertToModelMessages } = await import("ai");
               const parsed = JSON.parse(body) as { messages: unknown[] };
               console.log("[Chat dev] mensajes a enviar:", parsed.messages.length);
+              const modelMessages = await convertToModelMessages(parsed.messages as Parameters<typeof convertToModelMessages>[0]);
               const groq = createGroq({ apiKey });
               const result = streamText({
                 model: groq("llama-3.3-70b-versatile"),
                 system: SYSTEM_PROMPT,
-                messages: convertToModelMessages(parsed.messages as Parameters<typeof convertToModelMessages>[0]),
+                messages: modelMessages,
                 maxTokens: 500,
               });
               console.log("[Chat dev] llamando pipeUIMessageStreamToResponse");

@@ -142,6 +142,7 @@ export default {
         }
         try {
           const { messages } = await request.json() as { messages: unknown[] };
+          const modelMessages = await convertToModelMessages(messages as Parameters<typeof convertToModelMessages>[0]);
           const groq = createGroq({ apiKey });
           const result = streamText({
             model: groq("llama-3.3-70b-versatile"),
@@ -152,7 +153,7 @@ instrucciones para recibir sacramentos (bautismo, matrimonio, primera comunión,
 información general de la parroquia y orientación espiritual básica.
 Si no sabes algo específico de la parroquia, indícalo con humildad y sugiere contactar directamente.
 Siempre responde en español. Mantén un tono cálido, pastoral y cercano.`,
-            messages: convertToModelMessages(messages as Parameters<typeof convertToModelMessages>[0]),
+            messages: modelMessages,
             maxTokens: 500,
           });
           return result.toUIMessageStreamResponse();

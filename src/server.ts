@@ -2,6 +2,8 @@ import "./lib/error-capture";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
+import { createGroq } from "@ai-sdk/groq";
+import { streamText, convertToModelMessages } from "ai";
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
@@ -127,6 +129,42 @@ export default {
         }
       }
       // ============================================================================
+
+      // ── Chatbot AI ──────────────────────────────────────────────────────────
+      if (url.pathname === "/api/chat" && request.method === "POST") {
+        const apiKey = process.env.GROQ_API_KEY;
+        if (!apiKey) {
+          console.error("[Chat] GROQ_API_KEY no encontrada en process.env");
+          return new Response(JSON.stringify({ error: "API key no configurada" }), {
+            status: 500,
+            headers: { "content-type": "application/json" },
+          });
+        }
+        try {
+          const { messages } = await request.json() as { messages: unknown[] };
+          const groq = createGroq({ apiKey });
+          const result = streamText({
+            model: groq("llama-3.3-70b-versatile"),
+            system: `Eres el asistente virtual de la Parroquia Santísima Trinidad de Tingo, Arequipa, Perú.
+Tu nombre es "Asistente Parroquial". Respondes de forma amable, concisa y espiritual.
+Ayudas con: horarios de misas y sacramentos, información sobre eventos parroquiales,
+instrucciones para recibir sacramentos (bautismo, matrimonio, primera comunión, confirmación),
+información general de la parroquia y orientación espiritual básica.
+Si no sabes algo específico de la parroquia, indícalo con humildad y sugiere contactar directamente.
+Siempre responde en español. Mantén un tono cálido, pastoral y cercano.`,
+            messages: convertToModelMessages(messages as Parameters<typeof convertToModelMessages>[0]),
+            maxTokens: 500,
+          });
+          return result.toUIMessageStreamResponse();
+        } catch (err) {
+          console.error("[Chat] Error en streamText:", err);
+          return new Response(JSON.stringify({ error: String(err) }), {
+            status: 500,
+            headers: { "content-type": "application/json" },
+          });
+        }
+      }
+      // ────────────────────────────────────────────────────────────────────────
 
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);

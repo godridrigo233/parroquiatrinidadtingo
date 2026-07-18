@@ -12,6 +12,7 @@ import * as Sentry from "@sentry/react";
 
 // Carga modular diferida (Lazy-loading / Code-splitting) para optimizar el rendimiento y evitar bloqueos
 const AboutSection = lazy(() => import("@/components/site/sections/AboutSection"));
+const SacramentosSection = lazy(() => import("@/components/site/sections/SacramentosSection"));
 const HorariosSection = lazy(() => import("@/components/site/sections/HorariosSection"));
 const GaleriaSection = lazy(() => import("@/components/site/sections/GaleriaSection"));
 const DonacionesSection = lazy(() =>
@@ -49,6 +50,57 @@ export const Route = createFileRoute("/")({
       { name: "twitter:image", content: HOME_OG_IMAGE },
     ],
     links: [{ rel: "canonical", href: SITE_URL + "/" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Church",
+          name: "Parroquia Santísima Trinidad de Tingo",
+          description:
+            "Comunidad católica animada por las Carmelitas de María Inmaculada (CMI) en Tingo, Arequipa, Perú.",
+          url: SITE_URL + "/",
+          image: HOME_OG_IMAGE,
+          logo: SITE_URL + "/assets/logo.webp",
+          telephone: "+51 915 049 850",
+          email: "pstrinidadtingo@gmail.com",
+          address: {
+            "@type": "PostalAddress",
+            streetAddress: "Calle Ferrocarril 200, Av. Alfonso Ugarte Tingo - Cercado",
+            addressLocality: "Arequipa",
+            addressRegion: "Arequipa",
+            addressCountry: "PE",
+          },
+          sameAs: [
+            "https://www.facebook.com/parroquiasantisimatrinidadtingo/",
+            "https://www.instagram.com/stma_trinidad_tingo/",
+          ],
+          openingHoursSpecification: [
+            {
+              "@type": "OpeningHoursSpecification",
+              dayOfWeek: "Sunday",
+              opens: "08:00",
+              closes: "18:00",
+              description: "Misas dominicales: 8:00 AM y 6:00 PM",
+            },
+            {
+              "@type": "OpeningHoursSpecification",
+              dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+              opens: "18:00",
+              closes: "19:00",
+              description: "Misa diaria 6:00 PM",
+            },
+            {
+              "@type": "OpeningHoursSpecification",
+              dayOfWeek: "Saturday",
+              opens: "18:00",
+              closes: "19:00",
+              description: "Misa de vigilia 6:00 PM",
+            },
+          ],
+        }),
+      },
+    ],
   }),
   component: Home,
 });
@@ -226,6 +278,10 @@ function Home() {
 
       <Suspense fallback={<SectionSkeleton height="h-[900px]" />}>
         <HorariosSection groupedSchedules={groupedSchedules} loadingSchedules={loadingSchedules} />
+      </Suspense>
+
+      <Suspense fallback={<SectionSkeleton height="h-[700px]" />}>
+        <SacramentosSection />
       </Suspense>
 
       <Suspense fallback={<SectionSkeleton height="h-[700px]" />}>

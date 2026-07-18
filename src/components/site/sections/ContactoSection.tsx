@@ -56,7 +56,7 @@ export default function ContactoSection() {
                 <span className="h-11 w-11 rounded-xl bg-white/10 flex items-center justify-center text-gold shrink-0"><Mail size={20} /></span>
                 <div>
                   <p className="font-semibold text-white">Correo</p>
-                  <p className="text-white/75 text-sm">pstrinidadtingo@gmail.com</p>
+                  <a href="mailto:pstrinidadtingo@gmail.com" className="text-white/75 text-sm hover:text-gold transition-colors">pstrinidadtingo@gmail.com</a>
                 </div>
               </li>
             </ul>
@@ -64,7 +64,7 @@ export default function ContactoSection() {
 
           <Reveal delay={150}>
             <div className="rounded-2xl overflow-hidden shadow-elegant border border-white/10 aspect-[4/3] bg-white/5">
-              <iframe title="Mapa parroquia" src="https://www.google.com/maps?q=Americas+1820,+Arequipa+04011,+Peru&output=embed" className="w-full h-full" loading="lazy" />
+              <iframe title="Mapa parroquia" src="https://www.google.com/maps?q=Parroquia+Sant%C3%ADsima+Trinidad+Tingo+Arequipa&output=embed" className="w-full h-full" loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
             </div>
           </Reveal>
         </div>

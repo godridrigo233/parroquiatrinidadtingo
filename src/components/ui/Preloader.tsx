@@ -32,19 +32,25 @@ export function Preloader({ isLoading }: { isLoading: boolean }) {
       {/* Contenedor central */}
       <div className="relative z-10 flex flex-col items-center gap-7 text-center px-6">
         
-        {/* Logo con animación de resplandor sutil */}
-        <div className="relative h-24 w-24 md:h-28 md:w-28 animate-pulse duration-1000">
-          <img 
-            src="/assets/logo.webp" 
-            alt="Logo Parroquia"
-            width={112}
-            height={112}
-            fetchPriority="high"
-            loading="eager"
-            decoding="async"
-            className="h-full w-full object-contain filter drop-shadow-[0_0_20px_rgba(212,175,55,0.4)]"
-          />
-
+        {/* Logo circular con anillo dorado giratorio y resplandor */}
+        <div className="relative h-28 w-28">
+          {/* Anillo giratorio */}
+          <span className="absolute inset-0 rounded-full border-2 border-transparent border-t-gold border-r-gold/40 animate-spin [animation-duration:1.4s]" />
+          {/* Halo pulsante detrás del logo */}
+          <span className="absolute inset-1 rounded-full bg-gold/20 blur-xl animate-pulse [animation-duration:1.6s]" />
+          {/* Logo recortado en círculo */}
+          <div className="absolute inset-[6px] rounded-full overflow-hidden ring-1 ring-white/15 shadow-[0_0_30px_rgba(212,175,55,0.45)]">
+            <img
+              src="/assets/logo.webp"
+              alt="Logo Parroquia Santísima Trinidad"
+              width={112}
+              height={112}
+              fetchPriority="high"
+              loading="eager"
+              decoding="async"
+              className="h-full w-full object-cover"
+            />
+          </div>
         </div>
 
         {/* Textos con mayor espaciado (elegancia) */}

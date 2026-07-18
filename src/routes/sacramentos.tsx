@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Droplets,
   Cookie,
@@ -288,6 +288,21 @@ export const Route = createFileRoute("/sacramentos")({
 
 function SacramentosPage() {
   const [selected, setSelected] = useState(sacramentos[0]);
+  const detalleRef = useRef<HTMLDivElement>(null);
+
+  // Si llegan con un hash (#primera-comunion, #matrimonio, etc.) abrimos ese
+  // sacramento directamente y bajamos a sus requisitos, no al general.
+  useEffect(() => {
+    const hash = decodeURIComponent(window.location.hash.replace("#", "")).trim();
+    if (!hash) return;
+    const found = sacramentos.find((s) => s.id === hash);
+    if (!found) return;
+    setSelected(found);
+    // Esperamos al re-render para hacer scroll al detalle
+    requestAnimationFrame(() => {
+      detalleRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#F0F4F8] text-[#0F1B2D]">
@@ -382,8 +397,8 @@ function SacramentosPage() {
       </section>
 
       {/* ════════════════ DETALLE DEL SACRAMENTO SELECCIONADO ════════════════ */}
-      <section className="py-16 md:py-20 px-5 lg:px-8 bg-[#F0F4F8]">
-        <div className="max-w-6xl mx-auto">
+      <section className="py-16 md:py-20 px-5 lg:px-8 bg-[#F0F4F8] scroll-mt-20">
+        <div ref={detalleRef} className="max-w-6xl mx-auto">
           <Reveal key={selected.id}>
             <div className="grid lg:grid-cols-[380px_1fr] gap-8 items-start">
               {/* Imagen lateral */}

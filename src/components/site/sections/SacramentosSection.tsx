@@ -59,15 +59,6 @@ export default function SacramentosSection() {
             );
           })}
         </div>
-
-        <Reveal delay={120} className="mt-12 flex justify-center">
-          <Link
-            to="/sacramentos"
-            className="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3.5 font-semibold text-primary-foreground shadow-elegant transition-all hover:scale-105"
-          >
-            Ver todos los sacramentos <ArrowRight size={18} />
-          </Link>
-        </Reveal>
       </div>
     </section>
   );

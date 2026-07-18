@@ -346,7 +346,7 @@ DATOS DE LA PARROQUIA:
 ${PARISH_STATIC_DATA}${dynamicContext}
 ---`,
             messages: modelMessages,
-            maxTokens: 350,
+            maxOutputTokens: 350,
           });
           return result.toUIMessageStreamResponse();
         } catch (err) {

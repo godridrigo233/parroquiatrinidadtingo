@@ -70,7 +70,7 @@ function ParishAIBotFabWidget() {
               <Sparkles size={20} className="text-white" />
             </div>
             <div>
-              <h3 className="text-white font-display font-medium leading-none">Asistente Parroquial</h3>
+              <h3 className="text-white font-display font-medium leading-none">Asistente Parroquial (beta)</h3>
               <p className="text-[#C8A45C] text-xs mt-1 flex items-center gap-1">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />

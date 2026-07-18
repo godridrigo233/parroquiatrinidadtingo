@@ -59,6 +59,11 @@ export default function SacramentosSection() {
             );
           })}
         </div>
+        <Reveal className="mt-14 text-center">
+          <Link to="/sacramentos" className="inline-flex items-center gap-3 px-9 py-4 text-lg rounded-full bg-gradient-gold text-primary-foreground font-semibold shadow-card hover:shadow-elegant transition-shadow">
+            Ver requisitos de sacramentos <ArrowRight size={18} />
+          </Link>
+        </Reveal>
       </div>
     </section>
   );

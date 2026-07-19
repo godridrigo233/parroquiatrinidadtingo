@@ -94,9 +94,14 @@ Conversar directamente con el párroco para el discernimiento vocacional.
 
 async function buildParishContext(): Promise<string> {
   const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  // schedules y events tienen política RLS de lectura pública ("USING (true)"),
+  // así que la clave anon/publishable basta — no requiere el service role key.
+  const key = process.env.SUPABASE_PUBLISHABLE_KEY;
 
-  if (!url || !key) return "";
+  if (!url || !key) {
+    console.error("[Chat] Falta SUPABASE_URL o SUPABASE_PUBLISHABLE_KEY: el chatbot no tendrá horarios ni eventos actualizados.");
+    return "";
+  }
 
   try {
     const sb = createClient(url, key, { auth: { persistSession: false } });

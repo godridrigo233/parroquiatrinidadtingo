@@ -86,8 +86,12 @@ Conversar directamente con el párroco para el discernimiento vocacional.
 
   async function buildDevParishContext(): Promise<string> {
     const url = process.env.SUPABASE_URL;
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (!url || !key) return "";
+    // schedules y events tienen política RLS de lectura pública, la anon key basta.
+    const key = process.env.SUPABASE_PUBLISHABLE_KEY;
+    if (!url || !key) {
+      console.error("[Chat dev] Falta SUPABASE_URL o SUPABASE_PUBLISHABLE_KEY: sin horarios/eventos actualizados.");
+      return "";
+    }
     try {
       const { createClient } = await import("@supabase/supabase-js");
       const sb = createClient(url, key, { auth: { persistSession: false } });

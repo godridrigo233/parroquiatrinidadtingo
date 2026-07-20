@@ -14,7 +14,6 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { InventoryDashboard } from "@/routes/admin/inventario";
 import { DirectoryManager } from "@/routes/admin/DirectoryManager";
 import { CajaManager } from "@/routes/admin/CajaManager";
-import { EvangelioDelDiaCard } from "@/components/site/sections/EvangelioDelDiaCard";
 
 export const Route = createFileRoute("/admin/")({
   head: () => ({ meta: [{ title: "Panel administrador · Parroquia" }, { name: "robots", content: "noindex" }] }),

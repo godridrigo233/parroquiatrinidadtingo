@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Menu, X } from "lucide-react";
-import { InstallPWA } from "@/components/site/InstallPWA"; // ← Importación de tu botón
+import { InstallPWA } from "@/components/site/InstallPWA";
 
 const links = [
   { href: "/#inicio", label: "Inicio" },
@@ -83,10 +83,22 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
               </a>
             ),
           )}
-          
-          {/* 👇 BOTONES DERECHOS (Escritorio) */}
+
+          {/* ✝ EVANGELIO DEL DÍA */}
+          <a
+            href="https://www.vaticannews.va/es/evangelio-de-hoy.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`flex items-center gap-1.5 text-sm font-medium border rounded-full px-3 py-1 transition-colors hover:border-gold hover:text-gold ${
+              bg ? "border-border text-foreground/70" : "border-white/30 text-white/80"
+            }`}
+          >
+            ✝ Evangelio
+          </a>
+
+          {/* BOTONES DERECHOS */}
           <div className="flex items-center gap-3">
-            <InstallPWA /> {/* <--- Aquí va el botón de PWA */}
+            <InstallPWA />
             <Link
               to="/"
               hash="contacto"
@@ -109,7 +121,7 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
         </div>
       </div>
 
-      {/* NAVEGACIÓN MÓVIL (Menú desplegable) */}
+      {/* NAVEGACIÓN MÓVIL */}
       {open && (
         <div className="lg:hidden bg-background border-t border-border">
           <nav className="px-5 py-4 flex flex-col gap-1">
@@ -134,12 +146,22 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
                 </a>
               ),
             )}
-            
-            {/* 👇 BOTÓN PWA EN MÓVIL */}
+
+            {/* ✝ EVANGELIO DEL DÍA (Móvil) */}
+            <a
+              href="https://www.vaticannews.va/es/evangelio-de-hoy.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setOpen(false)}
+              className="py-2.5 text-gold border-b border-border/50 text-sm font-medium flex items-center gap-2"
+            >
+              ✝ Evangelio del día <span className="text-xs opacity-60">↗</span>
+            </a>
+
+            {/* BOTÓN PWA EN MÓVIL */}
             <div className="mt-4 flex flex-col gap-3">
-               <InstallPWA /> {/* <--- El botón también se mostrará en el menú móvil */}
+              <InstallPWA />
             </div>
-            
           </nav>
         </div>
       )}

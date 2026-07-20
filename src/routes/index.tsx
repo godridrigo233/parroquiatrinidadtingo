@@ -8,6 +8,7 @@ import { Navbar } from "@/components/site/Navbar";
 import { WhatsAppFab } from "@/components/site/WhatsAppFab";
 import { DonationRow } from "@/components/site/DonacionesSection";
 import { Preloader } from "@/components/ui/Preloader";
+import { EvangelioDelDiaCard } from "@/components/site/sections/EvangelioDelDiaCard";
 import * as Sentry from "@sentry/react";
 
 // Carga modular diferida (Lazy-loading / Code-splitting) para optimizar el rendimiento y evitar bloqueos
@@ -270,7 +271,14 @@ function Home() {
           <span className="block h-10 w-px bg-gradient-to-b from-gold/80 to-transparent animate-pulse" />
         </div>
       </section>
-
+      {/* ═════════════════════════════════════════════ */}
+      {/* 🙏 EVANGELIO DEL DÍA (CARD ESPIRITUAL) */}
+      {/* ═════════════════════════════════════════════ */}
+      <section className="py-6 md:py-8 bg-background">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+          <EvangelioDelDiaCard />
+        </div>
+      </section>
       {/* SECCIONES MODULARES (Cargadas progresivamente) */}
       <Suspense fallback={<SectionSkeleton height="h-[1800px]" />}>
         <AboutSection ministries={ministries} loadingMinistries={loadingMinistries} />

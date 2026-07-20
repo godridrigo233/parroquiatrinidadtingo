@@ -36,11 +36,17 @@ Trámites y secretaría de las capillas filiales: solo en la Sede Central
 == SECRETARÍA ==
 Horario: Lunes a Sábado, 3:00 PM – 6:00 PM
 
+== CÓMO LLEGAR AL TEMPLO ==
+- Bus Cuenca 10 (SIT), color granate/rojo, destino Jacobo Hunter o Balneario de Jesús.
+- Bajar en el "Cruce de Tingo" (aprox. 2–3 cuadras de la parroquia).
+- Desde el Centro / Terminal Avelino: tomar unidades con destino Jacobo Hunter que pasan por Av. Alfonso Ugarte.
+- Referencia: frente al parque principal de Tingo, Av. Alfonso Ugarte.
+
 == HORARIOS DE MISA (base) ==
 - Domingos: 8:00 AM y 6:00 PM
 - Lunes a Viernes: 6:00 PM
 - Sábados (vigilia): 6:00 PM
-(Para horarios actualizados, consultar la sección Horarios del sitio web o comunicarse con secretaría)
+(Para horarios actualizados, ver sección HORARIOS ACTUALIZADOS más abajo)
 
 == SACRAMENTO: BAUTISMO ==
 Cuándo: Todos los sábados desde las 3:00 PM, previa programación
@@ -88,25 +94,17 @@ Coordinar por teléfono (+51 915 049 850) o en secretaría.
 
 == VOCACIONES / ORDEN SACERDOTAL ==
 Conversar directamente con el párroco para el discernimiento vocacional.
-
-== MINISTERIOS Y GRUPOS PARROQUIALES ==
-- Señor de los Milagros (Coordinador: Hno. Ernesto)
-- Virgen Dolorosa (Coordinador: Hno. Luis)
-- Oración de María (Coordinadora: Hna. María)
-- Acólitos (Encargados: Rosita y Hilario)
-- Alas de Fé (Coordinadora: Hna. Karen)
-- Siervos de Luz (Coordinador: Hno. Edward)
-- Legión de María (Coordinadora: Hna. María)
 `.trim();
 
+// ============================================================================
+// CONTEXTO DINÁMICO DESDE SUPABASE
+// ============================================================================
 async function buildParishContext(): Promise<string> {
   const url = process.env.SUPABASE_URL;
-  // schedules y events tienen política RLS de lectura pública ("USING (true)"),
-  // así que la clave anon/publishable basta — no requiere el service role key.
   const key = process.env.SUPABASE_PUBLISHABLE_KEY;
 
   if (!url || !key) {
-    console.error("[Chat] Falta SUPABASE_URL o SUPABASE_PUBLISHABLE_KEY: el chatbot no tendrá horarios ni eventos actualizados.");
+    console.error("[Chat] Falta SUPABASE_URL o SUPABASE_PUBLISHABLE_KEY.");
     return "";
   }
 
@@ -114,18 +112,31 @@ async function buildParishContext(): Promise<string> {
     const sb = createClient(url, key, { auth: { persistSession: false } });
     const today = new Date().toISOString().split("T")[0];
 
-    const [{ data: schedules }, { data: events }] = await Promise.all([
-      sb.from("schedules").select("category, day_label, time_label, notes").order("sort_order"),
-      sb
-        .from("events")
+    const [
+      { data: schedules },
+      { data: events },
+      { data: ministries },
+      { data: donations },
+    ] = await Promise.all([
+      sb.from("schedules")
+        .select("category, day_label, time_label, notes")
+        .order("sort_order"),
+      sb.from("events")
         .select("title, description, event_date, location")
         .gte("event_date", today)
         .order("event_date")
         .limit(10),
+      sb.from("ministries")
+        .select("name, description, leader, location")
+        .order("created_at"),
+      sb.from("donations_info")
+        .select("title, bank_name, account_number, cci, description")
+        .order("sort_order"),
     ]);
 
     let ctx = "";
 
+    // ── Horarios ──────────────────────────────────────────────
     if (schedules && schedules.length > 0) {
       ctx += "\n\n== HORARIOS ACTUALIZADOS (base de datos) ==\n";
       const byCategory: Record<string, typeof schedules> = {};
@@ -134,20 +145,62 @@ async function buildParishContext(): Promise<string> {
         if (!byCategory[cat]) byCategory[cat] = [];
         byCategory[cat].push(s);
       }
+      const catLabels: Record<string, string> = {
+        misa: "MISAS", confesion: "CONFESIONES",
+        catequesis: "CATEQUESIS", adoracion: "ADORACIÓN", secretaria: "SECRETARÍA",
+      };
       for (const [cat, rows] of Object.entries(byCategory)) {
-        ctx += `\n[${cat.toUpperCase()}]\n`;
+        ctx += `\n[${catLabels[cat] ?? cat.toUpperCase()}]\n`;
         for (const r of rows) {
           ctx += `  - ${r.day_label}: ${r.time_label}${r.notes ? ` (${r.notes})` : ""}\n`;
         }
       }
     }
 
+    // ── Eventos ───────────────────────────────────────────────
     if (events && events.length > 0) {
       ctx += "\n\n== PRÓXIMOS EVENTOS ==\n";
       for (const e of events) {
-        ctx += `\n- ${e.title} | Fecha: ${e.event_date}`;
+        const fecha = new Date(e.event_date).toLocaleDateString("es-PE", {
+          weekday: "long", day: "numeric", month: "long", year: "numeric",
+        });
+        ctx += `\n- ${e.title} | Fecha: ${fecha}`;
         if (e.location) ctx += ` | Lugar: ${e.location}`;
         if (e.description) ctx += `\n  ${e.description}`;
+        ctx += "\n";
+      }
+    } else {
+      ctx += "\n\n== PRÓXIMOS EVENTOS ==\n- No hay eventos programados por el momento.\n";
+    }
+
+    // ── Ministerios ───────────────────────────────────────────
+    if (ministries && ministries.length > 0) {
+      ctx += "\n\n== MINISTERIOS Y GRUPOS PARROQUIALES (base de datos) ==\n";
+      const bySede: Record<string, typeof ministries> = {};
+      for (const m of ministries) {
+        const sede = m.location ?? "Sede Central";
+        if (!bySede[sede]) bySede[sede] = [];
+        bySede[sede].push(m);
+      }
+      for (const [sede, items] of Object.entries(bySede)) {
+        ctx += `\n[${sede.toUpperCase()}]\n`;
+        for (const m of items) {
+          ctx += `  - ${m.name}`;
+          if (m.leader) ctx += ` (Encargado: ${m.leader})`;
+          if (m.description) ctx += `\n    ${m.description}`;
+          ctx += "\n";
+        }
+      }
+    }
+
+    // ── Donaciones ────────────────────────────────────────────
+    if (donations && donations.length > 0) {
+      ctx += "\n\n== CANALES DE DONACIÓN (base de datos) ==\n";
+      for (const d of donations as any[]) {
+        ctx += `\n- ${d.title} | ${d.bank_name}`;
+        if (d.account_number) ctx += ` | Cuenta: ${d.account_number}`;
+        if (d.cci)            ctx += ` | CCI: ${d.cci}`;
+        if (d.description)    ctx += `\n  ${d.description}`;
         ctx += "\n";
       }
     }
@@ -159,39 +212,28 @@ async function buildParishContext(): Promise<string> {
   }
 }
 
+// ============================================================================
+// BOILERPLATE (sin cambios)
+// ============================================================================
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
 };
 
 let serverEntryPromise: Promise<ServerEntry> | undefined;
 
-// ============================================================================
-// 1. DICCIONARIO Y LÓGICA DE RATE LIMITING (En Memoria)
-// ============================================================================
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 
 function checkRateLimit(ip: string, limit: number, windowMs: number): boolean {
-  
   const now = Date.now();
-
   const userRecord = rateLimitMap.get(ip);
-
-  // Si es nuevo o ya pasó su castigo, reiniciar contador
   if (!userRecord || now > userRecord.resetTime) {
     rateLimitMap.set(ip, { count: 1, resetTime: now + windowMs });
     return true;
   }
-
-  // Si superó el límite, bloquear
-  if (userRecord.count >= limit) {
-    return false;
-  }
-
-  // Si está dentro del límite, sumar 1
+  if (userRecord.count >= limit) return false;
   userRecord.count += 1;
   return true;
 }
-// ============================================================================
 
 async function getServerEntry(): Promise<ServerEntry> {
   if (!serverEntryPromise) {
@@ -211,22 +253,11 @@ function brandedErrorResponse(): Response {
 
 function isCatastrophicSsrErrorBody(body: string, responseStatus: number): boolean {
   let payload: unknown;
-  try {
-    payload = JSON.parse(body);
-  } catch {
-    return false;
-  }
-
-  if (!payload || Array.isArray(payload) || typeof payload !== "object") {
-    return false;
-  }
-
+  try { payload = JSON.parse(body); } catch { return false; }
+  if (!payload || Array.isArray(payload) || typeof payload !== "object") return false;
   const fields = payload as Record<string, unknown>;
   const expectedKeys = new Set(["message", "status", "unhandled"]);
-  if (!Object.keys(fields).every((key) => expectedKeys.has(key))) {
-    return false;
-  }
-
+  if (!Object.keys(fields).every((key) => expectedKeys.has(key))) return false;
   return (
     fields.unhandled === true &&
     fields.message === "HTTPError" &&
@@ -234,18 +265,12 @@ function isCatastrophicSsrErrorBody(body: string, responseStatus: number): boole
   );
 }
 
-// h3 swallows in-handler throws into a normal 500 Response with body
-// {"unhandled":true,"message":"HTTPError"} — try/catch alone never fires for those.
 async function normalizeCatastrophicSsrResponse(response: Response): Promise<Response> {
   if (response.status < 500) return response;
   const contentType = response.headers.get("content-type") ?? "";
   if (!contentType.includes("application/json")) return response;
-
   const body = await response.clone().text();
-  if (!isCatastrophicSsrErrorBody(body, response.status)) {
-    return response;
-  }
-
+  if (!isCatastrophicSsrErrorBody(body, response.status)) return response;
   console.error(consumeLastCapturedError() ?? new Error(`h3 swallowed SSR error: ${body}`));
   return brandedErrorResponse();
 }
@@ -253,61 +278,47 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
-      // ============================================================================
-      // 2. INTERCEPTOR DE SEGURIDAD (Antes de procesar la solicitud)
-      // ============================================================================
       const url = new URL(request.url);
-      const ip = 
-        request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || 
+      const ip =
+        request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
         "ip-desconocida";
 
-      // NIVEL 1: Protección Administrativa (Muy estricta)
       if (url.pathname.startsWith("/admin")) {
-        // Solo 3 intentos por minuto para el acceso al panel admin
         if (!checkRateLimit(ip, 3, 60 * 1000)) {
-          console.warn(`[SEGURIDAD CRÍTICA] Intento de fuerza bruta en /admin detectado. IP: ${ip}`);
+          console.warn(`[SEGURIDAD] Fuerza bruta en /admin. IP: ${ip}`);
           return new Response(JSON.stringify({ error: "Acceso denegado temporalmente por seguridad." }), {
-            status: 429,
-            headers: { "content-type": "application/json" },
+            status: 429, headers: { "content-type": "application/json" },
           });
         }
       }
 
-      // NIVEL 2: Protección de APIs (Estándar)
       if (url.pathname.startsWith("/api")) {
         if (!checkRateLimit(ip, 15, 60 * 1000)) {
           return new Response(JSON.stringify({ error: "Límite de peticiones alcanzado." }), {
-            status: 429,
-            headers: { "content-type": "application/json" },
+            status: 429, headers: { "content-type": "application/json" },
           });
         }
       }
-      // ============================================================================
 
-      // ── Chatbot AI ──────────────────────────────────────────────────────────
+      // ── Chatbot AI ──────────────────────────────────────────
       if (url.pathname === "/api/chat" && request.method === "POST") {
         const apiKey = process.env.GROQ_API_KEY;
         if (!apiKey) {
-          console.error("[Chat] GROQ_API_KEY no encontrada en process.env");
+          console.error("[Chat] GROQ_API_KEY no encontrada");
           return new Response(JSON.stringify({ error: "API key no configurada" }), {
-            status: 500,
-            headers: { "content-type": "application/json" },
+            status: 500, headers: { "content-type": "application/json" },
           });
         }
         try {
           const body = await request.json() as { messages: unknown };
           const raw = body?.messages;
 
-          // Seguridad: validar que sea array y no vacío
           if (!Array.isArray(raw) || raw.length === 0) {
             return new Response(JSON.stringify({ error: "Formato inválido" }), {
-              status: 400,
-              headers: { "content-type": "application/json" },
+              status: 400, headers: { "content-type": "application/json" },
             });
           }
 
-          // Seguridad: solo últimos 20 mensajes, solo roles user/assistant,
-          // texto truncado a 500 chars para evitar inyección masiva
           const safeMessages = raw
             .slice(-20)
             .filter((m) => {
@@ -332,8 +343,7 @@ export default {
 
           if (safeMessages.length === 0) {
             return new Response(JSON.stringify({ error: "Sin mensajes válidos" }), {
-              status: 400,
-              headers: { "content-type": "application/json" },
+              status: 400, headers: { "content-type": "application/json" },
             });
           }
 
@@ -364,12 +374,10 @@ ${PARISH_STATIC_DATA}${dynamicContext}
         } catch (err) {
           console.error("[Chat] Error en streamText:", err);
           return new Response(JSON.stringify({ error: String(err) }), {
-            status: 500,
-            headers: { "content-type": "application/json" },
+            status: 500, headers: { "content-type": "application/json" },
           });
         }
       }
-      // ────────────────────────────────────────────────────────────────────────
 
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);

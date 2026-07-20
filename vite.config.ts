@@ -1,13 +1,12 @@
-  // @lovable.dev/vite-tanstack-config already includes the following — do NOT add them manually
-  // or the app will break with duplicate plugins:
-  //   - tanstackStart, viteReact, tailwindcss, tsConfigPaths, cloudflare (build-only),
-  //     componentTagger (dev-only), VITE_* env injection, @ path alias, React/TanStack dedupe,
-  //     error logger plugins, and sandbox detection (port/host/strictPort).
-  // You can pass additional config via defineConfig({ vite: { ... } }) if needed.
-  import { defineConfig } from "@lovable.dev/vite-tanstack-config";
-  import type { Plugin } from "vite";
+// @lovable.dev/vite-tanstack-config already includes the following — do NOT add them manually
+// or the app will break with duplicate plugins:
+//   - tanstackStart, viteReact, tailwindcss, tsConfigPaths, cloudflare (build-only),
+//     componentTagger (dev-only), VITE_* env injection, @ path alias, React/TanStack dedupe,
+//     error logger plugins, and sandbox detection (port/host/strictPort).
+import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import type { Plugin } from "vite";
 
-  const PARISH_STATIC_DATA = `
+const PARISH_STATIC_DATA = `
 == IDENTIDAD ==
 Nombre: Parroquia Santísima Trinidad de Tingo
 Dirección: Calle Ferrocarril 200, Av. Alfonso Ugarte Tingo - Cercado, Arequipa, Perú
@@ -34,10 +33,17 @@ Trámites y secretaría de las capillas filiales: solo en la Sede Central
 == SECRETARÍA ==
 Horario: Lunes a Sábado, 3:00 PM – 6:00 PM
 
+== CÓMO LLEGAR AL TEMPLO ==
+- Bus Cuenca 10 (SIT), color granate/rojo, destino Jacobo Hunter o Balneario de Jesús.
+- Bajar en el "Cruce de Tingo" (aprox. 2–3 cuadras de la parroquia).
+- Desde el Centro / Terminal Avelino: tomar unidades con destino Jacobo Hunter que pasan por Av. Alfonso Ugarte.
+- Referencia: frente al parque principal de Tingo, Av. Alfonso Ugarte.
+
 == HORARIOS DE MISA (base) ==
 - Domingos: 8:00 AM y 6:00 PM
 - Lunes a Viernes: 6:00 PM
 - Sábados (vigilia): 6:00 PM
+(Para horarios actualizados, ver sección HORARIOS ACTUALIZADOS más abajo)
 
 == SACRAMENTO: BAUTISMO ==
 Cuándo: Todos los sábados desde las 3:00 PM, previa programación
@@ -80,124 +86,188 @@ Coordinar por teléfono (+51 915 049 850) o en secretaría.
 
 == VOCACIONES / ORDEN SACERDOTAL ==
 Conversar directamente con el párroco para el discernimiento vocacional.
-
-== MINISTERIOS ==
-- Señor de los Milagros (Hno. Ernesto)
-- Virgen Dolorosa (Hno. Luis)
-- Oración de María (Hna. María)
-- Acólitos (Rosita y Hilario)
-- Alas de Fé (Hna. Karen)
-- Siervos de Luz (Hno. Edward)
-- Legión de María (Hna. María)
 `.trim();
 
-  async function buildDevParishContext(): Promise<string> {
-    const url = process.env.SUPABASE_URL;
-    // schedules y events tienen política RLS de lectura pública, la anon key basta.
-    const key = process.env.SUPABASE_PUBLISHABLE_KEY;
-    if (!url || !key) {
-      console.error("[Chat dev] Falta SUPABASE_URL o SUPABASE_PUBLISHABLE_KEY: sin horarios/eventos actualizados.");
-      return "";
-    }
-    try {
-      const { createClient } = await import("@supabase/supabase-js");
-      const sb = createClient(url, key, { auth: { persistSession: false } });
-      const today = new Date().toISOString().split("T")[0];
-      const [{ data: schedules }, { data: events }] = await Promise.all([
-        sb.from("schedules").select("category, day_label, time_label, notes").order("sort_order"),
-        sb.from("events").select("title, description, event_date, location").gte("event_date", today).order("event_date").limit(10),
-      ]);
-      let ctx = "";
-      if (schedules && schedules.length > 0) {
-        ctx += "\n\n== HORARIOS ACTUALIZADOS (base de datos) ==\n";
-        const byCategory: Record<string, typeof schedules> = {};
-        for (const s of schedules) {
-          const cat = s.category ?? "otros";
-          if (!byCategory[cat]) byCategory[cat] = [];
-          byCategory[cat].push(s);
-        }
-        for (const [cat, rows] of Object.entries(byCategory)) {
-          ctx += `\n[${cat.toUpperCase()}]\n`;
-          for (const r of rows) ctx += `  - ${r.day_label}: ${r.time_label}${r.notes ? ` (${r.notes})` : ""}\n`;
+// ============================================================================
+// CONTEXTO DINÁMICO DESDE SUPABASE (dev)
+// ============================================================================
+async function buildDevParishContext(): Promise<string> {
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_PUBLISHABLE_KEY;
+  if (!url || !key) {
+    console.error("[Chat dev] Falta SUPABASE_URL o SUPABASE_PUBLISHABLE_KEY.");
+    return "";
+  }
+  try {
+    const { createClient } = await import("@supabase/supabase-js");
+    const sb = createClient(url, key, { auth: { persistSession: false } });
+    const today = new Date().toISOString().split("T")[0];
+
+    const [
+      { data: schedules },
+      { data: events },
+      { data: ministries },
+      { data: donations },
+    ] = await Promise.all([
+      sb.from("schedules")
+        .select("category, day_label, time_label, notes")
+        .order("sort_order"),
+      sb.from("events")
+        .select("title, description, event_date, location")
+        .gte("event_date", today)
+        .order("event_date")
+        .limit(10),
+      sb.from("ministries")
+        .select("name, description, leader, location")
+        .order("created_at"),
+      sb.from("donations_info")
+        .select("title, bank_name, account_number, cci, description")
+        .order("sort_order"),
+    ]);
+
+    let ctx = "";
+
+    // ── Horarios ──────────────────────────────────────────────
+    if (schedules && schedules.length > 0) {
+      ctx += "\n\n== HORARIOS ACTUALIZADOS (base de datos) ==\n";
+      const byCategory: Record<string, typeof schedules> = {};
+      for (const s of schedules) {
+        const cat = s.category ?? "otros";
+        if (!byCategory[cat]) byCategory[cat] = [];
+        byCategory[cat].push(s);
+      }
+      const catLabels: Record<string, string> = {
+        misa: "MISAS", confesion: "CONFESIONES",
+        catequesis: "CATEQUESIS", adoracion: "ADORACIÓN", secretaria: "SECRETARÍA",
+      };
+      for (const [cat, rows] of Object.entries(byCategory)) {
+        ctx += `\n[${catLabels[cat] ?? cat.toUpperCase()}]\n`;
+        for (const r of rows) {
+          ctx += `  - ${r.day_label}: ${r.time_label}${r.notes ? ` (${r.notes})` : ""}\n`;
         }
       }
-      if (events && events.length > 0) {
-        ctx += "\n\n== PRÓXIMOS EVENTOS ==\n";
-        for (const e of events) {
-          ctx += `\n- ${e.title} | Fecha: ${e.event_date}`;
-          if (e.location) ctx += ` | Lugar: ${e.location}`;
-          if (e.description) ctx += `\n  ${e.description}`;
+    }
+
+    // ── Eventos ───────────────────────────────────────────────
+    if (events && events.length > 0) {
+      ctx += "\n\n== PRÓXIMOS EVENTOS ==\n";
+      for (const e of events) {
+        const fecha = new Date(e.event_date).toLocaleDateString("es-PE", {
+          weekday: "long", day: "numeric", month: "long", year: "numeric",
+        });
+        ctx += `\n- ${e.title} | Fecha: ${fecha}`;
+        if (e.location) ctx += ` | Lugar: ${e.location}`;
+        if (e.description) ctx += `\n  ${e.description}`;
+        ctx += "\n";
+      }
+    } else {
+      ctx += "\n\n== PRÓXIMOS EVENTOS ==\n- No hay eventos programados por el momento.\n";
+    }
+
+    // ── Ministerios ───────────────────────────────────────────
+    if (ministries && ministries.length > 0) {
+      ctx += "\n\n== MINISTERIOS Y GRUPOS PARROQUIALES (base de datos) ==\n";
+      const bySede: Record<string, typeof ministries> = {};
+      for (const m of ministries) {
+        const sede = m.location ?? "Sede Central";
+        if (!bySede[sede]) bySede[sede] = [];
+        bySede[sede].push(m);
+      }
+      for (const [sede, items] of Object.entries(bySede)) {
+        ctx += `\n[${sede.toUpperCase()}]\n`;
+        for (const m of items) {
+          ctx += `  - ${m.name}`;
+          if (m.leader) ctx += ` (Encargado: ${m.leader})`;
+          if (m.description) ctx += `\n    ${m.description}`;
           ctx += "\n";
         }
       }
-      return ctx;
-    } catch (err) {
-      console.error("[Chat dev] Error fetching Supabase context:", err);
-      return "";
     }
+
+    // ── Donaciones ────────────────────────────────────────────
+    if (donations && donations.length > 0) {
+      ctx += "\n\n== CANALES DE DONACIÓN (base de datos) ==\n";
+      for (const d of donations as any[]) {
+        ctx += `\n- ${d.title} | ${d.bank_name}`;
+        if (d.account_number) ctx += ` | Cuenta: ${d.account_number}`;
+        if (d.cci)            ctx += ` | CCI: ${d.cci}`;
+        if (d.description)    ctx += `\n  ${d.description}`;
+        ctx += "\n";
+      }
+    }
+
+    return ctx;
+  } catch (err) {
+    console.error("[Chat dev] Error fetching Supabase context:", err);
+    return "";
   }
+}
 
-  function chatDevPlugin(): Plugin {
-    return {
-      name: "parish-chat-dev",
-      enforce: "pre",
-      configureServer(server) {
-        server.middlewares.use("/api/chat", (req, res, next) => {
-          if (req.method !== "POST") return next();
-          let body = "";
-          req.on("data", (c) => (body += c));
-          req.on("end", async () => {
-            const apiKey = process.env.GROQ_API_KEY;
-            console.log("[Chat dev] body recibido, key:", apiKey ? `PRESENTE (${apiKey.slice(0, 8)}...)` : "AUSENTE");
-            try {
-              const { createGroq } = await import("@ai-sdk/groq");
-              const { streamText, convertToModelMessages } = await import("ai");
-              const parsed = JSON.parse(body) as { messages: unknown };
-              const raw = parsed?.messages;
+// ============================================================================
+// PLUGIN DEV
+// ============================================================================
+function chatDevPlugin(): Plugin {
+  return {
+    name: "parish-chat-dev",
+    enforce: "pre",
+    configureServer(server) {
+      server.middlewares.use("/api/chat", (req, res, next) => {
+        if (req.method !== "POST") return next();
+        let body = "";
+        req.on("data", (c) => (body += c));
+        req.on("end", async () => {
+          const apiKey = process.env.GROQ_API_KEY;
+          console.log("[Chat dev] body recibido, key:", apiKey ? `PRESENTE (${apiKey.slice(0, 8)}...)` : "AUSENTE");
+          try {
+            const { createGroq } = await import("@ai-sdk/groq");
+            const { streamText, convertToModelMessages } = await import("ai");
+            const parsed = JSON.parse(body) as { messages: unknown };
+            const raw = parsed?.messages;
 
-              if (!Array.isArray(raw) || raw.length === 0) {
-                res.statusCode = 400;
-                res.end(JSON.stringify({ error: "Formato inválido" }));
-                return;
-              }
+            if (!Array.isArray(raw) || raw.length === 0) {
+              res.statusCode = 400;
+              res.end(JSON.stringify({ error: "Formato inválido" }));
+              return;
+            }
 
-              const safeMessages = raw
-                .slice(-20)
-                .filter((m) => {
-                  if (typeof m !== "object" || m === null) return false;
-                  const role = (m as Record<string, unknown>).role;
-                  return role === "user" || role === "assistant";
-                })
-                .map((m) => {
-                  const msg = m as Record<string, unknown>;
-                  const parts = Array.isArray(msg.parts) ? msg.parts : [];
-                  return {
-                    ...msg,
-                    parts: parts
-                      .filter((p) => typeof p === "object" && p !== null && (p as Record<string, unknown>).type === "text")
-                      .map((p) => ({
-                        type: "text",
-                        text: String((p as Record<string, unknown>).text ?? "").slice(0, 500),
-                      })),
-                  };
-                })
-                .filter((m) => m.parts.length > 0);
+            const safeMessages = raw
+              .slice(-20)
+              .filter((m) => {
+                if (typeof m !== "object" || m === null) return false;
+                const role = (m as Record<string, unknown>).role;
+                return role === "user" || role === "assistant";
+              })
+              .map((m) => {
+                const msg = m as Record<string, unknown>;
+                const parts = Array.isArray(msg.parts) ? msg.parts : [];
+                return {
+                  ...msg,
+                  parts: parts
+                    .filter((p) => typeof p === "object" && p !== null && (p as Record<string, unknown>).type === "text")
+                    .map((p) => ({
+                      type: "text",
+                      text: String((p as Record<string, unknown>).text ?? "").slice(0, 500),
+                    })),
+                };
+              })
+              .filter((m) => m.parts.length > 0);
 
-              if (safeMessages.length === 0) {
-                res.statusCode = 400;
-                res.end(JSON.stringify({ error: "Sin mensajes válidos" }));
-                return;
-              }
+            if (safeMessages.length === 0) {
+              res.statusCode = 400;
+              res.end(JSON.stringify({ error: "Sin mensajes válidos" }));
+              return;
+            }
 
-              console.log("[Chat dev] mensajes a enviar:", safeMessages.length);
-              const [modelMessages, dynamicContext] = await Promise.all([
-                convertToModelMessages(safeMessages as Parameters<typeof convertToModelMessages>[0]),
-                buildDevParishContext(),
-              ]);
-              const groq = createGroq({ apiKey });
-              const result = streamText({
-                model: groq("llama-3.3-70b-versatile"),
-                system: `Eres el asistente virtual de la Parroquia Santísima Trinidad de Tingo, Arequipa, Perú.
+            console.log("[Chat dev] mensajes a enviar:", safeMessages.length);
+            const [modelMessages, dynamicContext] = await Promise.all([
+              convertToModelMessages(safeMessages as Parameters<typeof convertToModelMessages>[0]),
+              buildDevParishContext(),
+            ]);
+
+            const groq = createGroq({ apiKey });
+            const result = streamText({
+              model: groq("llama-3.3-70b-versatile"),
+              system: `Eres el asistente virtual de la Parroquia Santísima Trinidad de Tingo, Arequipa, Perú.
 Tu nombre es "Asistente Parroquial". Respondes de forma amable y pastoral.
 
 REGLA FUNDAMENTAL: Solo responde con información que figure explícitamente en los DATOS DE LA PARROQUIA que se te proporcionan abajo. Si alguien pregunta algo que no está en esos datos, responde exactamente: "No tengo esa información. Por favor, contacta directamente a la parroquia al +51 915 049 850 o visita secretaría (Lun–Sáb 3:00–6:00 PM)."
@@ -209,37 +279,35 @@ DATOS DE LA PARROQUIA:
 
 ${PARISH_STATIC_DATA}${dynamicContext}
 ---`,
-                messages: modelMessages,
-                maxOutputTokens: 350,
-              });
-              console.log("[Chat dev] llamando pipeUIMessageStreamToResponse");
-              result.pipeUIMessageStreamToResponse(res as import("node:http").ServerResponse, {
-                onError: (err) => { console.error("[Chat dev] error:", String(err)); return String(err); },
-              });
-            } catch (err) {
-              console.error("[Chat dev] catch:", err);
-              if (!res.headersSent) {
-                res.statusCode = 500;
-                res.end(JSON.stringify({ error: String(err) }));
-              }
+              messages: modelMessages,
+              maxOutputTokens: 350,
+            });
+            console.log("[Chat dev] llamando pipeUIMessageStreamToResponse");
+            result.pipeUIMessageStreamToResponse(res as import("node:http").ServerResponse, {
+              onError: (err) => { console.error("[Chat dev] error:", String(err)); return String(err); },
+            });
+          } catch (err) {
+            console.error("[Chat dev] catch:", err);
+            if (!res.headersSent) {
+              res.statusCode = 500;
+              res.end(JSON.stringify({ error: String(err) }));
             }
-          });
+          }
         });
-      },
-    };
-  }
-
-  // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
-  // @cloudflare/vite-plugin builds from this — wrangler.jsonc main alone is insufficient.
-  export default defineConfig({
-    tanstackStart: {
-      server: { entry: "server" }
-      },
-    nitro: true,
-    vite: {
-      ssr: {
-        noExternal: ["ai", "@ai-sdk/groq", "@ai-sdk/react"],
-      },
-      plugins: [chatDevPlugin()],
+      });
     },
-  });
+  };
+}
+
+export default defineConfig({
+  tanstackStart: {
+    server: { entry: "server" },
+  },
+  nitro: true,
+  vite: {
+    ssr: {
+      noExternal: ["ai", "@ai-sdk/groq", "@ai-sdk/react"],
+    },
+    plugins: [chatDevPlugin()],
+  },
+});

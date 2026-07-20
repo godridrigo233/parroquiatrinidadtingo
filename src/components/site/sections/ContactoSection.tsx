@@ -85,7 +85,7 @@ export default function ContactoSection() {
               <div className="rounded-2xl overflow-hidden shadow-elegant border border-white/10 aspect-[4/3] bg-white/5">
                 <iframe 
                   title="Mapa de ubicación - Parroquia Santísima Trinidad de Tingo" 
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3827.0543210!2d-71.55!3d-16.42!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zUGFycm9xdWlhIFNhbnTDrXNpbWEgVHJpbmlkYWQ!5e0!3m2!1ses!2spe!4v1700000000000!5m2!1ses!2spe" 
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3826.860511245394!2d-71.56416118821998!3d-16.431909184235895!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x91424aa2d977811b%3A0x8ce4e8c307c3facd!2sParroquia%20Sant%C3%ADsima%20Trinidad%2C%20Tingo!5e0!3m2!1ses-419!2spe!4v1784569640796!5m2!1ses-419!2spe" 
                   className="w-full h-full border-0" 
                   loading="lazy" 
                   allowFullScreen

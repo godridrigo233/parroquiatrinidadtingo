@@ -247,7 +247,7 @@ export default function EventosSection({
                   </div>
 
                   <h3 className="font-display text-2xl md:text-3xl text-primary font-semibold tracking-tight">
-                    Mantente conectado con nuestra comunidad!
+                    ¡Mantente conectado con nuestra comunidad!
                   </h3>
 
                   <p className="text-sm md:text-base text-muted-foreground max-w-2xl leading-relaxed">

@@ -16,6 +16,13 @@ const ministryPhotos = [
   null,
 ];
 
+// Datos fijos de cada capilla filial (ubicación/horario no vienen de la base de datos)
+const chapels: { key: string; icon: string; ubicacion: string; horario: string; encargado?: string }[] = [
+  { key: "Capilla María de la Merced", icon: "🛐", ubicacion: "Amp. Pampa del Cusco", horario: "Domingos 6:00 p.m." },
+  { key: "Capilla Virgen de Fátima", icon: "🕊️", ubicacion: "Pampa del Cusco", horario: "Domingos 10:00 a.m.", encargado: "Hno. Gilvert" },
+  { key: "Capilla Virgen del Carmen", icon: "⛪", ubicacion: "Plaza de Tingo Grande", horario: "Domingos 12:00 p.m." },
+];
+
 const sacerdotes = [
   {
     img: "/assets/padre-tommy.jpg",
@@ -38,7 +45,7 @@ export default function AboutSection({
   ministries: Ministry[];
   loadingMinistries: boolean;
 }) {
-  const [activeTab, setActiveTab] = useState<"Sede Central" | "Capilla María de la Merced">("Sede Central");
+  const [activeTab, setActiveTab] = useState<string>("Sede Central");
   return (
     <>
       {/* SOBRE LA PARROQUIA */}
@@ -150,7 +157,7 @@ export default function AboutSection({
           {/* ── BARRA DE PESTAÑAS (TABS) ── */}
           <Reveal delay={100} className="mt-10 flex justify-center">
             <div className="inline-flex p-1.5 bg-card/80 backdrop-blur border border-border/80 rounded-full shadow-sm max-w-full overflow-x-auto">
-              
+
               {/* Botón Sede Central */}
               <button
                 onClick={() => setActiveTab("Sede Central")}
@@ -166,22 +173,25 @@ export default function AboutSection({
                 </span>
               </button>
 
-              {/* Botón Capilla María de la Merced */}
-              <button
-                onClick={() => setActiveTab("Capilla María de la Merced")}
-                className={`flex items-center gap-2 px-6 py-3 rounded-full text-xs sm:text-sm font-semibold transition-all duration-300 whitespace-nowrap ${
-                  activeTab === "Capilla María de la Merced"
-                    ? "bg-primary text-white shadow-md scale-[1.02]"
-                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
-                }`}
-              >
-                <span>🛐 Capilla María de la Merced</span>
-                <span className={`ml-1 px-2 py-0.5 rounded-full text-[10px] ${
-                  activeTab === "Capilla María de la Merced" ? "bg-white/20 text-white" : "bg-secondary text-muted-foreground"
-                }`}>
-                  {ministries.filter(m => m.location === "Capilla María de la Merced").length}
-                </span>
-              </button>
+              {/* Botones de capillas filiales */}
+              {chapels.map((c) => (
+                <button
+                  key={c.key}
+                  onClick={() => setActiveTab(c.key)}
+                  className={`flex items-center gap-2 px-6 py-3 rounded-full text-xs sm:text-sm font-semibold transition-all duration-300 whitespace-nowrap ${
+                    activeTab === c.key
+                      ? "bg-primary text-white shadow-md scale-[1.02]"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
+                  }`}
+                >
+                  <span>{c.icon} {c.key}</span>
+                  <span className={`ml-1 px-2 py-0.5 rounded-full text-[10px] ${
+                    activeTab === c.key ? "bg-white/20 text-white" : "bg-secondary text-muted-foreground"
+                  }`}>
+                    {ministries.filter(m => m.location === c.key).length}
+                  </span>
+                </button>
+              ))}
 
             </div>
           </Reveal>
@@ -201,36 +211,43 @@ export default function AboutSection({
                   if (activeTab === "Sede Central") {
                     return !m.location || m.location === "Sede Central";
                   }
-                  return m.location === "Capilla María de la Merced";
+                  return m.location === activeTab;
                 });
 
-                // Si entran a la capilla y aún no han subido datos, mostramos el mensaje informativo
-                if (activeTab === "Capilla María de la Merced" && filtered.length === 0) {
-                  return (
-                    <Reveal>
-                      <div className="bg-white rounded-3xl p-8 md:p-12 text-center border border-primary/15 shadow-sm max-w-3xl mx-auto my-6">
-                        <span className="text-4xl block mb-4">🛐</span>
-                        <h3 className="text-primary font-display text-2xl md:text-3xl font-semibold">
-                          Capilla María de la Merced
-                        </h3>
-                        <p className="text-sm md:text-base text-muted-foreground mt-4 max-w-xl mx-auto leading-relaxed text-justify sm:text-center">
-                          Templo de oración y sede en nuestra comunidad de Hunter. Atendida pastoralmente por los Padres Carmelitas de la Sede Central de Santísima Trinidad.
-                        </p>
-                        <div className="mt-6 pt-6 border-t border-border/60 flex flex-wrap justify-center gap-4 text-xs font-medium text-primary/80">
-                          <span className="bg-primary/5 px-4 py-2 rounded-xl border border-primary/10 flex items-center gap-1.5">
-                            📍 Ubicación: Sector La Merced, Hunter
-                          </span>
-                          <span className="bg-primary/5 px-4 py-2 rounded-xl border border-primary/10 flex items-center gap-1.5">
-                            ℹ️ Trámites y secretaría en Sede Central
-                          </span>
-                        </div>
-                      </div>
-                    </Reveal>
-                  );
-                }
+                const activeChapel = chapels.find((c) => c.key === activeTab);
 
-                // Grilla de ministerios de la pestaña seleccionada
                 return (
+                  <>
+                    {/* Tarjeta de información de la capilla (siempre visible mientras esté seleccionada) */}
+                    {activeChapel && (
+                      <Reveal>
+                        <div className="bg-white rounded-3xl p-6 md:p-8 mb-8 text-center border border-primary/15 shadow-sm max-w-3xl mx-auto">
+                          <span className="text-4xl block mb-3">{activeChapel.icon}</span>
+                          <h3 className="text-primary font-display text-2xl md:text-3xl font-semibold">
+                            {activeChapel.key}
+                          </h3>
+                          <div className="mt-5 flex flex-wrap justify-center gap-3 text-xs font-medium text-primary/80">
+                            <span className="bg-primary/5 px-4 py-2 rounded-xl border border-primary/10 flex items-center gap-1.5">
+                              📍 {activeChapel.ubicacion}
+                            </span>
+                            <span className="bg-primary/5 px-4 py-2 rounded-xl border border-primary/10 flex items-center gap-1.5">
+                              🕒 Misa: {activeChapel.horario}
+                            </span>
+                            {activeChapel.encargado && (
+                              <span className="bg-primary/5 px-4 py-2 rounded-xl border border-primary/10 flex items-center gap-1.5">
+                                👤 Encargado: {activeChapel.encargado}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </Reveal>
+                    )}
+
+                    {filtered.length === 0 ? (
+                      <p className="text-center text-sm text-muted-foreground py-8">
+                        Aún no hay grupos registrados en esta {activeChapel ? "capilla" : "sede"}.
+                      </p>
+                    ) : (
                   <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in-50 duration-500">
                     {filtered.map((m, i) => {
                       const ministryImage = m.image_url || ministryPhotos[i];
@@ -274,6 +291,8 @@ export default function AboutSection({
                       );
                     })}
                   </div>
+                    )}
+                  </>
                 );
               })()
             )}

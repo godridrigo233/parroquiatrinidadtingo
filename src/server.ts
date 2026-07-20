@@ -20,7 +20,14 @@ Instagram: https://www.instagram.com/stma_trinidad_tingo/
 Canal WhatsApp: https://whatsapp.com/channel/0029Vb8tmDx90x2wWaZDB71a
 Congregación: Carmelitas de María Inmaculada (CMI)
 Patrona: Nuestra Señora de los Dolores
-Capilla filial: Capilla María de la Merced, Sector La Merced, Hunter (trámites y secretaría solo en Sede Central)
+Trámites y secretaría de las capillas filiales: solo en la Sede Central
+
+== CAPILLAS FILIALES ==
+- Capilla María de la Merced: Amp. Pampa del Cusco | Misa: Domingos 6:00 p.m.
+  Grupos: Catequistas — Jóvenes con Cristo (Hna. Milagros), Coro — Sangre Viva (Hno. Wilmer), Coro — Talita Kumy (Hno. Daniel)
+- Capilla Virgen de Fátima: Pampa del Cusco | Misa: Domingos 10:00 a.m. | Encargado: Hno. Gilvert
+- Capilla Virgen del Carmen: Plaza de Tingo Grande | Misa: Domingos 12:00 p.m.
+  Grupos: Hermandad del Señor de los Milagros (Hno. Ernesto), Cofradía Virgen del Carmen (Hna. Sara)
 
 == SACERDOTES ==
 - Párroco: Rvdo. P. Tomy Thengumparambil, CMI

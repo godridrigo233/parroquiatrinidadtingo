@@ -1,6 +1,6 @@
 import { Clock, MapPin, Phone, Facebook, Instagram, Mail } from "lucide-react";
 import { Reveal } from "@/components/site/Reveal";
-
+import { ComoLlegarCard } from "@/components/site/ComoLlegarCard.tsx";
 export default function ContactoSection() {
   return (
     <>
@@ -67,6 +67,7 @@ export default function ContactoSection() {
               <iframe title="Mapa parroquia" src="https://www.google.com/maps?q=Parroquia+Sant%C3%ADsima+Trinidad+Tingo+Arequipa&output=embed" className="w-full h-full" loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
             </div>
           </Reveal>
+          <ComoLlegarCard />
         </div>
       </section>
 

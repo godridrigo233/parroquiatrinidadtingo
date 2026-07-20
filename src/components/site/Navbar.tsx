@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Menu, X } from "lucide-react";
+import { Menu, X, BookOpen, MessageCircle } from "lucide-react";
 import { InstallPWA } from "@/components/site/InstallPWA";
 
 const links = [
@@ -13,6 +13,73 @@ const links = [
   { href: "/#galeria", label: "Galería" },
   { href: "/sacramentos", label: "Sacramentos", route: true },
 ];
+
+const EVANGELIO_URL = "https://www.vaticannews.va/es/evangelio-de-hoy.html";
+
+function EvangelioDropdown({ bg }: { bg: boolean }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const compartirWhatsApp = () => {
+    const texto = `✝ Evangelio del día: ${EVANGELIO_URL}`;
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(texto)}`, "_blank");
+    setOpen(false);
+  };
+
+  return (
+    <div ref={ref} className="relative">
+      {/* BOTÓN CRUZ */}
+      <button
+        onClick={() => setOpen((v) => !v)}
+        aria-label="Evangelio del día"
+        title="Evangelio del día"
+        className={`flex items-center justify-center w-8 h-8 rounded-full border transition-colors hover:border-gold hover:text-gold ${
+          open
+            ? "border-gold text-gold"
+            : bg
+            ? "border-border text-foreground/70"
+            : "border-white/30 text-white/80"
+        }`}
+      >
+        <span className="text-base leading-none select-none">✝</span>
+      </button>
+
+      {/* DROPDOWN */}
+      {open && (
+        <div className="absolute right-0 top-full mt-2 w-52 bg-card border border-border rounded-xl shadow-elegant overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+          <p className="px-4 pt-3 pb-1 text-[10px] uppercase tracking-widest font-bold text-muted-foreground">
+            Evangelio del día
+          </p>
+          <a
+            href={EVANGELIO_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-secondary transition-colors"
+          >
+            <BookOpen size={15} className="text-gold shrink-0" />
+            Leer en Vatican News
+          </a>
+          <button
+            onClick={compartirWhatsApp}
+            className="w-full flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-secondary transition-colors border-t border-border/50"
+          >
+            <MessageCircle size={15} className="text-green-500 shrink-0" />
+            Compartir por WhatsApp
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) {
   const [scrolled, setScrolled] = useState(false);
@@ -84,17 +151,8 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
             ),
           )}
 
-          {/* ✝ EVANGELIO DEL DÍA */}
-          <a
-            href="https://www.vaticannews.va/es/evangelio-de-hoy.html"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`flex items-center gap-1.5 text-sm font-medium border rounded-full px-3 py-1 transition-colors hover:border-gold hover:text-gold ${
-              bg ? "border-border text-foreground/70" : "border-white/30 text-white/80"
-            }`}
-          >
-            ✝ Evangelio
-          </a>
+          {/* ✝ EVANGELIO — botón cruz con dropdown */}
+          <EvangelioDropdown bg={!!bg} />
 
           {/* BOTONES DERECHOS */}
           <div className="flex items-center gap-3">
@@ -147,15 +205,16 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
               ),
             )}
 
-            {/* ✝ EVANGELIO DEL DÍA (Móvil) */}
+            {/* ✝ EVANGELIO (Móvil) */}
             <a
-              href="https://www.vaticannews.va/es/evangelio-de-hoy.html"
+              href={EVANGELIO_URL}
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => setOpen(false)}
-              className="py-2.5 text-gold border-b border-border/50 text-sm font-medium flex items-center gap-2"
+              className="py-2.5 border-b border-border/50 text-sm flex items-center gap-2 text-foreground/90"
             >
-              ✝ Evangelio del día <span className="text-xs opacity-60">↗</span>
+              <BookOpen size={14} className="text-gold" />
+              Evangelio del día
             </a>
 
             {/* BOTÓN PWA EN MÓVIL */}

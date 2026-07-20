@@ -1,11 +1,14 @@
 import { Clock, MapPin, Phone, Facebook, Instagram, Mail } from "lucide-react";
 import { Reveal } from "@/components/site/Reveal";
-import { ComoLlegarCard } from "@/components/site/ComoLlegarCard.tsx";
+import { ComoLlegarCard } from "@/components/site/ComoLlegarCard";
+
 export default function ContactoSection() {
   return (
     <>
       <section id="contacto" className="py-24 px-5 lg:px-8 bg-primary text-primary-foreground">
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-start">
+          
+          {/* ── COLUMNA 1: Información de Secretaría y Redes ── */}
           <Reveal>
             <p className="text-gold uppercase tracking-[0.25em] text-xs font-semibold">Visítanos</p>
             <h2 className="mt-3 font-display text-4xl md:text-5xl font-medium text-white">Estamos aquí para ti</h2>
@@ -15,7 +18,9 @@ export default function ContactoSection() {
 
             <div className="mt-6 p-5 rounded-xl bg-white/10 border border-white/15 backdrop-blur">
               <div className="flex items-start gap-4">
-                <span className="h-10 w-10 rounded-lg bg-white/10 flex items-center justify-center text-gold shrink-0"><Clock size={20} /></span>
+                <span className="h-10 w-10 rounded-lg bg-white/10 flex items-center justify-center text-gold shrink-0">
+                  <Clock size={20} />
+                </span>
                 <div>
                   <p className="font-semibold text-white">Horario de atención en secretaría</p>
                   <p className="text-white/75 text-sm">Lunes a sábado · 3:00 PM – 6:00 PM</p>
@@ -25,35 +30,45 @@ export default function ContactoSection() {
 
             <ul className="mt-10 space-y-5">
               <li className="flex items-start gap-4">
-                <span className="h-11 w-11 rounded-xl bg-white/10 flex items-center justify-center text-gold shrink-0"><MapPin size={20} /></span>
+                <span className="h-11 w-11 rounded-xl bg-white/10 flex items-center justify-center text-gold shrink-0">
+                  <MapPin size={20} />
+                </span>
                 <div>
                   <p className="font-semibold text-white">Dirección</p>
                   <p className="text-white/75 text-sm">Calle Ferrocarril 200, Av. Alfonso Ugarte Tingo - Cercado</p>
                 </div>
               </li>
               <li className="flex items-start gap-4">
-                <span className="h-11 w-11 rounded-xl bg-white/10 flex items-center justify-center text-gold shrink-0"><Phone size={20} /></span>
+                <span className="h-11 w-11 rounded-xl bg-white/10 flex items-center justify-center text-gold shrink-0">
+                  <Phone size={20} />
+                </span>
                 <div>
                   <p className="font-semibold text-white">Teléfono</p>
-                  <a href="tel:+51915049850" className="text-white/75 text-sm hover:text-gold">+51 915 049 850</a>
+                  <a href="tel:+51915049850" className="text-white/75 text-sm hover:text-gold transition-colors">+51 915 049 850</a>
                 </div>
               </li>
               <li className="flex items-start gap-4">
-                <span className="h-11 w-11 rounded-xl bg-white/10 flex items-center justify-center text-gold shrink-0"><Facebook size={20} /></span>
+                <span className="h-11 w-11 rounded-xl bg-white/10 flex items-center justify-center text-gold shrink-0">
+                  <Facebook size={20} />
+                </span>
                 <div>
                   <p className="font-semibold text-white">Facebook</p>
-                  <a href="https://www.facebook.com/parroquiasantisimatrinidadtingo/" target="_blank" rel="noopener noreferrer" className="text-white/75 text-sm hover:text-gold">@parroquiasantisimatrinidadtingo</a>
+                  <a href="https://www.facebook.com/parroquiasantisimatrinidadtingo/" target="_blank" rel="noopener noreferrer" className="text-white/75 text-sm hover:text-gold transition-colors">@parroquiasantisimatrinidadtingo</a>
                 </div>
               </li>
               <li className="flex items-start gap-4">
-                <span className="h-11 w-11 rounded-xl bg-white/10 flex items-center justify-center text-gold shrink-0"><Instagram size={20} /></span>
+                <span className="h-11 w-11 rounded-xl bg-white/10 flex items-center justify-center text-gold shrink-0">
+                  <Instagram size={20} />
+                </span>
                 <div>
                   <p className="font-semibold text-white">Instagram</p>
-                  <a href="https://www.instagram.com/stma_trinidad_tingo/" target="_blank" rel="noopener noreferrer" className="text-white/75 text-sm hover:text-gold">@stma_trinidad_tingo</a>
+                  <a href="https://www.instagram.com/stma_trinidad_tingo/" target="_blank" rel="noopener noreferrer" className="text-white/75 text-sm hover:text-gold transition-colors">@stma_trinidad_tingo</a>
                 </div>
               </li>
               <li className="flex items-start gap-4">
-                <span className="h-11 w-11 rounded-xl bg-white/10 flex items-center justify-center text-gold shrink-0"><Mail size={20} /></span>
+                <span className="h-11 w-11 rounded-xl bg-white/10 flex items-center justify-center text-gold shrink-0">
+                  <Mail size={20} />
+                </span>
                 <div>
                   <p className="font-semibold text-white">Correo</p>
                   <a href="mailto:pstrinidadtingo@gmail.com" className="text-white/75 text-sm hover:text-gold transition-colors">pstrinidadtingo@gmail.com</a>
@@ -62,12 +77,24 @@ export default function ContactoSection() {
             </ul>
           </Reveal>
 
+          {/* ── COLUMNA 2: Mapa y Tarjeta de Navegación agrupados ── */}
           <Reveal delay={150}>
-            <div className="rounded-2xl overflow-hidden shadow-elegant border border-white/10 aspect-[4/3] bg-white/5">
-              <iframe title="Mapa parroquia" src="https://www.google.com/maps?q=Parroquia+Sant%C3%ADsima+Trinidad+Tingo+Arequipa&output=embed" className="w-full h-full" loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
+            <div className="space-y-6">
+              <div className="rounded-2xl overflow-hidden shadow-elegant border border-white/10 aspect-[4/3] bg-white/5">
+                <iframe 
+                  title="Mapa parroquia" 
+                  src="https://maps.google.com/maps?q=Parroquia+Santisima+Trinidad+Tingo+Arequipa&t=&z=16&ie=UTF8&iwloc=&output=embed" 
+                  className="w-full h-full border-0" 
+                  loading="lazy" 
+                  referrerPolicy="no-referrer-when-downgrade" 
+                />
+              </div>
+              
+              {/* Al estar dentro del mismo div que el iframe, se mantendrá en la columna derecha */}
+              <ComoLlegarCard />
             </div>
           </Reveal>
-          <ComoLlegarCard />
+
         </div>
       </section>
 
@@ -104,12 +131,12 @@ export default function ContactoSection() {
           <div>
             <p className="font-semibold text-white uppercase tracking-widest text-xs">Redes Sociales</p>
             <div className="mt-4 flex flex-wrap gap-2">
-              <a href="https://www.facebook.com/parroquiasantisimatrinidadtingo/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 text-sm">
+              <a href="https://www.facebook.com/parroquiasantisimatrinidadtingo/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 text-sm hover:bg-white/20 transition-colors">
                 <Facebook size={16} /> Facebook
               </a>
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
-              <a href="https://www.instagram.com/stma_trinidad_tingo/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 text-sm">
+              <a href="https://www.instagram.com/stma_trinidad_tingo/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 text-sm hover:bg-white/20 transition-colors">
                 <Instagram size={16} /> Instagram
               </a>
             </div>

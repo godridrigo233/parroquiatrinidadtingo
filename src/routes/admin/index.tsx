@@ -427,19 +427,24 @@ function SchedulesManager({ showToast }: { showToast: (m: string, t?: "success" 
   );
 }
 
-// ────────────────────────────────────────────────
-//  SECCIÓN: MINISTERIOS (CON SOPORTE DE CAPILLAS)
-// ────────────────────────────────────────────────
-type MinistryRow = { 
+// MINISTERIOS//
+export type LocationType = 
+  | "TODOS" 
+  | "Sede Central" 
+  | "Capilla María de la Merced" 
+  | "Capilla Virgen del Carmen" 
+  | "Capilla Virgen de Fátima";
+
+export type MinistryRow = { 
   id: string; 
   name: string; 
   description: string | null; 
   leader: string | null;
   image_url: string | null;
-  location: string;
+  location: string; // Mantenemos string para compatibilidad directa con Supabase, pero lo controlamos en UI
 };
 
-function MinistriesManager({ showToast }: { showToast: (m: string, t?: "success" | "error") => void }) {
+export function MinistriesManager({ showToast }: { showToast: (m: string, t?: "success" | "error") => void }) {
   const confirm = useConfirm();
   const { items, load, remove } = useTable<MinistryRow>("ministries", "created_at", true);
   
@@ -450,8 +455,8 @@ function MinistriesManager({ showToast }: { showToast: (m: string, t?: "success"
   const [file, setFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   
-  // Estado para el filtro de pestañas en la vista de lista
-  const [filterLocation, setFilterLocation] = useState<"TODOS" | "Sede Central" | "Capilla María de la Merced">("TODOS");
+  // Estado para el filtro de pestañas fuertemente tipado
+  const [filterLocation, setFilterLocation] = useState<LocationType>("TODOS");
 
   const uploadImage = async (f: File) => {
     const compressed = await imageCompression(f, { maxSizeMB: 0.8, maxWidthOrHeight: 1200, useWebWorker: true });
@@ -465,7 +470,6 @@ function MinistriesManager({ showToast }: { showToast: (m: string, t?: "success"
     e.preventDefault(); setSaving(true);
     try {
       const url = file ? await uploadImage(file) : null;
-      // 2. Se envía la ubicación (form.location) al guardar en Supabase
       const { error } = await supabase.from("ministries").insert({ 
         name: form.name, 
         description: form.description || null, 
@@ -475,28 +479,37 @@ function MinistriesManager({ showToast }: { showToast: (m: string, t?: "success"
       });
       if (error) throw error;
       setForm(empty); setFile(null); showToast("Ministerio agregado"); load();
-    } catch (err: any) { showToast(err.message, "error"); } finally { setSaving(false); }
+    } catch (err: any) { 
+      showToast(err.message, "error"); 
+    } finally { 
+      setSaving(false); 
+    }
   };
 
   const saveEdit = async (e: React.FormEvent) => {
     e.preventDefault(); if (!editing) return; setSaving(true);
     try {
       const finalUrl = file ? await uploadImage(file) : editing.image_url;
-      // 3. Se actualiza la ubicación en la edición
       const { error } = await supabase.from("ministries").update({ 
         name: editing.name, 
         description: editing.description || null, 
         leader: editing.leader || null, 
         image_url: finalUrl,
         location: editing.location
-      }as any).eq("id", editing.id);
+      } as any).eq("id", editing.id);
       if (error) throw error;
       setEditing(null); setFile(null); showToast("Ministerio actualizado"); load();
-    } catch (err: any) { showToast(err.message, "error"); } finally { setSaving(false); }
+    } catch (err: any) { 
+      showToast(err.message, "error"); 
+    } finally { 
+      setSaving(false); 
+    }
   };
+
   const filteredItems = items.filter(m => 
     filterLocation === "TODOS" ? true : (m.location || "Sede Central") === filterLocation
   );
+
   return (
     <div className="grid lg:grid-cols-3 gap-6">
       <Card>
@@ -514,6 +527,8 @@ function MinistriesManager({ showToast }: { showToast: (m: string, t?: "success"
             >
               <option value="Sede Central">⛪ Parroquia Principal (Sede)</option>
               <option value="Capilla María de la Merced">🛐 Capilla María de la Merced</option>
+              <option value="Capilla Virgen del Carmen">🕊️ Capilla Virgen del Carmen</option>
+              <option value="Capilla Virgen de Fátima">⛪ Capilla Virgen de Fátima</option>
             </select>
           </div>
 
@@ -533,7 +548,7 @@ function MinistriesManager({ showToast }: { showToast: (m: string, t?: "success"
       <div className="lg:col-span-2 space-y-3">
         
         {/* PESTAÑAS PARA FILTRAR LA LISTA */}
-        <div className="flex gap-1.5 p-1 bg-card rounded-xl border border-border w-fit">
+        <div className="flex flex-wrap gap-1.5 p-1 bg-card rounded-xl border border-border w-fit">
           <button 
             type="button"
             onClick={() => setFilterLocation("TODOS")}
@@ -555,6 +570,20 @@ function MinistriesManager({ showToast }: { showToast: (m: string, t?: "success"
           >
             Capilla La Merced ({items.filter(i => i.location === "Capilla María de la Merced").length})
           </button>
+          <button 
+            type="button"
+            onClick={() => setFilterLocation("Capilla Virgen del Carmen")}
+            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${filterLocation === "Capilla Virgen del Carmen" ? "bg-blue-600 text-white shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            Capilla Virgen del Carmen ({items.filter(i => i.location === "Capilla Virgen del Carmen").length})
+          </button>
+          <button 
+            type="button"
+            onClick={() => setFilterLocation("Capilla Virgen de Fátima")}
+            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${filterLocation === "Capilla Virgen de Fátima" ? "bg-blue-600 text-white shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+          >
+            Capilla Virgen de Fátima ({items.filter(i => i.location === "Capilla Virgen de Fátima").length})
+          </button>
         </div>
 
         {filteredItems.length === 0 && (
@@ -564,7 +593,10 @@ function MinistriesManager({ showToast }: { showToast: (m: string, t?: "success"
         )}
 
         {filteredItems.map(m => {
-          const isCapilla = m.location === "Capilla María de la Merced";
+          const loc = m.location || "Sede Central";
+          // Cualquier ubicación que no sea la Sede Central se estiliza como Capilla (Azul)
+          const isCapilla = loc !== "Sede Central"; 
+
           return (
             <div key={m.id} className="bg-card rounded-xl p-4 border border-border flex gap-4 items-center shadow-sm hover:border-gold/40 transition-colors">
               <div className="w-16 h-16 shrink-0 rounded-xl overflow-hidden bg-secondary flex items-center justify-center border">
@@ -572,13 +604,13 @@ function MinistriesManager({ showToast }: { showToast: (m: string, t?: "success"
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  {/* BADGE DE UBICACIÓN VISIBLE */}
+                  {/* BADGE DE UBICACIÓN VISIBLE Y DINÁMICO */}
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wider ${
                     isCapilla 
                       ? "bg-blue-50 text-blue-700 border-blue-200" 
                       : "bg-amber-50 text-amber-800 border-amber-200"
                   }`}>
-                    
+                    {loc}
                   </span>
                 </div>
                 <p className="font-semibold text-sm text-primary">{m.name}</p>
@@ -593,6 +625,7 @@ function MinistriesManager({ showToast }: { showToast: (m: string, t?: "success"
           );
         })}
       </div>
+
       <EditModal open={!!editing} onClose={() => setEditing(null)} title="Editar ministerio">
         {editing && (
           <form onSubmit={saveEdit} className="space-y-3">
@@ -605,13 +638,14 @@ function MinistriesManager({ showToast }: { showToast: (m: string, t?: "success"
               >
                 <option value="Sede Central">⛪ Parroquia Principal (Sede)</option>
                 <option value="Capilla María de la Merced">🛐 Capilla María de la Merced</option>
+                <option value="Capilla Virgen del Carmen">🕊️ Capilla Virgen del Carmen</option>
+                <option value="Capilla Virgen de Fátima">⛪ Capilla Virgen de Fátima</option>
               </select>
             </div>
 
             <Input required placeholder="Nombre del ministerio" value={editing.name} onChange={e => setEditing({ ...editing, name: e.target.value })} />
             <Input placeholder="Encargado" value={editing.leader ?? ""} onChange={e => setEditing({ ...editing, leader: e.target.value })} />
   
-            
             {(file || editing.image_url) && (
               <div className="aspect-[4/3] w-full rounded-xl overflow-hidden bg-secondary border border-border">
                 <img src={file ? URL.createObjectURL(file) : editing.image_url!} alt="" className="w-full h-full object-cover" />
@@ -627,7 +661,6 @@ function MinistriesManager({ showToast }: { showToast: (m: string, t?: "success"
     </div>
   );
 }
-
 // ────────────────────────────────────────────────
 //  SECCIÓN: GALERÍA (CON PAGINACIÓN)
 // ────────────────────────────────────────────────

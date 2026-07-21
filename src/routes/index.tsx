@@ -49,9 +49,11 @@ export const Route = createFileRoute("/")({
       { property: "og:image", content: HOME_OG_IMAGE },
       { name: "twitter:image", content: HOME_OG_IMAGE },
     ],
-    links: [{ rel: "canonical", href: SITE_URL + "/" }
+    links: [
+      { rel: "canonical", href: SITE_URL + "/" },
       { rel: "icon", type: "image/webp", href: "/assets/logo.webp" },
-      { rel: "apple-touch-icon", href: "/assets/logo.webp" },],
+      { rel: "apple-touch-icon", href: "/assets/logo.webp" },
+    ],
     scripts: [
       {
         type: "application/ld+json",

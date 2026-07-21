@@ -20,7 +20,12 @@ const ministryPhotos = [
 const chapels: { key: string; icon: string; ubicacion: string; horario: string; encargado?: string; photos: string[] }[] = [
   {
     key: "Capilla María de la Merced", icon: "🛐", ubicacion: "Amp. Pampa del Cusco", horario: "Domingos 6:00 p.m.",
-    photos: [],
+    photos: [
+        "/assets/capillas/maria-de-la-merced-1",
+        "/assets/capillas/maria-de-la-merced-2",
+        "/assets/capillas/maria-de-la-merced-3",
+        "/assets/capillas/maria-de-la-merced-4",
+    ],
   },
   {
     key: "Capilla Virgen de Fátima", icon: "🕊️", ubicacion: "Pampa del Cusco", horario: "Domingos 10:00 a.m.", encargado: "Hno. Gilvert",

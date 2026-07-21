@@ -1,31 +1,56 @@
-// public/sw.js
-// 🚨 Cambiamos la versión a v2 para forzar a los celulares y PCs a borrar la basura vieja
-const CACHE_NAME = 'parroquia-cache-v2';
+const CACHE_NAME = 'parroquia-cache-v3'; // Subimos a v3 para activar la nueva lógica
 
-// 1. Instalar y obligar al navegador a usar esta nueva versión de inmediato
+// Rutas esenciales que siempre deben estar disponibles en el templo
+const OFFLINE_URLS = [
+  '/',
+  '/assets/logo.webp',
+  '/assets/hero-church.webp',
+  '/index.html'
+];
+
 self.addEventListener('install', (event) => {
   self.skipWaiting();
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(OFFLINE_URLS);
+    })
+  );
 });
 
-// 2. Al activarse, DESTRUIR la caché vieja que está congelando las pestañas nuevas
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cache) => {
-          // Elimina cualquier rastro de la versión v1 o cachés rebeldes
-          return caches.delete(cache);
+          if (cache !== CACHE_NAME) return caches.delete(cache);
         })
       );
-    }).then(() => self.clients.claim()) // Toma el control de la página en el acto
+    }).then(() => self.clients.claim())
   );
 });
 
-// 3. El truco maestro: El evento fantasma
+// Estrategia: Stale-While-Revalidate (Sirve rápido desde caché, y actualiza en silencio por detrás)
 self.addEventListener('fetch', (event) => {
-  // Chrome en Android EXIGE que este evento 'fetch' exista en el código 
-  // para permitir que salga el botón de "Instalar App".
-  // Al no interceptar nada adentro, engañamos a Chrome: cumplimos su regla, 
-  // pero obligamos al navegador a pedirle los datos frescos a Vercel SIEMPRE.
-  return;
+  if (event.request.method !== 'GET') return;
+
+  event.respondWith(
+    caches.match(event.request).then((cachedResponse) => {
+      // 1. Si está en caché, lo devolvemos DE INMEDIATO (carga instantánea en la iglesia)
+      const fetchPromise = fetch(event.request).then((networkResponse) => {
+        // 2. Si hay internet, actualizamos la caché en segundo plano
+        if (networkResponse && networkResponse.status === 200) {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
+        }
+        return networkResponse;
+      }).catch(() => {
+        // Si falla el internet y no había caché previa, no rompemos la app
+        return cachedResponse;
+      });
+
+      return cachedResponse || fetchPromise;
+    })
+  );
 });

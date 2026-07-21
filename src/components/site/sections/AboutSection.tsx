@@ -21,10 +21,10 @@ const chapels: { key: string; icon: string; ubicacion: string; horario: string; 
   {
     key: "Capilla María de la Merced", icon: "🛐", ubicacion: "Amp. Pampa del Cusco", horario: "Domingos 6:00 p.m.",
     photos: [
-        "/assets/capillas/maria-de-la-merced-1",
-        "/assets/capillas/maria-de-la-merced-2",
-        "/assets/capillas/maria-de-la-merced-3",
-        "/assets/capillas/maria-de-la-merced-4",
+        "/assets/capillas/maria-de-la-merced-1.jpg",
+        "/assets/capillas/maria-de-la-merced-2.jpg",
+        "/assets/capillas/maria-de-la-merced-3.jpg",
+        "/assets/capillas/maria-de-la-merced-4.jpg",
     ],
   },
   {

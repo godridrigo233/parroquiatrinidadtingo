@@ -1,4 +1,4 @@
-import { Church, Clock, BookOpen, Heart, Users, Music, Sparkles, GraduationCap } from "lucide-react";
+import { Church, Clock, BookOpen, Heart, Users, Music, Sparkles, GraduationCap, MapPin, User  } from "lucide-react";
 import { Reveal } from "@/components/site/Reveal";
 import { OptimizedImage } from "@/components/site/OptimizedImage";
 import { SkeletonCard } from "@/components/ui/SkeletonCard";
@@ -143,22 +143,28 @@ export default function AboutSection({
           </div>
         </div>
       </section>
-{/* MINISTERIOS Y CAPILLAS CON PESTAÑAS */}
+      {/* MINISTERIOS Y CAPILLAS CON PESTAÑAS */}
       <section id="ministerios" className="py-24 px-5 lg:px-8 bg-secondary/50">
         <div className="max-w-7xl mx-auto">
-          
-          {/* ── ENCABEZADO PRINCIPAL ── */}
+
+          {/* ── ENCABEZADO ── */}
           <Reveal className="text-center max-w-2xl mx-auto">
             <p className="text-gold uppercase tracking-[0.25em] text-xs font-semibold">Servir y caminar juntos</p>
             <h2 className="mt-3 font-display text-4xl md:text-5xl font-medium">Comunidad y Ministerios</h2>
-            <p className="mt-4 text-muted-foreground">Carismas al servicio de nuestra parroquia y su jurisdicción.</p>
+            {/* Ornamento dorado */}
+            <div className="mt-4 flex items-center justify-center gap-3">
+              <div className="h-px w-14 bg-gradient-to-r from-transparent to-gold/50" />
+              <span className="text-gold text-base leading-none">✦</span>
+              <div className="h-px w-14 bg-gradient-to-l from-transparent to-gold/50" />
+            </div>
+            <p className="mt-3 text-muted-foreground text-sm">Carismas al servicio de nuestra parroquia y su jurisdicción.</p>
           </Reveal>
 
-          {/* ── BARRA DE PESTAÑAS (TABS) ── */}
+          {/* ── TABS ── */}
           <Reveal delay={100} className="mt-10 flex justify-center">
             <div className="inline-flex p-1.5 bg-card/80 backdrop-blur border border-border/80 rounded-full shadow-sm max-w-full overflow-x-auto">
 
-              {/* Botón Sede Central */}
+              {/* Sede Central */}
               <button
                 onClick={() => setActiveTab("Sede Central")}
                 className={`flex items-center gap-2 px-6 py-3 rounded-full text-xs sm:text-sm font-semibold transition-all duration-300 whitespace-nowrap ${
@@ -167,25 +173,30 @@ export default function AboutSection({
                     : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
                 }`}
               >
-                <span>⛪ Sede Parroquial Central</span>
-                <span className={`ml-1 px-2 py-0.5 rounded-full text-[10px]`}>
+                <span>⛪</span>
+                <span>Sede Parroquial Central</span>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                  activeTab === "Sede Central" ? "bg-white/25 text-white" : "bg-secondary text-muted-foreground"
+                }`}>
                   {ministries.filter(m => !m.location || m.location === "Sede Central").length}
                 </span>
               </button>
 
-              {/* Botones de capillas filiales */}
+              {/* Capillas filiales */}
               {chapels.map((c) => (
                 <button
                   key={c.key}
                   onClick={() => setActiveTab(c.key)}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-full text-xs sm:text-sm font-semibold transition-all duration-300 whitespace-nowrap ${
+                  className={`flex items-center gap-2 px-5 py-3 rounded-full text-xs sm:text-sm font-semibold transition-all duration-300 whitespace-nowrap ${
                     activeTab === c.key
                       ? "bg-primary text-white shadow-md scale-[1.02]"
                       : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
                   }`}
                 >
-                  <span>{c.icon} {c.key}</span>
-                  <span className={`ml-1 px-2 py-0.5 rounded-full text-[10px] ${
+                  <span>{c.icon}</span>
+                  {/* Móvil: solo icono. sm+: nombre sin "Capilla " */}
+                  <span className="hidden sm:inline">{c.key.replace("Capilla ", "")}</span>
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                     activeTab === c.key ? "bg-white/20 text-white" : "bg-secondary text-muted-foreground"
                   }`}>
                     {ministries.filter(m => m.location === c.key).length}
@@ -196,7 +207,7 @@ export default function AboutSection({
             </div>
           </Reveal>
 
-          {/* ── CONTENIDO DE LA PESTAÑA SELECCIONADA ── */}
+          {/* ── CONTENIDO ── */}
           <div className="mt-12 min-h-[400px]">
             {loadingMinistries ? (
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -206,108 +217,135 @@ export default function AboutSection({
               </div>
             ) : (
               (() => {
-                // Filtramos los ministerios según la pestaña seleccionada
                 const filtered = ministries.filter(m => {
-                  if (activeTab === "Sede Central") {
-                    return !m.location || m.location === "Sede Central";
-                  }
+                  if (activeTab === "Sede Central") return !m.location || m.location === "Sede Central";
                   return m.location === activeTab;
                 });
-
                 const activeChapel = chapels.find((c) => c.key === activeTab);
 
                 return (
                   <>
-                    {/* Tarjeta de información de la capilla (siempre visible mientras esté seleccionada) */}
+                    {/* Tarjeta informativa de capilla */}
                     {activeChapel && (
                       <Reveal>
-                        <div className="bg-card rounded-3xl mb-8 border border-primary/15 shadow-sm max-w-3xl mx-auto overflow-hidden">
-                          {activeChapel.photo && (
+                        <div className="bg-card rounded-2xl mb-8 overflow-hidden border border-border shadow-card max-w-2xl mx-auto">
+                          {activeChapel.photo ? (
                             <div className="relative aspect-[16/7] overflow-hidden">
                               <OptimizedImage
                                 src={activeChapel.photo}
                                 alt={activeChapel.key}
                                 className="w-full h-full object-cover"
                               />
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
                               <h3 className="absolute bottom-4 left-6 text-white font-display text-2xl md:text-3xl font-semibold drop-shadow">
                                 {activeChapel.key}
                               </h3>
                             </div>
+                          ) : (
+                            <>
+                              <div className="h-1 bg-gradient-gold" />
+                              <div className="p-6 md:p-8 flex items-center gap-4">
+                                <span className="text-4xl leading-none flex-shrink-0">{activeChapel.icon}</span>
+                                <h3 className="font-display text-2xl text-primary">{activeChapel.key}</h3>
+                              </div>
+                            </>
                           )}
-                          <div className={`p-6 ${!activeChapel.photo ? "text-center pt-8" : ""}`}>
-                            {!activeChapel.photo && (
-                              <>
-                                <span className="text-4xl block mb-3">{activeChapel.icon}</span>
-                                <h3 className="text-primary font-display text-2xl md:text-3xl font-semibold">{activeChapel.key}</h3>
-                              </>
+                          <div className="p-5 flex flex-wrap gap-2">
+                            <span className="inline-flex items-center gap-1.5 bg-gold/10 border border-gold/20 text-gold px-3 py-1.5 rounded-xl text-xs font-medium">
+                              <MapPin size={11} /> {activeChapel.ubicacion}
+                            </span>
+                            <span className="inline-flex items-center gap-1.5 bg-gold/10 border border-gold/20 text-gold px-3 py-1.5 rounded-xl text-xs font-medium">
+                              <Clock size={11} /> Misa: {activeChapel.horario}
+                            </span>
+                            {activeChapel.encargado && (
+                              <span className="inline-flex items-center gap-1.5 bg-gold/10 border border-gold/20 text-gold px-3 py-1.5 rounded-xl text-xs font-medium">
+                                <User size={11} /> {activeChapel.encargado}
+                              </span>
                             )}
-                            <div className={`flex flex-wrap gap-3 text-xs font-medium text-primary/80 ${!activeChapel.photo ? "justify-center mt-5" : "mt-2"}`}>
-                              <span className="bg-primary/5 px-4 py-2 rounded-xl border border-primary/10 flex items-center gap-1.5">
-                                📍 {activeChapel.ubicacion}
-                              </span>
-                              <span className="bg-primary/5 px-4 py-2 rounded-xl border border-primary/10 flex items-center gap-1.5">
-                                🕒 Misa: {activeChapel.horario}
-                              </span>
-                              {activeChapel.encargado && (
-                                <span className="bg-primary/5 px-4 py-2 rounded-xl border border-primary/10 flex items-center gap-1.5">
-                                  👤 Encargado: {activeChapel.encargado}
-                                </span>
-                              )}
-                            </div>
                           </div>
                         </div>
                       </Reveal>
                     )}
 
-                    {filtered.length === 0 ? (
-                      <p className="text-center text-sm text-muted-foreground py-8">
-                        Aún no hay grupos registrados en esta {activeChapel ? "capilla" : "sede"}.
-                      </p>
-                    ) : (
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in-50 duration-500">
-                    {filtered.map((m, i) => {
-                      const ministryImage = m.image_url || ministryPhotos[i];
-                      return (
-                        <Reveal key={m.id} delay={i * 80}>
-                          <article className="group h-full flex flex-col bg-card rounded-2xl border border-border shadow-card hover:shadow-elegant hover:-translate-y-1 transition-all overflow-hidden will-change-transform">
-                            <div className="relative aspect-[16/10] overflow-hidden bg-secondary">
-                              {ministryImage ? (
-                                <OptimizedImage src={`${ministryImage}?v=1`} alt={m.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 will-change-transform" />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center bg-primary/10 text-primary font-display font-medium text-sm">
-                                  {m.name}
-                                </div>
-                              )}
-                              
-                              {/* Etiqueta flotante en la esquina de la foto */}
-                              <div className="absolute top-3 left-3">
-                                <span className={`text-[10px] font-bold px-3 py-1 rounded-full backdrop-blur-md uppercase tracking-wider shadow-sm ${
-                                  activeTab === "Sede Central"
-                                    ? "bg-black/40 text-white border border-white/20"
-                                    : "bg-primary text-white"
-                                }`}>
-                                
-                                </span>
-                              </div>
-                            </div>
+                    {/* Estado vacío */}
+                    {filtered.length === 0 && (
+                      <div className="text-center py-16">
+                        <Church size={40} className="mx-auto mb-4 text-muted-foreground/40" />
+                        <p className="text-sm text-muted-foreground">
+                          Aún no hay grupos registrados en esta {activeChapel ? "capilla" : "sede"}.
+                        </p>
+                      </div>
+                    )}
 
-                            <div className="p-6 flex-1 flex flex-col justify-between">
-                              <div>
-                                <h4 className="font-display text-2xl text-primary">{m.name}</h4>
-                                {m.description && <p className="mt-3 text-sm text-muted-foreground leading-relaxed text-justify line-clamp-3">{m.description}</p>}
-                              </div>
-                                <div className="mt-5 pt-5 border-t border-border space-y-1.5 text-sm">
-                                  {m.leader && <p className="text-foreground truncate"><span className="text-muted-foreground">Encargado:</span> {m.leader}</p>}
-                      
+                    {/* Grid de tarjetas */}
+                    {filtered.length > 0 && (
+                      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in-50 duration-500">
+                        {filtered.map((m, i) => {
+                          const Icon = ministryIcons[i % ministryIcons.length];
+                          const ministryImage = m.image_url || ministryPhotos[i];
+                          return (
+                            <Reveal key={m.id} delay={i * 80}>
+                              <article className="group h-full flex flex-col bg-card rounded-2xl border border-border shadow-card hover:shadow-elegant hover:-translate-y-1 transition-all overflow-hidden will-change-transform">
+
+                                {/* Imagen desde Supabase / placeholder si no hay */}
+                                <div className="relative aspect-[16/10] overflow-hidden">
+                                  {ministryImage ? (
+                                    <OptimizedImage
+                                      src={`${ministryImage}?v=1`}
+                                      alt={m.name}
+                                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 will-change-transform"
+                                    />
+                                  ) : (
+                                    <div className="w-full h-full bg-primary/5 flex items-center justify-center relative overflow-hidden">
+                                      {/* Círculos decorativos sutiles */}
+                                      <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full border border-gold/15" />
+                                      <div className="absolute -bottom-6 -left-4 w-24 h-24 rounded-full border border-gold/10" />
+                                      <div className="absolute top-3 left-4 w-10 h-10 rounded-full border border-gold/10" />
+                                      {/* Cruz de fondo muy sutil */}
+                                      <span className="absolute text-7xl text-primary/5 font-bold select-none pointer-events-none">✝</span>
+                                      {/* Ícono del ministerio en círculo dorado */}
+                                      <div className="relative z-10 flex flex-col items-center gap-2">
+                                        <div className="w-14 h-14 rounded-full bg-gold/10 border border-gold/25 flex items-center justify-center">
+                                          <Icon size={24} className="text-gold" />
+                                        </div>
+                                        <p className="font-display text-primary/60 text-xs font-medium px-4 text-center">{m.name}</p>
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
-                            
-                            </div>
-                          </article>
-                        </Reveal>
-                      );
-                    })}
-                  </div>
+
+                                {/* Cuerpo de la tarjeta */}
+                                <div className="p-6 flex-1 flex flex-col justify-between">
+                                  <div>
+                                    <h4 className="font-display text-2xl text-primary">{m.name}</h4>
+                                    {m.description && (
+                                      <p className="mt-3 text-sm text-muted-foreground leading-relaxed text-justify line-clamp-3">
+                                        {m.description}
+                                      </p>
+                                    )}
+                                  </div>
+
+                                  {/* Encargado con avatar */}
+                                  {m.leader && (
+                                    <div className="mt-5 pt-4 border-t border-border flex items-center gap-3">
+                                      <div className="w-8 h-8 rounded-full bg-gold/10 border border-gold/20 flex items-center justify-center shrink-0">
+                                        <User size={13} className="text-gold" />
+                                      </div>
+                                      <div>
+                                        <p className="text-[10px] text-gold uppercase tracking-wider font-semibold leading-none mb-0.5">
+                                          Encargado
+                                        </p>
+                                        <p className="text-sm text-foreground font-medium">{m.leader}</p>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+
+                              </article>
+                            </Reveal>
+                          );
+                        })}
+                      </div>
                     )}
                   </>
                 );

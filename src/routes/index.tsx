@@ -270,8 +270,6 @@ function Home() {
           <span className="block h-10 w-px bg-gradient-to-b from-gold/80 to-transparent animate-pulse" />
         </div>
       </section>
-
-      {/* SECCIONES MODULARES (Cargadas progresivamente) */}
       <Suspense fallback={<SectionSkeleton height="h-[1800px]" />}>
         <AboutSection ministries={ministries} loadingMinistries={loadingMinistries} />
       </Suspense>

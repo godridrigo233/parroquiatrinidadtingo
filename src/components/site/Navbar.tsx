@@ -84,6 +84,7 @@ function EvangelioDropdown({ bg }: { bg: boolean }) {
 export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const [isMobileDevice, setIsMobileDevice] = useState(false); // ⭐ Estado para detectar celulares reales
   const clicks = useRef(0);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navigate = useNavigate();
@@ -93,6 +94,21 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
     onScroll();
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // ⭐ useEffect inteligente para detectar si es un dispositivo móvil real
+  useEffect(() => {
+    const checkMobile = () => {
+      const isSmallScreen = window.innerWidth < 1024;
+      const isTouchOrMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent
+      );
+      setIsMobileDevice(isSmallScreen && isTouchOrMobile);
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
   const onLogoClick = () => {
@@ -156,7 +172,8 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
 
           {/* BOTONES DERECHOS */}
           <div className="flex items-center gap-3">
-            <InstallPWA />
+            {/* ⭐ Solo se renderiza en escritorio si se detecta una tablet grande real (iPad Pro, etc.) */}
+            {isMobileDevice && <InstallPWA />}
             <Link
               to="/"
               hash="contacto"
@@ -204,8 +221,6 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
                 </a>
               ),
             )}
-
-            {/* ✝ EVANGELIO (Móvil) */}
             <a
               href={EVANGELIO_URL}
               target="_blank"
@@ -216,11 +231,11 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
               <BookOpen size={14} className="text-gold" />
               Evangelio del día
             </a>
-
-            {/* BOTÓN PWA EN MÓVIL */}
-            <div className="mt-4 flex flex-col gap-3">
-              <InstallPWA />
-            </div>
+            {isMobileDevice && (
+              <div className="mt-4 flex flex-col gap-3">
+                <InstallPWA />
+              </div>
+            )}
           </nav>
         </div>
       )}

@@ -4,6 +4,18 @@ import { useChat } from "@ai-sdk/react";
 import type { UIMessage } from "ai";
 import { MessageSquareText, X, Send, Church, User } from "lucide-react";
 
+// Icono personalizado del Hermano Elías (Monje/Fraile Carmelita)
+function BrotherEliasIcon({ className = "w-5 h-5" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 3a4 4 0 0 0-4 4v2c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V7a4 4 0 0 0-4-4Z" />
+      <path d="M4 21v-3a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v3" />
+      <path d="M9 14v1a3 3 0 0 0 6 0v-1" />
+      <path d="M12 17v4" />
+    </svg>
+  );
+}
+
 export function ParishAIBotFab() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
@@ -24,7 +36,7 @@ const WELCOME_MESSAGE: UIMessage = {
   parts: [
     {
       type: "text",
-      text: "¡Paz y bien! Soy el asistente virtual de la Parroquia Santísima Trinidad. Elige una opción o escribe tu pregunta sobre horarios, eventos o sacramentos.",
+      text: "¡Paz y bien! 🌿 Soy el Hermano Elías, tu asistente virtual. Elige una opción o escribe tu pregunta sobre horarios, eventos o sacramentos.",
     },
   ],
 };
@@ -192,7 +204,7 @@ function ParishAIBotFabWidget() {
       {showTeaser && !isOpen && (
         <div className="mb-3 mr-1 max-w-[230px] bg-white rounded-2xl rounded-br-sm shadow-lg border border-[#CBD5E1] p-3 flex items-start gap-2">
           <p className="text-xs text-[#1A2940] leading-snug flex-1">
-            ¿Tienes preguntas sobre horarios, sacramentos o eventos? Escríbenos 🙏
+            Soy el Hermano Elías. ¿Tienes dudas sobre horarios, sacramentos o misas? Escríbeme 🙏
           </p>
           <button
             onClick={() => { setShowTeaser(false); setTeaserDismissed(true); }}
@@ -218,16 +230,16 @@ function ParishAIBotFabWidget() {
         <div className="bg-[#0F1B2D] p-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[#C8A45C] to-[#9a7b40] flex items-center justify-center shadow-inner">
-              <Church size={19} className="text-white" />
+              <BrotherEliasIcon className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h3 className="text-white font-display font-medium leading-none">Asistente Parroquial (beta)</h3>
+              <h3 className="text-white font-display font-medium leading-none">Hermano Elías</h3>
               <p className="text-[#C8A45C] text-xs mt-1 flex items-center gap-1">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
                 </span>
-                En línea
+                Asistente Parroquial
               </p>
             </div>
           </div>
@@ -256,7 +268,7 @@ function ParishAIBotFabWidget() {
                   msg.role === "user" ? "bg-[#0F1B2D] text-white" : "bg-white text-[#C8A45C]"
                 }`}
               >
-                {msg.role === "user" ? <User size={16} /> : <Church size={16} />}
+                {msg.role === "user" ? <User size={16} /> : <BrotherEliasIcon className="w-4 h-4 text-[#C8A45C]" />}
               </div>
               <div
                 className={`p-3.5 rounded-2xl text-sm leading-relaxed shadow-sm whitespace-pre-wrap ${
@@ -288,7 +300,7 @@ function ParishAIBotFabWidget() {
           {isLoading && (
             <div className="flex gap-2.5 max-w-[85%] mr-auto">
               <div className="shrink-0 h-8 w-8 rounded-full bg-white text-[#C8A45C] flex items-center justify-center mt-1 shadow-sm">
-                <Church size={16} />
+                <BrotherEliasIcon className="w-4 h-4 text-[#C8A45C]" />
               </div>
               <div className="px-3.5 py-3 rounded-2xl bg-white border border-[#CBD5E1]/50 rounded-tl-sm shadow-sm">
                 <TypingDots />

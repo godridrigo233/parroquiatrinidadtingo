@@ -2,23 +2,13 @@
 import { useRef, useEffect, useState, useCallback } from "react";
 import { useChat } from "@ai-sdk/react";
 import type { UIMessage } from "ai";
-import { MessageSquareText, X, Send, Church, User } from "lucide-react";
-
-// Icono personalizado del Hermano Elías (Monje/Fraile Carmelita)
-function BrotherEliasIcon({ className = "w-5 h-5" }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 3a4 4 0 0 0-4 4v2c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V7a4 4 0 0 0-4-4Z" />
-      <path d="M4 21v-3a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v3" />
-      <path d="M9 14v1a3 3 0 0 0 6 0v-1" />
-      <path d="M12 17v4" />
-    </svg>
-  );
-}
+import { MessageSquareText, X, Send, User } from "lucide-react";
 
 export function ParishAIBotFab() {
   const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   if (!mounted) return null;
   return <ParishAIBotFabWidget />;
 }
@@ -30,26 +20,34 @@ function getMessageText(msg: UIMessage): string {
     .join("");
 }
 
+// ⭐ ACTUALIZA AQUÍ EL SALUDO DEL ASISTENTE ⭐
 const WELCOME_MESSAGE: UIMessage = {
   id: "welcome",
   role: "assistant",
   parts: [
     {
       type: "text",
-      text: "¡Paz y bien! 🌿 Soy el Hermano Elías, tu asistente virtual. Elige una opción o escribe tu pregunta sobre horarios, eventos o sacramentos.",
+      text: "¡Paz y bien! Soy el Hermano Elías, tu asistente virtual. ¿En qué te puedo ayudar hoy sobre horarios, sacramentos o eventos? 🙏",
     },
   ],
 };
 
 const QUICK_REPLIES = [
   { label: "🕊️ Horarios de Misa", message: "¿Cuáles son los horarios de misa?" },
-  { label: "✝️ Sacramentos", message: "Quisiera información sobre los sacramentos" },
+  {
+    label: "✝️ Sacramentos",
+    message: "Quisiera información sobre los sacramentos",
+  },
   { label: "📅 Próximos eventos", message: "¿Qué eventos tienen próximamente?" },
-  { label: "📍 Dirección y contacto", message: "¿Cuál es la dirección y el teléfono de la parroquia?" },
+  {
+    label: "📍 Dirección y contacto",
+    message: "¿Cuál es la dirección y el teléfono de la parroquia?",
+  },
 ];
 
 // Detects URLs, emails and phone numbers inside a bot reply and turns them into tappable links.
-const RICH_TEXT_REGEX = /(https?:\/\/[^\s]+)|([\w.+-]+@[\w-]+\.[\w.-]+)|(\+?\d[\d\s-]{6,}\d)/g;
+const RICH_TEXT_REGEX =
+  /(https?:\/\/[^\s]+)|([\w.+-]+@[\w-]+\.[\w.-]+)|(\+?\d[\d\s-]{6,}\d)/g;
 
 function renderRichText(text: string, keyPrefix: string) {
   const nodes: React.ReactNode[] = [];
@@ -60,22 +58,37 @@ function renderRichText(text: string, keyPrefix: string) {
   while ((match = RICH_TEXT_REGEX.exec(text)) !== null) {
     if (match.index > lastIndex) nodes.push(text.slice(lastIndex, match.index));
     const value = match[0];
-    const linkClass = "underline underline-offset-2 decoration-[#C8A45C] hover:text-[#C8A45C] break-words";
+    const linkClass =
+      "underline underline-offset-2 decoration-[#C8A45C] hover:text-[#C8A45C] break-words";
     if (match[1]) {
       nodes.push(
-        <a key={`${keyPrefix}-${i}`} href={value} target="_blank" rel="noopener noreferrer" className={linkClass}>
+        <a
+          key={`${keyPrefix}-${i}`}
+          href={value}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={linkClass}
+        >
           {value}
         </a>
       );
     } else if (match[2]) {
       nodes.push(
-        <a key={`${keyPrefix}-${i}`} href={`mailto:${value}`} className={linkClass}>
+        <a
+          key={`${keyPrefix}-${i}`}
+          href={`mailto:${value}`}
+          className={linkClass}
+        >
           {value}
         </a>
       );
     } else if (match[3]) {
       nodes.push(
-        <a key={`${keyPrefix}-${i}`} href={`tel:${value.replace(/[\s-]/g, "")}`} className={linkClass}>
+        <a
+          key={`${keyPrefix}-${i}`}
+          href={`tel:${value.replace(/[\s-]/g, "")}`}
+          className={linkClass}
+        >
           {value}
         </a>
       );
@@ -89,13 +102,20 @@ function renderRichText(text: string, keyPrefix: string) {
 
 function TypingDots() {
   return (
-    <span className="inline-flex items-center gap-1 px-1 py-1" aria-label="El asistente está escribiendo">
+    <span
+      className="inline-flex items-center gap-1 px-1 py-1"
+      aria-label="El asistente está escribiendo"
+    >
       <span className="h-1.5 w-1.5 rounded-full bg-[#C8A45C] animate-bounce [animation-delay:-0.3s]" />
       <span className="h-1.5 w-1.5 rounded-full bg-[#C8A45C] animate-bounce [animation-delay:-0.15s]" />
       <span className="h-1.5 w-1.5 rounded-full bg-[#C8A45C] animate-bounce" />
     </span>
   );
 }
+
+// Ruta a la imagen del avatar animado del Hermano Elías
+// ⭐ ASEGÚRATE DE QUE ESTA RUTA ES CORRECTA EN TU PROYECTO ⭐
+const AVATAR_IMAGE_PATH = "/assets/hermano-elias-avatar.png";
 
 function ParishAIBotFabWidget() {
   const [isOpen, setIsOpen] = useState(false);
@@ -130,7 +150,10 @@ function ParishAIBotFabWidget() {
     if (hasOpenedOnce || teaserDismissed) return;
     const showTimer = setTimeout(() => setShowTeaser(true), 3500);
     const hideTimer = setTimeout(() => setShowTeaser(false), 16000);
-    return () => { clearTimeout(showTimer); clearTimeout(hideTimer); };
+    return () => {
+      clearTimeout(showTimer);
+      clearTimeout(hideTimer);
+    };
   }, [hasOpenedOnce, teaserDismissed]);
 
   // Badge the FAB with unread replies that arrive while the panel is closed.
@@ -145,16 +168,26 @@ function ParishAIBotFabWidget() {
   }, [messages, isOpen, hasOpenedOnce]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth" });
+    messagesEndRef.current?.scrollIntoView({
+      behavior: reducedMotion ? "auto" : "smooth",
+    });
   }, [messages, isOpen, isLoading, reducedMotion]);
 
   // Auto-focus the input and allow Escape to close once the panel is open.
   useEffect(() => {
     if (!isOpen) return;
-    const focusTimer = setTimeout(() => textareaRef.current?.focus(), reducedMotion ? 0 : 320);
-    const onKeyDown = (e: KeyboardEvent) => { if (e.key === "Escape") setIsOpen(false); };
+    const focusTimer = setTimeout(
+      () => textareaRef.current?.focus(),
+      reducedMotion ? 0 : 320
+    );
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setIsOpen(false);
+    };
     window.addEventListener("keydown", onKeyDown);
-    return () => { clearTimeout(focusTimer); window.removeEventListener("keydown", onKeyDown); };
+    return () => {
+      clearTimeout(focusTimer);
+      window.removeEventListener("keydown", onKeyDown);
+    };
   }, [isOpen, reducedMotion]);
 
   // Auto-grow the textarea as the visitor types, capped at a sensible height.
@@ -193,7 +226,9 @@ function ParishAIBotFabWidget() {
     sendMessage({ text: message });
   };
 
-  const motionClass = reducedMotion ? "transition-opacity duration-150" : "transition-all duration-300";
+  const motionClass = reducedMotion
+    ? "transition-opacity duration-150"
+    : "transition-all duration-300";
 
   return (
     <div
@@ -204,10 +239,14 @@ function ParishAIBotFabWidget() {
       {showTeaser && !isOpen && (
         <div className="mb-3 mr-1 max-w-[230px] bg-white rounded-2xl rounded-br-sm shadow-lg border border-[#CBD5E1] p-3 flex items-start gap-2">
           <p className="text-xs text-[#1A2940] leading-snug flex-1">
-            Soy el Hermano Elías. ¿Tienes dudas sobre horarios, sacramentos o misas? Escríbeme 🙏
+            ¿Dudas sobre horarios, sacramentos o eventos? Pregúntale al Hermano
+            Elías 🙏
           </p>
           <button
-            onClick={() => { setShowTeaser(false); setTeaserDismissed(true); }}
+            onClick={() => {
+              setShowTeaser(false);
+              setTeaserDismissed(true);
+            }}
             className="text-[#94A3B8] hover:text-[#0F1B2D] shrink-0 -mt-0.5"
             aria-label="Cerrar mensaje"
           >
@@ -226,14 +265,20 @@ function ParishAIBotFabWidget() {
             : `${reducedMotion ? "scale-100" : "scale-95"} opacity-0 translate-y-4 pointer-events-none absolute`
         }`}
       >
-        {/* Cabecera */}
+        {/* Cabecera con Avatar Animado */}
         <div className="bg-[#0F1B2D] p-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[#C8A45C] to-[#9a7b40] flex items-center justify-center shadow-inner">
-              <BrotherEliasIcon className="w-5 h-5 text-white" />
+            <div className="h-10 w-10 rounded-full border-2 border-white/70 flex items-center justify-center shadow-inner overflow-hidden">
+              <img
+                src={AVATAR_IMAGE_PATH}
+                alt="Avatar del Hermano Elías"
+                className="w-full h-full object-cover"
+              />
             </div>
             <div>
-              <h3 className="text-white font-display font-medium leading-none">Hermano Elías</h3>
+              <h3 className="text-white font-display font-medium leading-none">
+                Hermano Elías
+              </h3>
               <p className="text-[#C8A45C] text-xs mt-1 flex items-center gap-1">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
@@ -252,7 +297,7 @@ function ParishAIBotFabWidget() {
           </button>
         </div>
 
-        {/* Mensajes */}
+        {/* Mensajes con Avatar Animado */}
         <div
           className="h-[350px] overflow-y-auto p-4 bg-[#F0F4F8] flex flex-col gap-4"
           role="log"
@@ -264,11 +309,21 @@ function ParishAIBotFabWidget() {
               className={`flex gap-2.5 max-w-[85%] ${msg.role === "user" ? "ml-auto flex-row-reverse" : "mr-auto"}`}
             >
               <div
-                className={`shrink-0 h-8 w-8 rounded-full flex items-center justify-center mt-1 shadow-sm ${
-                  msg.role === "user" ? "bg-[#0F1B2D] text-white" : "bg-white text-[#C8A45C]"
+                className={`shrink-0 h-8 w-8 rounded-full flex items-center justify-center mt-1 shadow-sm overflow-hidden ${
+                  msg.role === "user"
+                    ? "bg-[#0F1B2D] text-white"
+                    : "bg-white border border-[#CBD5E1]/50"
                 }`}
               >
-                {msg.role === "user" ? <User size={16} /> : <BrotherEliasIcon className="w-4 h-4 text-[#C8A45C]" />}
+                {msg.role === "user" ? (
+                  <User size={16} />
+                ) : (
+                  <img
+                    src={AVATAR_IMAGE_PATH}
+                    alt="Avatar del Hermano Elías"
+                    className="w-full h-full object-cover"
+                  />
+                )}
               </div>
               <div
                 className={`p-3.5 rounded-2xl text-sm leading-relaxed shadow-sm whitespace-pre-wrap ${
@@ -277,7 +332,9 @@ function ParishAIBotFabWidget() {
                     : "bg-white text-[#1A2940] border border-[#CBD5E1]/50 rounded-tl-sm"
                 }`}
               >
-                {msg.role === "assistant" ? renderRichText(getMessageText(msg), msg.id) : getMessageText(msg)}
+                {msg.role === "assistant"
+                  ? renderRichText(getMessageText(msg), msg.id)
+                  : getMessageText(msg)}
               </div>
             </div>
           ))}
@@ -299,8 +356,12 @@ function ParishAIBotFabWidget() {
 
           {isLoading && (
             <div className="flex gap-2.5 max-w-[85%] mr-auto">
-              <div className="shrink-0 h-8 w-8 rounded-full bg-white text-[#C8A45C] flex items-center justify-center mt-1 shadow-sm">
-                <BrotherEliasIcon className="w-4 h-4 text-[#C8A45C]" />
+              <div className="shrink-0 h-8 w-8 rounded-full bg-white border border-[#CBD5E1]/50 flex items-center justify-center mt-1 shadow-sm overflow-hidden">
+                <img
+                  src={AVATAR_IMAGE_PATH}
+                  alt="Avatar del Hermano Elías"
+                  className="w-full h-full object-cover"
+                />
               </div>
               <div className="px-3.5 py-3 rounded-2xl bg-white border border-[#CBD5E1]/50 rounded-tl-sm shadow-sm">
                 <TypingDots />
@@ -312,7 +373,10 @@ function ParishAIBotFabWidget() {
         </div>
 
         {/* Input */}
-        <form onSubmit={handleFormSubmit} className="p-3 bg-white border-t border-[#CBD5E1] flex gap-2 items-end">
+        <form
+          onSubmit={handleFormSubmit}
+          className="p-3 bg-white border-t border-[#CBD5E1] flex gap-2 items-end"
+        >
           <textarea
             ref={textareaRef}
             value={inputValue}
@@ -344,12 +408,20 @@ function ParishAIBotFabWidget() {
         )}
         <button
           onClick={handleToggle}
-          aria-label={isOpen ? "Cerrar asistente parroquial" : "Abrir asistente parroquial"}
+          aria-label={
+            isOpen ? "Cerrar asistente parroquial" : "Abrir asistente parroquial"
+          }
           className={`h-14 w-14 rounded-full flex items-center justify-center shadow-[0_8px_25px_rgba(15,27,45,0.3)] hover:scale-105 active:scale-95 ${motionClass} ${
-            isOpen ? "bg-[#0F1B2D] text-white rotate-90" : "bg-[#0F1B2D] text-[#C8A45C] hover:bg-[#1a2e4a]"
+            isOpen
+              ? "bg-[#0F1B2D] text-white rotate-90"
+              : "bg-[#0F1B2D] text-[#C8A45C] hover:bg-[#1a2e4a]"
           }`}
         >
-          {isOpen ? <X size={24} className="-rotate-90" /> : <MessageSquareText size={26} />}
+          {isOpen ? (
+            <X size={24} className="-rotate-90" />
+          ) : (
+            <MessageSquareText size={26} />
+          )}
         </button>
       </div>
     </div>

@@ -17,10 +17,10 @@ const ministryPhotos = [
 ];
 
 // Datos fijos de cada capilla filial (ubicación/horario no vienen de la base de datos)
-const chapels: { key: string; icon: string; ubicacion: string; horario: string; encargado?: string }[] = [
-  { key: "Capilla María de la Merced", icon: "🛐", ubicacion: "Amp. Pampa del Cusco", horario: "Domingos 6:00 p.m." },
-  { key: "Capilla Virgen de Fátima", icon: "🕊️", ubicacion: "Pampa del Cusco", horario: "Domingos 10:00 a.m.", encargado: "Hno. Gilvert" },
-  { key: "Capilla Virgen del Carmen", icon: "⛪", ubicacion: "Plaza de Tingo Grande", horario: "Domingos 12:00 p.m." },
+const chapels: { key: string; icon: string; ubicacion: string; horario: string; encargado?: string; photo?: string }[] = [
+  { key: "Capilla María de la Merced", icon: "🛐", ubicacion: "Amp. Pampa del Cusco", horario: "Domingos 6:00 p.m.", photo: "/assets/capillas/maria-de-la-merced.jpg" },
+  { key: "Capilla Virgen de Fátima", icon: "🕊️", ubicacion: "Pampa del Cusco", horario: "Domingos 10:00 a.m.", encargado: "Hno. Gilvert", photo: "/assets/capillas/virgen-de-fatima.jpg" },
+  { key: "Capilla Virgen del Carmen", icon: "⛪", ubicacion: "Plaza de Tingo Grande", horario: "Domingos 12:00 p.m.", photo: "/assets/capillas/virgen-del-carmen.jpg" },
 ];
 
 const sacerdotes = [
@@ -221,23 +221,40 @@ export default function AboutSection({
                     {/* Tarjeta de información de la capilla (siempre visible mientras esté seleccionada) */}
                     {activeChapel && (
                       <Reveal>
-                        <div className="bg-white rounded-3xl p-6 md:p-8 mb-8 text-center border border-primary/15 shadow-sm max-w-3xl mx-auto">
-                          <span className="text-4xl block mb-3">{activeChapel.icon}</span>
-                          <h3 className="text-primary font-display text-2xl md:text-3xl font-semibold">
-                            {activeChapel.key}
-                          </h3>
-                          <div className="mt-5 flex flex-wrap justify-center gap-3 text-xs font-medium text-primary/80">
-                            <span className="bg-primary/5 px-4 py-2 rounded-xl border border-primary/10 flex items-center gap-1.5">
-                              📍 {activeChapel.ubicacion}
-                            </span>
-                            <span className="bg-primary/5 px-4 py-2 rounded-xl border border-primary/10 flex items-center gap-1.5">
-                              🕒 Misa: {activeChapel.horario}
-                            </span>
-                            {activeChapel.encargado && (
-                              <span className="bg-primary/5 px-4 py-2 rounded-xl border border-primary/10 flex items-center gap-1.5">
-                                👤 Encargado: {activeChapel.encargado}
-                              </span>
+                        <div className="bg-card rounded-3xl mb-8 border border-primary/15 shadow-sm max-w-3xl mx-auto overflow-hidden">
+                          {activeChapel.photo && (
+                            <div className="relative aspect-[16/7] overflow-hidden">
+                              <OptimizedImage
+                                src={activeChapel.photo}
+                                alt={activeChapel.key}
+                                className="w-full h-full object-cover"
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                              <h3 className="absolute bottom-4 left-6 text-white font-display text-2xl md:text-3xl font-semibold drop-shadow">
+                                {activeChapel.key}
+                              </h3>
+                            </div>
+                          )}
+                          <div className={`p-6 ${!activeChapel.photo ? "text-center pt-8" : ""}`}>
+                            {!activeChapel.photo && (
+                              <>
+                                <span className="text-4xl block mb-3">{activeChapel.icon}</span>
+                                <h3 className="text-primary font-display text-2xl md:text-3xl font-semibold">{activeChapel.key}</h3>
+                              </>
                             )}
+                            <div className={`flex flex-wrap gap-3 text-xs font-medium text-primary/80 ${!activeChapel.photo ? "justify-center mt-5" : "mt-2"}`}>
+                              <span className="bg-primary/5 px-4 py-2 rounded-xl border border-primary/10 flex items-center gap-1.5">
+                                📍 {activeChapel.ubicacion}
+                              </span>
+                              <span className="bg-primary/5 px-4 py-2 rounded-xl border border-primary/10 flex items-center gap-1.5">
+                                🕒 Misa: {activeChapel.horario}
+                              </span>
+                              {activeChapel.encargado && (
+                                <span className="bg-primary/5 px-4 py-2 rounded-xl border border-primary/10 flex items-center gap-1.5">
+                                  👤 Encargado: {activeChapel.encargado}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </Reveal>

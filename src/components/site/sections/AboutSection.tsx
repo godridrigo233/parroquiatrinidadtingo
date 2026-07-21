@@ -2,7 +2,7 @@ import { Church, Clock, BookOpen, Heart, Users, Music, Sparkles, GraduationCap, 
 import { Reveal } from "@/components/site/Reveal";
 import { OptimizedImage } from "@/components/site/OptimizedImage";
 import { SkeletonCard } from "@/components/ui/SkeletonCard";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 type Ministry = { id: string; name: string; description: string | null; leader: string | null; schedule: string | null; image_url: string | null; location: string };
 
 const ministryIcons = [Music, BookOpen, Users, Sparkles, Heart, GraduationCap];
@@ -17,10 +17,29 @@ const ministryPhotos = [
 ];
 
 // Datos fijos de cada capilla filial (ubicación/horario no vienen de la base de datos)
-const chapels: { key: string; icon: string; ubicacion: string; horario: string; encargado?: string; photo?: string }[] = [
-  { key: "Capilla María de la Merced", icon: "🛐", ubicacion: "Amp. Pampa del Cusco", horario: "Domingos 6:00 p.m.", photo: "/assets/capillas/maria-de-la-merced.jpg" },
-  { key: "Capilla Virgen de Fátima", icon: "🕊️", ubicacion: "Pampa del Cusco", horario: "Domingos 10:00 a.m.", encargado: "Hno. Gilvert", photo: "/assets/capillas/virgen-de-fatima.jpg" },
-  { key: "Capilla Virgen del Carmen", icon: "⛪", ubicacion: "Plaza de Tingo Grande", horario: "Domingos 12:00 p.m.", photo: "/assets/capillas/virgen-del-carmen.jpg" },
+const chapels: { key: string; icon: string; ubicacion: string; horario: string; encargado?: string; photos: string[] }[] = [
+  {
+    key: "Capilla María de la Merced", icon: "🛐", ubicacion: "Amp. Pampa del Cusco", horario: "Domingos 6:00 p.m.",
+    photos: [],
+  },
+  {
+    key: "Capilla Virgen de Fátima", icon: "🕊️", ubicacion: "Pampa del Cusco", horario: "Domingos 10:00 a.m.", encargado: "Hno. Gilvert",
+    photos: [
+      "/assets/capillas/virgen-de-fatima-1.jpg",
+      "/assets/capillas/virgen-de-fatima-2.jpg",
+      "/assets/capillas/virgen-de-fatima-3.jpg",
+      "/assets/capillas/virgen-de-fatima-4.jpg",
+    ],
+  },
+  {
+    key: "Capilla Virgen del Carmen", icon: "⛪", ubicacion: "Plaza de Tingo Grande", horario: "Domingos 12:00 p.m.",
+    photos: [
+      "/assets/capillas/virgen-del-carmen-1.jpg",
+      "/assets/capillas/virgen-del-carmen-2.jpg",
+      "/assets/capillas/virgen-del-carmen-3.jpg",
+      "/assets/capillas/virgen-del-carmen-4.jpg",
+    ],
+  },
 ];
 
 const sacerdotes = [
@@ -46,6 +65,19 @@ export default function AboutSection({
   loadingMinistries: boolean;
 }) {
   const [activeTab, setActiveTab] = useState<string>("Sede Central");
+  const [slideIndex, setSlideIndex] = useState(0);
+
+  const activeChapelData = chapels.find((c) => c.key === activeTab);
+
+  // Reset slide and auto-advance when tab or photos change
+  useEffect(() => {
+    setSlideIndex(0);
+    const photos = activeChapelData?.photos ?? [];
+    if (photos.length <= 1) return;
+    const id = setInterval(() => setSlideIndex((i) => (i + 1) % photos.length), 3500);
+    return () => clearInterval(id);
+  }, [activeTab]);
+
   return (
     <>
       {/* SOBRE LA PARROQUIA */}
@@ -225,21 +257,35 @@ export default function AboutSection({
 
                 return (
                   <>
-                    {/* Tarjeta informativa de capilla */}
+                    {/* Tarjeta informativa de capilla con carousel */}
                     {activeChapel && (
                       <Reveal>
                         <div className="bg-card rounded-2xl mb-8 overflow-hidden border border-border shadow-card max-w-2xl mx-auto">
-                          {activeChapel.photo ? (
+                          {activeChapel.photos.length > 0 ? (
                             <div className="relative aspect-[16/7] overflow-hidden">
-                              <OptimizedImage
-                                src={activeChapel.photo}
-                                alt={activeChapel.key}
-                                className="w-full h-full object-cover"
-                              />
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                              <h3 className="absolute bottom-4 left-6 text-white font-display text-2xl md:text-3xl font-semibold drop-shadow">
+                              {activeChapel.photos.map((src, idx) => (
+                                <img
+                                  key={src}
+                                  src={src}
+                                  alt={`${activeChapel.key} ${idx + 1}`}
+                                  className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
+                                  style={{ opacity: idx === slideIndex ? 1 : 0 }}
+                                />
+                              ))}
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+                              <h3 className="absolute bottom-8 left-6 text-white font-display text-2xl md:text-3xl font-semibold drop-shadow">
                                 {activeChapel.key}
                               </h3>
+                              {/* Dots */}
+                              <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">
+                                {activeChapel.photos.map((_, idx) => (
+                                  <button
+                                    key={idx}
+                                    onClick={() => setSlideIndex(idx)}
+                                    className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${idx === slideIndex ? "bg-white w-4" : "bg-white/50"}`}
+                                  />
+                                ))}
+                              </div>
                             </div>
                           ) : (
                             <>

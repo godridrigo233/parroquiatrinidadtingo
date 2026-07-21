@@ -554,15 +554,6 @@ function SacramentosPage() {
                       Contactar secretaría
                     </a>
                     
-                    {/* PLACEHOLDER: Enlace para descargar requisitos en PDF.
-                        Reemplazar href con la ruta real del archivo PDF. */}
-                    <a
-                      href={`/assets/requisitos-${selected.id}.pdf`}
-                      className="flex items-center gap-2.5 w-full px-4 py-3 rounded-xl bg-[#E1E8F0] text-[#0F1B2D] text-sm font-semibold transition-colors hover:bg-[#D4DCE8]"
-                    >
-                      <FileText size={16} className="text-[#C8A45C]" />
-                      Descargar requisitos (PDF)
-                    </a>
                   </div>
                 </div>
               </div>

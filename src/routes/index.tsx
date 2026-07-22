@@ -8,7 +8,6 @@ import { Navbar } from "@/components/site/Navbar";
 import { WhatsAppFab } from "@/components/site/WhatsAppFab";
 import { DonationRow } from "@/components/site/sections/DonacionesSection";
 import { Preloader } from "@/components/ui/Preloader";
-import {SchedulesSection} from "@/components/site/SchedulesSection"
 import * as Sentry from "@sentry/react";
 const FilialesMapSection = lazy(() =>
   import("@/components/site/sections/FilialesMapSection").then((m) => ({
@@ -269,11 +268,7 @@ function Home() {
       <Suspense fallback={<SectionSkeleton height="h-[1800px]" />}>
         <AboutSection ministries={ministries} loadingMinistries={loadingMinistries} />
       </Suspense>
-      <section id="horarios">
-        <Suspense fallback={<SectionSkeleton height="h-[900px]" />}>
-          <SchedulesSection />
-        </Suspense>
-      </section>
+      
       <Suspense fallback={<SectionSkeleton height="h-[600px]" />}>
         <FilialesMapSection />
       </Suspense>

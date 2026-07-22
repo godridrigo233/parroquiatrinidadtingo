@@ -50,7 +50,7 @@ const chapels: { key: string; icon: string; ubicacion: string; horario: string; 
 const sacerdotes = [
   {
     img: "/assets/padre-tommy.jpg",
-    name: "Rvdo.P. Tomy Thengumparambil, CMI ",
+    name: "Rvdo. P. Tomy Thengumparambil, CMI ",
     role: "Párroco",
     desc: "Pastor de la comunidad, dedicado a la celebración de los sacramentos, la formación de los fieles y el acompañamiento espiritual de la familia parroquial.",
   },

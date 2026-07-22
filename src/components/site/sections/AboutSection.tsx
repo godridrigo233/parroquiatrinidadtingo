@@ -52,7 +52,7 @@ const sacerdotes = [
     img: "/assets/padre-tommy.jpg",
     name: "Rvdo. P. Tomy Thengumparambil, CMI ",
     role: "Párroco",
-    desc: "Pastor de la comunidad, dedicado a la celebración de los sacramentos, la formación de los fieles y el acompañamiento espiritual de la familia parroquial.",
+    desc: "Pastor de la comunidad, dedicado a la celebration de los sacramentos, la formación de los fieles y el acompañamiento espiritual de la familia parroquial.",
   },
   {
     img: "/assets/padre-manesh.jpg",
@@ -180,7 +180,8 @@ export default function AboutSection({
           </div>
         </div>
       </section>
-      {/* MINISTERIOS Y CAPILLAS CON PESTAÑAS */}
+
+      {/* MINISTERIOS Y CAPILLAS CON PESTAÑAS (OPTIMIZADO EN ESPACIO) */}
       <section id="ministerios" className="py-24 px-5 lg:px-8 bg-secondary/50">
         <div className="max-w-7xl mx-auto">
 
@@ -231,7 +232,6 @@ export default function AboutSection({
                   }`}
                 >
                   <span>{c.icon}</span>
-                  {/* Móvil: solo icono. sm+: nombre sin "Capilla " */}
                   <span className="hidden sm:inline">{c.key.replace("Capilla ", "")}</span>
                   <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                     activeTab === c.key ? "bg-white/20 text-white" : "bg-secondary text-muted-foreground"
@@ -244,7 +244,7 @@ export default function AboutSection({
             </div>
           </Reveal>
 
-          {/* ── CONTENIDO ── */}
+          {/* ── CONTENIDO COMPACTO EN 2 O 3 COLUMNAS ── */}
           <div className="mt-12 min-h-[400px]">
             {loadingMinistries ? (
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -261,13 +261,15 @@ export default function AboutSection({
                 const activeChapel = chapels.find((c) => c.key === activeTab);
 
                 return (
-                  <>
-                    {/* Tarjeta informativa de capilla con carousel */}
+                  /* NUEVA ESTRUCTURA COMPACTA: Si hay datos de capilla, colocamos un grid donde la capilla va a la izquierda y los ministerios a la derecha */
+                  <div className={activeChapel ? "grid lg:grid-cols-3 gap-8 items-start animate-in fade-in-50 duration-500" : "animate-in fade-in-50 duration-500"}>
+                    
+                    {/* COLUMNA IZQUIERDA: Tarjeta informativa de capilla con carrusel (Fija, compacta y elegante) */}
                     {activeChapel && (
-                      <Reveal>
-                        <div className="bg-card rounded-2xl mb-8 overflow-hidden border border-border shadow-card max-w-2xl mx-auto">
+                      <Reveal className="lg:col-span-1 w-full lg:sticky lg:top-24">
+                        <div className="bg-card rounded-2xl overflow-hidden border border-border shadow-card w-full">
                           {activeChapel.photos.length > 0 ? (
-                            <div className="relative aspect-[16/7] overflow-hidden">
+                            <div className="relative aspect-[16/10] overflow-hidden">
                               {activeChapel.photos.map((src, idx) => (
                                 <img
                                   key={src}
@@ -277,12 +279,12 @@ export default function AboutSection({
                                   style={{ opacity: idx === slideIndex ? 1 : 0 }}
                                 />
                               ))}
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-                              <h3 className="absolute bottom-8 left-6 text-white font-display text-2xl md:text-3xl font-semibold drop-shadow">
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                              <h3 className="absolute bottom-6 left-5 text-white font-display text-xl sm:text-2xl font-semibold drop-shadow leading-tight">
                                 {activeChapel.key}
                               </h3>
                               {/* Dots */}
-                              <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">
+                              <div className="absolute bottom-2.5 left-0 right-0 flex justify-center gap-1.5">
                                 {activeChapel.photos.map((_, idx) => (
                                   <button
                                     key={idx}
@@ -295,22 +297,22 @@ export default function AboutSection({
                           ) : (
                             <>
                               <div className="h-1 bg-gradient-gold" />
-                              <div className="p-6 md:p-8 flex items-center gap-4">
+                              <div className="p-6 flex items-center gap-4">
                                 <span className="text-4xl leading-none flex-shrink-0">{activeChapel.icon}</span>
                                 <h3 className="font-display text-2xl text-primary">{activeChapel.key}</h3>
                               </div>
                             </>
                           )}
-                          <div className="p-5 flex flex-wrap gap-2">
-                            <span className="inline-flex items-center gap-1.5 bg-gold/10 border border-gold/20 text-gold px-3 py-1.5 rounded-xl text-xs font-medium">
-                              <MapPin size={11} /> {activeChapel.ubicacion}
+                          <div className="p-5 flex flex-col gap-2.5 bg-secondary/20">
+                            <span className="inline-flex items-center gap-2 bg-card border border-border/80 text-foreground px-3.5 py-2 rounded-xl text-xs font-medium shadow-2xs">
+                              <MapPin size={14} className="text-gold shrink-0" /> {activeChapel.ubicacion}
                             </span>
-                            <span className="inline-flex items-center gap-1.5 bg-gold/10 border border-gold/20 text-gold px-3 py-1.5 rounded-xl text-xs font-medium">
-                              <Clock size={11} /> Misa: {activeChapel.horario}
+                            <span className="inline-flex items-center gap-2 bg-card border border-border/80 text-foreground px-3.5 py-2 rounded-xl text-xs font-medium shadow-2xs">
+                              <Clock size={14} className="text-gold shrink-0" /> Misa: {activeChapel.horario}
                             </span>
                             {activeChapel.encargado && (
-                              <span className="inline-flex items-center gap-1.5 bg-gold/10 border border-gold/20 text-gold px-3 py-1.5 rounded-xl text-xs font-medium">
-                                <User size={11} /> {activeChapel.encargado}
+                              <span className="inline-flex items-center gap-2 bg-card border border-border/80 text-foreground px-3.5 py-2 rounded-xl text-xs font-medium shadow-2xs">
+                                <User size={14} className="text-gold shrink-0" /> {activeChapel.encargado}
                               </span>
                             )}
                           </div>
@@ -318,87 +320,91 @@ export default function AboutSection({
                       </Reveal>
                     )}
 
-                    {/* Estado vacío */}
-                    {filtered.length === 0 && (
-                      <div className="text-center py-16">
-                        <Church size={40} className="mx-auto mb-4 text-muted-foreground/40" />
-                        <p className="text-sm text-muted-foreground">
-                          Aún no hay grupos registrados en esta {activeChapel ? "capilla" : "sede"}.
-                        </p>
-                      </div>
-                    )}
+                    {/* COLUMNA DERECHA: Grid de tarjetas de ministerios (Ocupa 2 columnas cuando hay capilla) */}
+                    <div className={activeChapel ? "lg:col-span-2" : "w-full"}>
+                      {/* Estado vacío */}
+                      {filtered.length === 0 && (
+                        <div className="text-center py-16 bg-card rounded-2xl border border-dashed border-border p-8">
+                          <Church size={40} className="mx-auto mb-4 text-muted-foreground/40" />
+                          <p className="text-sm text-muted-foreground">
+                            Aún no hay grupos registrados en esta {activeChapel ? "capilla" : "sede"}.
+                          </p>
+                        </div>
+                      )}
 
-                    {/* Grid de tarjetas */}
-                    {filtered.length > 0 && (
-                      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in-50 duration-500">
-                        {filtered.map((m, i) => {
-                          const Icon = ministryIcons[i % ministryIcons.length];
-                          const ministryImage = m.image_url || ministryPhotos[i];
-                          return (
-                            <Reveal key={m.id} delay={i * 80}>
-                              <article className="group h-full flex flex-col bg-card rounded-2xl border border-border shadow-card hover:shadow-elegant hover:-translate-y-1 transition-all overflow-hidden will-change-transform">
+                      {/* Grid de tarjetas */}
+                      {filtered.length > 0 && (
+                        <div className={`grid gap-6 ${activeChapel ? "sm:grid-cols-2" : "md:grid-cols-2 lg:grid-cols-3"}`}>
+                          {filtered.map((m, i) => {
+                            const Icon = ministryIcons[i % ministryIcons.length];
+                            const ministryImage = m.image_url || ministryPhotos[i];
+                            return (
+                              <Reveal key={m.id} delay={i * 80}>
+                                <article className="group h-full flex flex-col bg-card rounded-2xl border border-border shadow-card hover:shadow-elegant hover:-translate-y-1 transition-all overflow-hidden will-change-transform">
 
-                                {/* Imagen desde Supabase / placeholder si no hay */}
-                                <div className="relative aspect-[16/10] overflow-hidden">
-                                  {ministryImage ? (
-                                    <OptimizedImage
-                                      src={`${ministryImage}?v=1`}
-                                      alt={m.name}
-                                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 will-change-transform"
-                                    />
-                                  ) : (
-                                    <div className="w-full h-full bg-primary/5 flex items-center justify-center relative overflow-hidden">
-                                      {/* Círculos decorativos sutiles */}
-                                      <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full border border-gold/15" />
-                                      <div className="absolute -bottom-6 -left-4 w-24 h-24 rounded-full border border-gold/10" />
-                                      <div className="absolute top-3 left-4 w-10 h-10 rounded-full border border-gold/10" />
-                                      {/* Cruz de fondo muy sutil */}
-                                      <span className="absolute text-7xl text-primary/5 font-bold select-none pointer-events-none">✝</span>
-                                      {/* Ícono del ministerio en círculo dorado */}
-                                      <div className="relative z-10 flex flex-col items-center gap-2">
-                                        <div className="w-14 h-14 rounded-full bg-gold/10 border border-gold/25 flex items-center justify-center">
-                                          <Icon size={24} className="text-gold" />
+                                  {/* Imagen desde Supabase / placeholder si no hay */}
+                                  <div className="relative aspect-[16/10] overflow-hidden">
+                                    {ministryImage ? (
+                                      <OptimizedImage
+                                        src={`${ministryImage}?v=1`}
+                                        alt={m.name}
+                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 will-change-transform"
+                                      />
+                                    ) : (
+                                      <div className="w-full h-full bg-primary/5 flex items-center justify-center relative overflow-hidden">
+                                        {/* Círculos decorativos sutiles */}
+                                        <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full border border-gold/15" />
+                                        <div className="absolute -bottom-6 -left-4 w-24 h-24 rounded-full border border-gold/10" />
+                                        <div className="absolute top-3 left-4 w-10 h-10 rounded-full border border-gold/10" />
+                                        {/* Cruz de fondo muy sutil */}
+                                        <span className="absolute text-7xl text-primary/5 font-bold select-none pointer-events-none">✝</span>
+                                        {/* Ícono del ministerio en círculo dorado */}
+                                        <div className="relative z-10 flex flex-col items-center gap-2">
+                                          <div className="w-14 h-14 rounded-full bg-gold/10 border border-gold/25 flex items-center justify-center">
+                                            <Icon size={24} className="text-gold" />
+                                          </div>
+                                          <p className="font-display text-primary/60 text-xs font-medium px-4 text-center">{m.name}</p>
                                         </div>
-                                        <p className="font-display text-primary/60 text-xs font-medium px-4 text-center">{m.name}</p>
                                       </div>
-                                    </div>
-                                  )}
-                                </div>
-
-                                {/* Cuerpo de la tarjeta */}
-                                <div className="p-6 flex-1 flex flex-col justify-between">
-                                  <div>
-                                    <h4 className="font-display text-2xl text-primary">{m.name}</h4>
-                                    {m.description && (
-                                      <p className="mt-3 text-sm text-muted-foreground leading-relaxed text-justify line-clamp-3">
-                                        {m.description}
-                                      </p>
                                     )}
                                   </div>
 
-                                  {/* Encargado con avatar */}
-                                  {m.leader && (
-                                    <div className="mt-5 pt-4 border-t border-border flex items-center gap-3">
-                                      <div className="w-8 h-8 rounded-full bg-gold/10 border border-gold/20 flex items-center justify-center shrink-0">
-                                        <User size={13} className="text-gold" />
-                                      </div>
-                                      <div>
-                                        <p className="text-[10px] text-gold uppercase tracking-wider font-semibold leading-none mb-0.5">
-                                          Encargado
+                                  {/* Cuerpo de la tarjeta */}
+                                  <div className="p-6 flex-1 flex flex-col justify-between">
+                                    <div>
+                                      <h4 className="font-display text-2xl text-primary">{m.name}</h4>
+                                      {m.description && (
+                                        <p className="mt-3 text-sm text-muted-foreground leading-relaxed text-justify line-clamp-3">
+                                          {m.description}
                                         </p>
-                                        <p className="text-sm text-foreground font-medium">{m.leader}</p>
-                                      </div>
+                                      )}
                                     </div>
-                                  )}
-                                </div>
 
-                              </article>
-                            </Reveal>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </>
+                                    {/* Encargado con avatar */}
+                                    {m.leader && (
+                                      <div className="mt-5 pt-4 border-t border-border flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-full bg-gold/10 border border-gold/20 flex items-center justify-center shrink-0">
+                                          <User size={13} className="text-gold" />
+                                        </div>
+                                        <div>
+                                          <p className="text-[10px] text-gold uppercase tracking-wider font-semibold leading-none mb-0.5">
+                                            Encargado
+                                          </p>
+                                          <p className="text-sm text-foreground font-medium">{m.leader}</p>
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+
+                                </article>
+                              </Reveal>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+
+                  </div>
                 );
               })()
             )}

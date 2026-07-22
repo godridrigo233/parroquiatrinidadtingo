@@ -9,11 +9,6 @@ import { WhatsAppFab } from "@/components/site/WhatsAppFab";
 import { DonationRow } from "@/components/site/sections/DonacionesSection";
 import { Preloader } from "@/components/ui/Preloader";
 import * as Sentry from "@sentry/react";
-const FilialesMapSection = lazy(() =>
-  import("@/components/site/sections/FilialesMapSection").then((m) => ({
-    default: m.FilialesMapSection,
-  }))
-);
 // Carga modular diferida (Lazy-loading / Code-splitting) para optimizar el rendimiento y evitar bloqueos
 const AboutSection = lazy(() => import("@/components/site/sections/AboutSection"));
 const SacramentosSection = lazy(() => import("@/components/site/sections/SacramentosSection"));
@@ -267,10 +262,6 @@ function Home() {
       </section>
       <Suspense fallback={<SectionSkeleton height="h-[1800px]" />}>
         <AboutSection ministries={ministries} loadingMinistries={loadingMinistries} />
-      </Suspense>
-      
-      <Suspense fallback={<SectionSkeleton height="h-[600px]" />}>
-        <FilialesMapSection />
       </Suspense>
       <Suspense fallback={<SectionSkeleton height="h-[700px]" />}>
         <SacramentosSection />

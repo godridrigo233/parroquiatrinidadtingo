@@ -462,16 +462,19 @@ function ParishAIBotFabWidget() {
                     {msg.role === "assistant" ? renderRichText(rawText, msg.id) : rawText}
 
                     {/* Botón de Lectura en Voz Alta (Solo en mensajes del asistente) */}
+                    {/* Botón de Lectura en Voz Alta (Visible en celular, hover en PC) */}
                     {msg.role === "assistant" && (
                       <button
                         onClick={() => toggleSpeech(rawText, msg.id)}
-                        className={`absolute -right-2 -bottom-2 h-7 w-7 rounded-full bg-white border border-[#CBD5E1] shadow-md flex items-center justify-center text-[#0F1B2D] hover:bg-[#C8A45C] hover:text-white hover:border-[#C8A45C] transition-colors ${
-                          speakingMsgId === msg.id ? "bg-[#C8A45C] text-white animate-bounce" : "opacity-0 group-hover:opacity-100"
+                        className={`absolute -right-1.5 -bottom-2 h-7 w-7 rounded-full bg-white border border-[#CBD5E1] shadow-md flex items-center justify-center text-[#0F1B2D] hover:bg-[#C8A45C] hover:text-white hover:border-[#C8A45C] transition-all ${
+                          speakingMsgId === msg.id 
+                            ? "bg-[#C8A45C] !text-white animate-bounce opacity-100 scale-110" 
+                            : "opacity-90 sm:opacity-0 sm:group-hover:opacity-100 active:scale-95"
                         }`}
                         title={speakingMsgId === msg.id ? "Detener lectura" : "Leer en voz alta"}
                         aria-label="Leer en voz alta"
                       >
-                        {speakingMsgId === msg.id ? <VolumeX size={14} /> : <Volume2 size={14} />}
+                        {speakingMsgId === msg.id ? <VolumeX size={14} /> : <Volume2 size={14} className="text-[#C8A45C] sm:text-[#0F1B2D]" />}
                       </button>
                     )}
                   </div>

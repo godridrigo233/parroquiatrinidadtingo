@@ -1,4 +1,4 @@
-import { Church, Clock, BookOpen, Heart, Users, Music, Sparkles, GraduationCap, MapPin, User  } from "lucide-react";
+import { Church, Clock, BookOpen, Heart, Users, Music, Sparkles, GraduationCap, MapPin, User, Bus, Navigation } from "lucide-react";
 import { Reveal } from "@/components/site/Reveal";
 import { OptimizedImage } from "@/components/site/OptimizedImage";
 import { SkeletonCard } from "@/components/ui/SkeletonCard";
@@ -16,8 +16,27 @@ const ministryPhotos = [
   null,
 ];
 
-// Datos fijos de cada capilla filial (ubicación/horario no vienen de la base de datos)
-const chapels: { key: string; icon: string; ubicacion: string; horario: string; encargado?: string; photos: string[] }[] = [
+// Datos enriquecidos con Rutas SIT y Coordenadas GPS para cada capilla y la Sede Central
+const locationsData: { 
+  key: string; 
+  icon: string; 
+  ubicacion: string; 
+  horario: string; 
+  encargado?: string; 
+  photos: string[];
+  busStop: string;
+  sitInstructions: string;
+  lat: number;
+  lng: number;
+}[] = [
+  {
+    key: "Sede Central", icon: "⛪", ubicacion: "Calle Ferrocarril 200, Tingo", horario: "Dom 8am/6pm | Lun-Sáb 6pm",
+    encargado: "Rvdo. P. Tomy Thengumparambil, CMI",
+    photos: ["/assets/church-interior.webp", "/assets/hero-church.webp"],
+    busStop: "Paradero 'Cruce de Tingo'",
+    sitInstructions: "Bus SIT Cuenca 10 (Rojo/Granate). Bajar en el Cruce de Tingo y caminar 2 cuadras por Calle Ferrocarril.",
+    lat: -16.4358, lng: -71.5512,
+  },
   {
     key: "Capilla María de la Merced", icon: "🛐", ubicacion: "Amp. Pampa del Cusco", horario: "Domingos 6:00 p.m.",
     photos: [
@@ -26,6 +45,9 @@ const chapels: { key: string; icon: string; ubicacion: string; horario: string; 
         "/assets/capillas/maria-de-la-merced-3.jpg",
         "/assets/capillas/maria-de-la-merced-4.jpg",
     ],
+    busStop: "Paradero Entrada Pampa del Cusco",
+    sitInstructions: "Tomar Bus SIT Cuenca 10 por Av. Alfonso Ugarte hasta el desvío de Pampa del Cusco. Subir por la vía principal.",
+    lat: -16.4410, lng: -71.5485,
   },
   {
     key: "Capilla Virgen de Fátima", icon: "🕊️", ubicacion: "Pampa del Cusco", horario: "Domingos 10:00 a.m.", encargado: "Hno. Gilvert",
@@ -35,6 +57,9 @@ const chapels: { key: string; icon: string; ubicacion: string; horario: string; 
       "/assets/capillas/virgen-de-fatima-3.jpg",
       "/assets/capillas/virgen-de-fatima-4.jpg",
     ],
+    busStop: "Paradero Central Pampa del Cusco",
+    sitInstructions: "Unidades del SIT con ruta hacia Pampa del Cusco / Hunter. El templo se ubica en la zona media urbana.",
+    lat: -16.4395, lng: -71.5460,
   },
   {
     key: "Capilla Virgen del Carmen", icon: "⛪", ubicacion: "Plaza de Tingo Grande", horario: "Domingos 12:00 p.m.",
@@ -44,6 +69,9 @@ const chapels: { key: string; icon: string; ubicacion: string; horario: string; 
       "/assets/capillas/virgen-del-carmen-3.jpg",
       "/assets/capillas/virgen-del-carmen-4.jpg",
     ],
+    busStop: "Paradero Plaza Tingo Grande",
+    sitInstructions: "Bus SIT Cuenca 10 directo hasta la Plaza Principal de Tingo Grande. La capilla está frente al parque.",
+    lat: -16.4480, lng: -71.5540,
   },
 ];
 
@@ -52,7 +80,7 @@ const sacerdotes = [
     img: "/assets/padre-tommy.jpg",
     name: "Rvdo. P. Tomy Thengumparambil, CMI ",
     role: "Párroco",
-    desc: "Pastor de la comunidad, dedicado a la celebration de los sacramentos, la formación de los fieles y el acompañamiento espiritual de la familia parroquial.",
+    desc: "Pastor de la comunidad, dedicado a la celebración de los sacramentos, la formación de los fieles y el acompañamiento espiritual de la familia parroquial.",
   },
   {
     img: "/assets/padre-manesh.jpg",
@@ -72,16 +100,24 @@ export default function AboutSection({
   const [activeTab, setActiveTab] = useState<string>("Sede Central");
   const [slideIndex, setSlideIndex] = useState(0);
 
-  const activeChapelData = chapels.find((c) => c.key === activeTab);
+  const activeLocation = locationsData.find((c) => c.key === activeTab);
 
   // Reset slide and auto-advance when tab or photos change
   useEffect(() => {
     setSlideIndex(0);
-    const photos = activeChapelData?.photos ?? [];
+    const photos = activeLocation?.photos ?? [];
     if (photos.length <= 1) return;
     const id = setInterval(() => setSlideIndex((i) => (i + 1) % photos.length), 3500);
     return () => clearInterval(id);
   }, [activeTab]);
+
+  const openGoogleMaps = (lat: number, lng: number) => {
+    window.open(`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`, "_blank");
+  };
+
+  const openWaze = (lat: number, lng: number) => {
+    window.open(`https://ul.waze.com/ul?ll=${lat},${lng}&navigate=yes`, "_blank");
+  };
 
   return (
     <>
@@ -181,7 +217,7 @@ export default function AboutSection({
         </div>
       </section>
 
-      {/* MINISTERIOS Y CAPILLAS CON PESTAÑAS (OPTIMIZADO EN ESPACIO) */}
+      {/* MINISTERIOS Y CAPILLAS CON PESTAÑAS (ALL-IN-ONE: LOGÍSTICA SIT + MINISTERIOS) */}
       <section id="ministerios" className="py-24 px-5 lg:px-8 bg-secondary/50">
         <div className="max-w-7xl mx-auto">
 
@@ -195,7 +231,7 @@ export default function AboutSection({
               <span className="text-gold text-base leading-none">✦</span>
               <div className="h-px w-14 bg-gradient-to-l from-transparent to-gold/50" />
             </div>
-            <p className="mt-3 text-muted-foreground text-sm">Carismas al servicio de nuestra parroquia y su jurisdicción.</p>
+            <p className="mt-3 text-muted-foreground text-sm">Carismas, horarios y rutas de transporte al servicio de nuestra jurisdicción.</p>
           </Reveal>
 
           {/* ── TABS ── */}
@@ -221,7 +257,7 @@ export default function AboutSection({
               </button>
 
               {/* Capillas filiales */}
-              {chapels.map((c) => (
+              {locationsData.filter(c => c.key !== "Sede Central").map((c) => (
                 <button
                   key={c.key}
                   onClick={() => setActiveTab(c.key)}
@@ -244,7 +280,7 @@ export default function AboutSection({
             </div>
           </Reveal>
 
-          {/* ── CONTENIDO COMPACTO EN 2 O 3 COLUMNAS ── */}
+          {/* ── CONTENIDO COMPACTO CON LOGÍSTICA SIT INTEGRADA ── */}
           <div className="mt-12 min-h-[400px]">
             {loadingMinistries ? (
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -258,83 +294,132 @@ export default function AboutSection({
                   if (activeTab === "Sede Central") return !m.location || m.location === "Sede Central";
                   return m.location === activeTab;
                 });
-                const activeChapel = chapels.find((c) => c.key === activeTab);
 
                 return (
-                  /* NUEVA ESTRUCTURA COMPACTA: Si hay datos de capilla, colocamos un grid donde la capilla va a la izquierda y los ministerios a la derecha */
-                  <div className={activeChapel ? "grid lg:grid-cols-3 gap-8 items-start animate-in fade-in-50 duration-500" : "animate-in fade-in-50 duration-500"}>
+                  <div className={activeLocation ? "grid lg:grid-cols-12 gap-8 items-start animate-in fade-in-50 duration-500" : "animate-in fade-in-50 duration-500"}>
                     
-                    {/* COLUMNA IZQUIERDA: Tarjeta informativa de capilla con carrusel (Fija, compacta y elegante) */}
-                    {activeChapel && (
-                      <Reveal className="lg:col-span-1 w-full lg:sticky lg:top-24">
-                        <div className="bg-card rounded-2xl overflow-hidden border border-border shadow-card w-full">
-                          {activeChapel.photos.length > 0 ? (
-                            <div className="relative aspect-[16/10] overflow-hidden">
-                              {activeChapel.photos.map((src, idx) => (
-                                <img
-                                  key={src}
-                                  src={src}
-                                  alt={`${activeChapel.key} ${idx + 1}`}
-                                  className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
-                                  style={{ opacity: idx === slideIndex ? 1 : 0 }}
-                                />
-                              ))}
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                              <h3 className="absolute bottom-6 left-5 text-white font-display text-xl sm:text-2xl font-semibold drop-shadow leading-tight">
-                                {activeChapel.key}
-                              </h3>
-                              {/* Dots */}
-                              <div className="absolute bottom-2.5 left-0 right-0 flex justify-center gap-1.5">
-                                {activeChapel.photos.map((_, idx) => (
-                                  <button
-                                    key={idx}
-                                    onClick={() => setSlideIndex(idx)}
-                                    className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${idx === slideIndex ? "bg-white w-4" : "bg-white/50"}`}
+                    {/* COLUMNA IZQUIERDA (5 cols): Tarjeta de Capilla + Guía de Transporte SIT + GPS (Sticky) */}
+                    {activeLocation && (
+                      <Reveal className="lg:col-span-5 w-full lg:sticky lg:top-24">
+                        <div className="bg-card rounded-2xl overflow-hidden border border-border shadow-card w-full flex flex-col justify-between">
+                          
+                          {/* Foto de la capilla / Sede */}
+                          <div>
+                            {activeLocation.photos.length > 0 ? (
+                              <div className="relative aspect-[16/9] overflow-hidden">
+                                {activeLocation.photos.map((src, idx) => (
+                                  <img
+                                    key={src}
+                                    src={src}
+                                    alt={`${activeLocation.key} ${idx + 1}`}
+                                    className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
+                                    style={{ opacity: idx === slideIndex ? 1 : 0 }}
                                   />
                                 ))}
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                                <h3 className="absolute bottom-4 left-5 text-white font-display text-xl sm:text-2xl font-semibold drop-shadow leading-tight">
+                                  {activeLocation.key.replace("Capilla ", "")}
+                                </h3>
+                                {/* Dots */}
+                                {activeLocation.photos.length > 1 && (
+                                  <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5">
+                                    {activeLocation.photos.map((_, idx) => (
+                                      <button
+                                        key={idx}
+                                        onClick={() => setSlideIndex(idx)}
+                                        className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${idx === slideIndex ? "bg-white w-4" : "bg-white/50"}`}
+                                      />
+                                    ))}
+                                  </div>
+                                )}
                               </div>
-                            </div>
-                          ) : (
-                            <>
-                              <div className="h-1 bg-gradient-gold" />
-                              <div className="p-6 flex items-center gap-4">
-                                <span className="text-4xl leading-none flex-shrink-0">{activeChapel.icon}</span>
-                                <h3 className="font-display text-2xl text-primary">{activeChapel.key}</h3>
+                            ) : (
+                              <div className="p-6 flex items-center gap-4 bg-primary text-white">
+                                <span className="text-4xl leading-none flex-shrink-0">{activeLocation.icon}</span>
+                                <h3 className="font-display text-2xl">{activeLocation.key}</h3>
                               </div>
-                            </>
-                          )}
-                          <div className="p-5 flex flex-col gap-2.5 bg-secondary/20">
-                            <span className="inline-flex items-center gap-2 bg-card border border-border/80 text-foreground px-3.5 py-2 rounded-xl text-xs font-medium shadow-2xs">
-                              <MapPin size={14} className="text-gold shrink-0" /> {activeChapel.ubicacion}
-                            </span>
-                            <span className="inline-flex items-center gap-2 bg-card border border-border/80 text-foreground px-3.5 py-2 rounded-xl text-xs font-medium shadow-2xs">
-                              <Clock size={14} className="text-gold shrink-0" /> Misa: {activeChapel.horario}
-                            </span>
-                            {activeChapel.encargado && (
-                              <span className="inline-flex items-center gap-2 bg-card border border-border/80 text-foreground px-3.5 py-2 rounded-xl text-xs font-medium shadow-2xs">
-                                <User size={14} className="text-gold shrink-0" /> {activeChapel.encargado}
-                              </span>
                             )}
+
+                            {/* Datos pastorales y litúrgicos */}
+                            <div className="p-5 space-y-3 bg-secondary/20 border-b border-border">
+                              <div className="flex items-start gap-2.5 text-xs text-foreground font-medium">
+                                <MapPin size={16} className="text-gold shrink-0 mt-0.5" />
+                                <div>
+                                  <span className="text-[10px] text-muted-foreground uppercase font-bold block">Ubicación</span>
+                                  <span>{activeLocation.ubicacion}</span>
+                                </div>
+                              </div>
+
+                              <div className="flex items-start gap-2.5 text-xs text-foreground font-medium">
+                                <Clock size={16} className="text-gold shrink-0 mt-0.5" />
+                                <div>
+                                  <span className="text-[10px] text-muted-foreground uppercase font-bold block">Misa</span>
+                                  <span className="text-gold font-bold">{activeLocation.horario}</span>
+                                </div>
+                              </div>
+
+                              {activeLocation.encargado && (
+                                <div className="flex items-start gap-2.5 text-xs text-foreground font-medium">
+                                  <User size={16} className="text-gold shrink-0 mt-0.5" />
+                                  <div>
+                                    <span className="text-[10px] text-muted-foreground uppercase font-bold block">Encargado</span>
+                                    <span>{activeLocation.encargado}</span>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* ── NUEVO: BLOQUE DE TRANSPORTE SIT CUENCA 10 ── */}
+                            <div className="p-5 bg-amber-50/60 dark:bg-amber-950/20 border-b border-amber-200/50 space-y-2">
+                              <div className="flex items-center gap-2 text-amber-900 dark:text-amber-400 font-bold text-xs">
+                                <Bus size={15} className="text-amber-700 dark:text-amber-500" />
+                                <span>Ruta SIT — Cuenca 10 (Rojo/Granate)</span>
+                              </div>
+                              <p className="text-[11px] text-amber-950 dark:text-amber-200 font-medium">
+                                📍 Paradero: <strong>{activeLocation.busStop}</strong>
+                              </p>
+                              <p className="text-[11px] text-amber-800 dark:text-amber-300/80 leading-relaxed">
+                                {activeLocation.sitInstructions}
+                              </p>
+                            </div>
                           </div>
+
+                          {/* ── NUEVO: BOTONES GPS (Google Maps & Waze) ── */}
+                          <div className="p-4 bg-card grid grid-cols-2 gap-2">
+                            <button
+                              onClick={() => openGoogleMaps(activeLocation.lat, activeLocation.lng)}
+                              className="py-2.5 px-3 rounded-xl bg-primary text-white font-bold text-xs flex items-center justify-center gap-1.5 hover:bg-primary/90 transition-all shadow-sm active:scale-95"
+                            >
+                              <Navigation size={13} className="text-gold" />
+                              <span>Google Maps</span>
+                            </button>
+                            <button
+                              onClick={() => openWaze(activeLocation.lat, activeLocation.lng)}
+                              className="py-2.5 px-3 rounded-xl bg-secondary text-foreground border border-border font-bold text-xs flex items-center justify-center gap-1.5 hover:bg-secondary/80 transition-all active:scale-95"
+                            >
+                              <span>Waze GPS</span>
+                            </button>
+                          </div>
+
                         </div>
                       </Reveal>
                     )}
 
-                    {/* COLUMNA DERECHA: Grid de tarjetas de ministerios (Ocupa 2 columnas cuando hay capilla) */}
-                    <div className={activeChapel ? "lg:col-span-2" : "w-full"}>
+                    {/* COLUMNA DERECHA (7 cols): Grid de tarjetas de ministerios */}
+                    <div className={activeLocation ? "lg:col-span-7" : "w-full"}>
                       {/* Estado vacío */}
                       {filtered.length === 0 && (
                         <div className="text-center py-16 bg-card rounded-2xl border border-dashed border-border p-8">
                           <Church size={40} className="mx-auto mb-4 text-muted-foreground/40" />
                           <p className="text-sm text-muted-foreground">
-                            Aún no hay grupos registrados en esta {activeChapel ? "capilla" : "sede"}.
+                            Aún no hay grupos registrados en esta {activeLocation ? "comunidad" : "sede"}.
                           </p>
                         </div>
                       )}
 
                       {/* Grid de tarjetas */}
                       {filtered.length > 0 && (
-                        <div className={`grid gap-6 ${activeChapel ? "sm:grid-cols-2" : "md:grid-cols-2 lg:grid-cols-3"}`}>
+                        <div className={`grid gap-5 ${activeLocation ? "sm:grid-cols-2" : "md:grid-cols-2 lg:grid-cols-3"}`}>
                           {filtered.map((m, i) => {
                             const Icon = ministryIcons[i % ministryIcons.length];
                             const ministryImage = m.image_url || ministryPhotos[i];
@@ -370,11 +455,11 @@ export default function AboutSection({
                                   </div>
 
                                   {/* Cuerpo de la tarjeta */}
-                                  <div className="p-6 flex-1 flex flex-col justify-between">
+                                  <div className="p-5 flex-1 flex flex-col justify-between">
                                     <div>
-                                      <h4 className="font-display text-2xl text-primary">{m.name}</h4>
+                                      <h4 className="font-display text-xl sm:text-2xl text-primary">{m.name}</h4>
                                       {m.description && (
-                                        <p className="mt-3 text-sm text-muted-foreground leading-relaxed text-justify line-clamp-3">
+                                        <p className="mt-2.5 text-xs sm:text-sm text-muted-foreground leading-relaxed text-justify line-clamp-3">
                                           {m.description}
                                         </p>
                                       )}
@@ -382,15 +467,15 @@ export default function AboutSection({
 
                                     {/* Encargado con avatar */}
                                     {m.leader && (
-                                      <div className="mt-5 pt-4 border-t border-border flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-full bg-gold/10 border border-gold/20 flex items-center justify-center shrink-0">
-                                          <User size={13} className="text-gold" />
+                                      <div className="mt-4 pt-3.5 border-t border-border flex items-center gap-2.5">
+                                        <div className="w-7 h-7 rounded-full bg-gold/10 border border-gold/20 flex items-center justify-center shrink-0">
+                                          <User size={12} className="text-gold" />
                                         </div>
                                         <div>
-                                          <p className="text-[10px] text-gold uppercase tracking-wider font-semibold leading-none mb-0.5">
+                                          <p className="text-[9px] text-gold uppercase tracking-wider font-semibold leading-none mb-0.5">
                                             Encargado
                                           </p>
-                                          <p className="text-sm text-foreground font-medium">{m.leader}</p>
+                                          <p className="text-xs sm:text-sm text-foreground font-medium">{m.leader}</p>
                                         </div>
                                       </div>
                                     )}
@@ -414,4 +499,4 @@ export default function AboutSection({
       </section>
     </>
   );
-}
+}aaaaaaaaaaa

@@ -225,6 +225,36 @@ async function buildDevParishContext(): Promise<string> {
 }
 
 // ============================================================================
+// REGISTRO DE ANALÍTICAS ANÓNIMAS (NUEVO)
+// ============================================================================
+async function trackQueryAnalytics(userQuery: string) {
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_PUBLISHABLE_KEY;
+  if (!url || !key) return;
+
+  try {
+    const { createClient } = await import("@supabase/supabase-js");
+    const sb = createClient(url, key, { auth: { persistSession: false } });
+
+    const cleanQuery = userQuery.toLowerCase();
+    let category = "general";
+
+    if (/misa|horario|domingo/i.test(cleanQuery)) category = "misas";
+    else if (/bautismo|matrimonio|confes[ií]on|comuni[oó]n|sacramento/i.test(cleanQuery)) category = "sacramentos";
+    else if (/direcci[oó]n|llegar|ubicaci[oó]n/i.test(cleanQuery)) category = "ubicacion";
+    else if (/secretar[ií]a|telefono|llamar/i.test(cleanQuery)) category = "secretaria";
+    else if (/evento|actividad/i.test(cleanQuery)) category = "eventos";
+
+    await sb.from("analytics_queries").insert({
+      query_text: userQuery.slice(0, 250),
+      category: category,
+    });
+  } catch (err) {
+    console.error("[Analytics warning]: No se pudo registrar la consulta", err);
+  }
+}
+
+// ============================================================================
 // PLUGIN DEV
 // ============================================================================
 function chatDevPlugin(): Plugin {
@@ -250,7 +280,7 @@ function chatDevPlugin(): Plugin {
           );
           return;
         }
-
+        
         let body = "";
         req.on("data", (c) => (body += c));
         req.on("end", async () => {
@@ -297,9 +327,18 @@ function chatDevPlugin(): Plugin {
             }
 
             console.log("[Chat dev] mensajes a enviar:", safeMessages.length);
+            
+            // ── NUEVO: EXTRAER Y REGISTRAR LA PREGUNTA PARA ANALÍTICAS ──
+            const lastUserMsg = safeMessages.filter((m) => m.role === "user").pop();
+            const userQueryText = lastUserMsg && Array.isArray(lastUserMsg.parts) && lastUserMsg.parts[0]
+              ? String((lastUserMsg.parts[0] as { text?: string }).text ?? "")
+              : "";
+
             const [modelMessages, dynamicContext] = await Promise.all([
               convertToModelMessages(safeMessages as Parameters<typeof convertToModelMessages>[0]),
               buildDevParishContext(),
+              // Disparamos la analítica en paralelo de forma asíncrona y segura
+              userQueryText ? trackQueryAnalytics(userQueryText) : Promise.resolve(),
             ]);
 
             const groq = createGroq({ apiKey });

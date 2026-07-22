@@ -10,7 +10,11 @@ import { DonationRow } from "@/components/site/sections/DonacionesSection";
 import { Preloader } from "@/components/ui/Preloader";
 import {SchedulesSection} from "@/components/site/SchedulesSection"
 import * as Sentry from "@sentry/react";
-const FilialesMapSection = lazy(() => import("@/components/site/sections/FilialesMapSection"));
+const FilialesMapSection = lazy(() =>
+  import("@/components/site/sections/FilialesMapSection").then((m) => ({
+    default: m.FilialesMapSection,
+  }))
+);
 // Carga modular diferida (Lazy-loading / Code-splitting) para optimizar el rendimiento y evitar bloqueos
 const AboutSection = lazy(() => import("@/components/site/sections/AboutSection"));
 const SacramentosSection = lazy(() => import("@/components/site/sections/SacramentosSection"));

@@ -553,7 +553,6 @@ function SacramentosPage() {
                       <Phone size={16} />
                       Contactar secretaría
                     </a>
-                    
                   </div>
                 </div>
               </div>

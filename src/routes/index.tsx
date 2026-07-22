@@ -6,18 +6,18 @@ import { ParishAIBotFab } from "@/components/site/ParishAIBotFab";
 import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/site/Navbar";
 import { WhatsAppFab } from "@/components/site/WhatsAppFab";
-import { DonationRow } from "@/components/site/DonacionesSection";
+import { DonationRow } from "@/components/site/sections/DonacionesSection";
 import { Preloader } from "@/components/ui/Preloader";
 import {SchedulesSection} from "@/components/site/SchedulesSection"
 import * as Sentry from "@sentry/react";
-
+const FilialesMapSection = lazy(() => import("@/components/site/sections/FilialesMapSection"));
 // Carga modular diferida (Lazy-loading / Code-splitting) para optimizar el rendimiento y evitar bloqueos
 const AboutSection = lazy(() => import("@/components/site/sections/AboutSection"));
 const SacramentosSection = lazy(() => import("@/components/site/sections/SacramentosSection"));
 const HorariosSection = lazy(() => import("@/components/site/sections/HorariosSection"));
 const GaleriaSection = lazy(() => import("@/components/site/sections/GaleriaSection"));
 const DonacionesSection = lazy(() =>
-  import("@/components/site/DonacionesSection").then((m) => ({ default: m.DonacionesSection })),
+  import("@/components/site/sections/DonacionesSection").then((m) => ({ default: m.DonacionesSection })),
 );
 const EventosSection = lazy(() => import("@/components/site/sections/EventosSection"));
 const ContactoSection = lazy(() => import("@/components/site/sections/ContactoSection"));
@@ -270,7 +270,9 @@ function Home() {
           <SchedulesSection />
         </Suspense>
       </section>
-
+      <Suspense fallback={<SectionSkeleton height="h-[600px]" />}>
+        <FilialesMapSection />
+      </Suspense>
       <Suspense fallback={<SectionSkeleton height="h-[700px]" />}>
         <SacramentosSection />
       </Suspense>

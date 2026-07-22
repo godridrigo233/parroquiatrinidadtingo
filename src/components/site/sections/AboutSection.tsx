@@ -35,7 +35,7 @@ const locationsData: {
     photos: ["/assets/church-interior.webp", "/assets/hero-church.webp"],
     busStop: "Paradero 'Cruce de Tingo'",
     sitInstructions: "Bus SIT Cuenca 10 (Rojo/Granate). Bajar en el Cruce de Tingo y caminar 2 cuadras por Calle Ferrocarril.",
-    lat: -16.4358, lng: -71.5512,
+    lat: -16.431900735593253, lng: -71.56158179593903,
   },
   {
     key: "Capilla María de la Merced", icon: "🛐", ubicacion: "Amp. Pampa del Cusco", horario: "Domingos 6:00 p.m.",
@@ -47,7 +47,7 @@ const locationsData: {
     ],
     busStop: "Paradero Entrada Pampa del Cusco",
     sitInstructions: "Tomar Bus SIT Cuenca 10 por Av. Alfonso Ugarte hasta el desvío de Pampa del Cusco. Subir por la vía principal.",
-    lat: -16.4410, lng: -71.5485,
+    lat: -16.45023838717048, lng: -71.5592105514432,
   },
   {
     key: "Capilla Virgen de Fátima", icon: "🕊️", ubicacion: "Pampa del Cusco", horario: "Domingos 10:00 a.m.", encargado: "Hno. Gilvert",
@@ -59,7 +59,7 @@ const locationsData: {
     ],
     busStop: "Paradero Central Pampa del Cusco",
     sitInstructions: "Unidades del SIT con ruta hacia Pampa del Cusco / Hunter. El templo se ubica en la zona media urbana.",
-    lat: -16.4395, lng: -71.5460,
+    lat: -16.44808137426008, lng: -71.56592551067982,
   },
   {
     key: "Capilla Virgen del Carmen", icon: "⛪", ubicacion: "Plaza de Tingo Grande", horario: "Domingos 12:00 p.m.",
@@ -71,7 +71,7 @@ const locationsData: {
     ],
     busStop: "Paradero Plaza Tingo Grande",
     sitInstructions: "Bus SIT Cuenca 10 directo hasta la Plaza Principal de Tingo Grande. La capilla está frente al parque.",
-    lat: -16.4480, lng: -71.5540,
+    lat: -16.457548818750848, lng: -71.57475548463539,
   },
 ];
 

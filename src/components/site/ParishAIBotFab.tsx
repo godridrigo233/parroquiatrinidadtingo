@@ -14,6 +14,47 @@ import {
   Sparkles 
 } from "lucide-react";
 
+export function SchedulesSection() {
+  // TanStack Query nos entrega todo mágico y gestionado
+  const { data: schedules, isLoading, isError } = useSchedules();
+
+  if (isLoading) {
+    return (
+      <div className="p-8 text-center text-[#1A2940] animate-pulse">
+        Cargando horarios de misa y atención...
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="p-4 bg-red-50 text-red-700 rounded-xl flex items-center gap-2">
+        <AlertCircle size={20} />
+        <span>No se pudieron cargar los horarios en este momento. Intenta de nuevo más tarde.</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid gap-4 md:grid-cols-2">
+      {schedules?.map((item, index) => (
+        <div key={index} className="p-4 bg-white border border-[#CBD5E1] rounded-2xl shadow-sm hover:border-[#C8A45C] transition-colors">
+          <div className="flex items-center gap-2 text-[#C8A45C] font-semibold text-xs uppercase mb-1">
+            <Clock size={14} />
+            <span>{item.category}</span>
+          </div>
+          <h4 className="font-bold text-[#0F1B2D] text-base">{item.day_label}</h4>
+          <p className="text-sm text-[#1A2940] font-medium mt-0.5">{item.time_label}</p>
+          {item.notes && (
+            <p className="text-xs text-slate-500 mt-2 bg-slate-100 p-1.5 rounded-lg inline-block">
+              ℹ️ {item.notes}
+            </p>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
 export function ParishAIBotFab() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => {

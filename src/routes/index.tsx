@@ -8,6 +8,7 @@ import { Navbar } from "@/components/site/Navbar";
 import { WhatsAppFab } from "@/components/site/WhatsAppFab";
 import { DonationRow } from "@/components/site/DonacionesSection";
 import { Preloader } from "@/components/ui/Preloader";
+import {SchedulesSection} from "@/components/site/SchedulesSection"
 import * as Sentry from "@sentry/react";
 
 // Carga modular diferida (Lazy-loading / Code-splitting) para optimizar el rendimiento y evitar bloqueos
@@ -143,14 +144,7 @@ function Home() {
 
   const staleConfig = { staleTime: 1000 * 60 * 15, gcTime: 1000 * 60 * 30 };
 
-  const { data: schedules = [], isLoading: loadingSchedules } = useQuery({
-    queryKey: ["home_schedules"],
-    queryFn: async () => {
-      const { data } = await supabase.from("schedules").select("*").order("sort_order");
-      return (data as Schedule[]) || [];
-    },
-    ...staleConfig,
-  });
+  
 
   const { data: ministries = [], isLoading: loadingMinistries } = useQuery({
     queryKey: ["home_ministries"],
@@ -193,13 +187,7 @@ function Home() {
     ...staleConfig,
   });
 
-  const globalLoading =
-    loadingSchedules || loadingMinistries || loadingEvents || loadingGallery || loadingDonations;
-
-  const groupedSchedules = schedules.reduce<Record<string, Schedule[]>>((acc, s) => {
-    (acc[s.category] ??= []).push(s);
-    return acc;
-  }, {});
+  const globalLoading = loadingMinistries || loadingEvents || loadingGallery || loadingDonations;
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -277,10 +265,11 @@ function Home() {
       <Suspense fallback={<SectionSkeleton height="h-[1800px]" />}>
         <AboutSection ministries={ministries} loadingMinistries={loadingMinistries} />
       </Suspense>
-
-      <Suspense fallback={<SectionSkeleton height="h-[900px]" />}>
-        <HorariosSection groupedSchedules={groupedSchedules} loadingSchedules={loadingSchedules} />
-      </Suspense>
+      <section id="horarios">
+        <Suspense fallback={<SectionSkeleton height="h-[900px]" />}>
+          <SchedulesSection />
+        </Suspense>
+      </section>
 
       <Suspense fallback={<SectionSkeleton height="h-[700px]" />}>
         <SacramentosSection />

@@ -145,6 +145,10 @@ function ParishAIBotFabWidget() {
   const [fontSize, setFontSize] = useState<"sm" | "base" | "lg">("sm");
   const [speakingMsgId, setSpeakingMsgId] = useState<string | null>(null);
   const [quickReplies, setQuickReplies] = useState(getDynamicQuickReplies());
+  
+  // ── ESTADOS PARA MODO VOZ CONTINUA AUTOMÁTICA ──
+  const [autoRead, setAutoRead] = useState(false);
+  const lastAutoReadIdRef = useRef<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -256,6 +260,7 @@ function ParishAIBotFabWidget() {
     setShowTeaser(false);
     setTeaserDismissed(true);
   }, []);
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -263,6 +268,7 @@ function ParishAIBotFabWidget() {
       setInputValue("");
     }
   };
+
   // ── ENVÍO DE MENSAJES CON INTERCEPTOR DE CERO LATENCIA ──
   const handleSend = (textToSend: string) => {
     const text = textToSend.trim();
@@ -292,23 +298,82 @@ function ParishAIBotFabWidget() {
     handleSend(message);
   };
 
-  // ── 4. LECTURA EN VOZ ALTA (TEXT TO SPEECH) ──
+  // ── 4. LECTURA EN VOZ ALTA (TEXT TO SPEECH OPTIMIZADO Y GRATUITO) ──
+  const getBestSpanishVoice = (): SpeechSynthesisVoice | null => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return null;
+    
+    const voices = window.speechSynthesis.getVoices();
+    
+    // 1. Buscamos primero voces "Neuronales" o "Naturales"
+    const neuralVoice = voices.find((v) => 
+      v.lang.startsWith("es") && 
+      (v.name.includes("Natural") || v.name.includes("Neural") || v.name.includes("Google"))
+    );
+    if (neuralVoice) return neuralVoice;
+
+    // 2. Buscamos voces humanas masculinas populares
+    const maleVoice = voices.find((v) => 
+      v.lang.startsWith("es") && 
+      (/Alvaro|Jorge|Alex|Pablo|Miguel|Diego/i.test(v.name))
+    );
+    if (maleVoice) return maleVoice;
+
+    // 3. Mejor voz latina disponible
+    const latinVoice = voices.find((v) => 
+      v.lang === "es-PE" || v.lang === "es-MX" || v.lang === "es-CO" || v.lang === "es-US" || v.lang === "es-ES"
+    );
+    if (latinVoice) return latinVoice;
+
+    // 4. Último recurso: cualquier voz en español
+    return voices.find((v) => v.lang.startsWith("es")) || null;
+  };
+
   const toggleSpeech = (text: string, id: string) => {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    
+    // Si ya está hablando este mensaje, lo callamos
     if (speakingMsgId === id) {
       window.speechSynthesis.cancel();
       setSpeakingMsgId(null);
       return;
     }
+    
+    // Cortamos cualquier audio anterior
     window.speechSynthesis.cancel();
+    
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "es-PE";
-    utterance.rate = 0.95; // Velocidad ligeramente pausada para adultos mayores
+    const bestVoice = getBestSpanishVoice();
+    if (bestVoice) {
+      utterance.voice = bestVoice;
+    } else {
+      utterance.lang = "es-PE";
+    }
+    utterance.rate = 0.92;  // Un 8% más lento de lo normal
+    utterance.pitch = 0.95; // Un tono ligeramente más grave
+
     utterance.onend = () => setSpeakingMsgId(null);
     utterance.onerror = () => setSpeakingMsgId(null);
+    
     window.speechSynthesis.speak(utterance);
     setSpeakingMsgId(id);
   };
+
+  // ── GATILLO DE LECTURA AUTOMÁTICA CONTINUA ──
+  useEffect(() => {
+    if (!autoRead || isLoading || messages.length === 0) return;
+    const lastMsg = messages[messages.length - 1];
+    
+    // Solo leemos si es un mensaje del asistente y no se ha leído antes
+    if (lastMsg.role === "assistant" && lastAutoReadIdRef.current !== lastMsg.id) {
+      lastAutoReadIdRef.current = lastMsg.id;
+      const text = getMessageText(lastMsg);
+      if (text) {
+        setTimeout(() => {
+          toggleSpeech(text, lastMsg.id);
+        }, 300);
+      }
+    }
+  }, [messages, isLoading, autoRead]);
 
   // ── 5. DETECCIÓN PARA BOTONES DE ACCIÓN DIRECTA HACIA SECRETARÍA ──
   const shouldShowSecretariatButtons = (text: string): boolean => {
@@ -358,7 +423,7 @@ function ParishAIBotFabWidget() {
             : `${reducedMotion ? "scale-100" : "scale-95"} opacity-0 translate-y-4 pointer-events-none absolute`
         }`}
       >
-        {/* Cabecera con Avatar y Control de Tamaño de Letra */}
+        {/* Cabecera con Avatar, Voz: ON/OFF y Control de Tamaño de Letra */}
         <div className="bg-[#0F1B2D] p-3.5 sm:p-4 flex items-center justify-between border-b border-[#C8A45C]/30">
           <div className="flex items-center gap-3">
             {/* ── 6. ANIMACIÓN DE "PENSANDO" EN EL AVATAR ── */}
@@ -389,6 +454,33 @@ function ParishAIBotFabWidget() {
           </div>
 
           <div className="flex items-center gap-1.5">
+            {/* ── BOTÓN MODO VOZ AUTOMÁTICA CONTINUA ── */}
+            <button
+              onClick={() => {
+                const nextState = !autoRead;
+                setAutoRead(nextState);
+                if (nextState && messages.length > 0) {
+                  const lastMsg = messages[messages.length - 1];
+                  if (lastMsg.role === "assistant") {
+                    toggleSpeech(getMessageText(lastMsg), lastMsg.id);
+                    lastAutoReadIdRef.current = lastMsg.id;
+                  }
+                } else if (!nextState && typeof window !== "undefined" && "speechSynthesis" in window) {
+                  window.speechSynthesis.cancel();
+                  setSpeakingMsgId(null);
+                }
+              }}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all border shadow-sm ${
+                autoRead
+                  ? "bg-[#C8A45C] text-white border-[#C8A45C] ring-2 ring-white/30 animate-pulse"
+                  : "bg-white/10 text-white/80 border-white/15 hover:text-white hover:bg-white/20"
+              }`}
+              title={autoRead ? "Desactivar lectura automática" : "Activar lectura automática de respuestas"}
+            >
+              <Volume2 size={13} className={autoRead ? "animate-bounce" : ""} />
+              <span>{autoRead ? "Voz: ON" : "Voz: OFF"}</span>
+            </button>
+
             {/* ── 7. BOTONES DE ACCESIBILIDAD A- / A+ PARA ADULTOS MAYORES ── */}
             <div className="flex items-center bg-white/10 rounded-full p-0.5 border border-white/15">
               <button
@@ -461,7 +553,6 @@ function ParishAIBotFabWidget() {
                   >
                     {msg.role === "assistant" ? renderRichText(rawText, msg.id) : rawText}
 
-                    {/* Botón de Lectura en Voz Alta (Solo en mensajes del asistente) */}
                     {/* Botón de Lectura en Voz Alta (Visible en celular, hover en PC) */}
                     {msg.role === "assistant" && (
                       <button

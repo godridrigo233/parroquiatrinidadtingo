@@ -49,7 +49,7 @@ function EvangelioDropdown({ bg }: { bg: boolean }) {
         onClick={() => setOpen((v) => !v)}
         aria-label="Evangelio del día"
         title="Evangelio del día"
-        className={`flex items-center justify-center w-8 h-8 rounded-full border transition-colors hover:border-gold hover:text-gold ${
+        className={`flex items-center justify-center w-8 h-8 rounded-full border transition-colors select-none outline-none focus:outline-none focus:ring-0 hover:border-gold hover:text-gold ${
           open
             ? "border-gold text-gold"
             : bg
@@ -61,8 +61,8 @@ function EvangelioDropdown({ bg }: { bg: boolean }) {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-52 bg-card border border-border rounded-xl shadow-elegant overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-150">
-          <p className="px-4 pt-3 pb-1 text-[10px] uppercase tracking-widest font-bold text-muted-foreground">
+        <div className="absolute right-0 top-full mt-2 w-52 bg-card border border-border rounded-xl shadow-elegant overflow-hidden z-[110] animate-in fade-in slide-in-from-top-2 duration-150">
+          <p className="px-4 pt-3 pb-1 text-[10px] uppercase tracking-widest font-bold text-muted-foreground select-none">
             Evangelio del día
           </p>
           <a
@@ -70,14 +70,14 @@ function EvangelioDropdown({ bg }: { bg: boolean }) {
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => setOpen(false)}
-            className="flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-secondary transition-colors"
+            className="flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-secondary transition-colors select-none outline-none focus:outline-none"
           >
             <BookOpen size={15} className="text-gold shrink-0" />
             Leer en Vatican News
           </a>
           <button
             onClick={compartirWhatsApp}
-            className="w-full flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-secondary transition-colors border-t border-border/50"
+            className="w-full flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-secondary transition-colors border-t border-border/50 select-none outline-none focus:outline-none"
           >
             <MessageCircle size={15} className="text-green-500 shrink-0" />
             Compartir por WhatsApp
@@ -89,7 +89,7 @@ function EvangelioDropdown({ bg }: { bg: boolean }) {
 }
 
 export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) {
-  const [scrolled, setScrolled] = useState(true); // FIX: empieza en true para evitar flash transparente
+  const [scrolled, setScrolled] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isMobileDevice, setIsMobileDevice] = useState(false);
   const clicks = useRef(0);
@@ -97,15 +97,12 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
   const navigate = useNavigate();
   const matches = useMatches();
 
-  // Determinar si estamos en home
   const isHome = matches.some((m) => m.pathname === "/");
 
-  // Cerrar drawer al navegar a otra ruta
   useEffect(() => {
     setDrawerOpen(false);
   }, [matches]);
 
-  // Cerrar drawer con tecla Escape
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") setDrawerOpen(false);
@@ -114,16 +111,28 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
-  // FIX: scroll-detection solo activo en home; fuera de home siempre con fondo
+  // ── FIX BLINDADO PARA MÓVILES: Detección multicanal de scroll ──
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
+    const onScroll = () => {
+      // Revisa todas las posibles fuentes de scroll en navegadores móviles (iOS/Android)
+      const scrollPos =
+        window.scrollY ||
+        window.pageYOffset ||
+        document.documentElement.scrollTop ||
+        document.body.scrollTop ||
+        (document.getElementById("root")?.scrollTop ?? 0) ||
+        0;
+      
+      setScrolled(scrollPos > 20);
+    };
 
     if (isHome) {
-      onScroll(); // evalúa posición actual al entrar al home
-      window.addEventListener("scroll", onScroll, { passive: true });
-      return () => window.removeEventListener("scroll", onScroll);
+      onScroll(); // Evalúa posición al montar
+      // EL TRUCO: capture: true obliga al navegador móvil a reportar el scroll sin importar qué contenedor se mueva
+      window.addEventListener("scroll", onScroll, { passive: true, capture: true });
+      return () => window.removeEventListener("scroll", onScroll, { capture: true });
     } else {
-      setScrolled(true); // fuera de home siempre con fondo
+      setScrolled(true);
     }
   }, [isHome]);
 
@@ -140,7 +149,6 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // Bloquear scroll del body cuando drawer abierto
   useEffect(() => {
     document.body.style.overflow = drawerOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
@@ -156,7 +164,6 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
     }
   };
 
-  // SIEMPRE mostrar fondo cuando no estamos en home o cuando hay forceBackground
   const bg = !!forceBackground || !isHome || scrolled;
 
   const handleNavClick = useCallback((href: string, isRoute?: boolean) => {
@@ -170,22 +177,22 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
 
   return (
     <header
-      className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
+      className={`fixed top-0 inset-x-0 z-[100] transition-all duration-300 ${
         bg ? "bg-background/95 backdrop-blur-md border-b border-border shadow-card" : "bg-transparent"
       }`}
     >
       <div className="max-w-7xl mx-auto px-5 lg:px-8 h-16 flex items-center justify-between">
         <button
           onClick={onLogoClick}
-          className="flex items-center gap-3 select-none"
+          className="flex items-center gap-3 select-none outline-none focus:outline-none focus:ring-0"
           aria-label="Logo parroquia"
         >
-          <img src="/assets/logo.webp" alt="" className="h-10 w-10 rounded-full overflow-hidden object-cover" />
+          <img src="/assets/logo.webp" alt="" className="h-10 w-10 rounded-full overflow-hidden object-cover pointer-events-none" />
           <div className="hidden sm:block leading-tight text-left">
-            <p className={`font-display text-base font-semibold ${bg ? "text-foreground" : "text-white"}`}>
+            <p className={`font-display text-base font-semibold transition-colors ${bg ? "text-foreground" : "text-white"}`}>
               Parroquia Santísima Trinidad
             </p>
-            <p className={`text-[11px] uppercase tracking-widest ${bg ? "text-muted-foreground" : "text-white/80"}`}>
+            <p className={`text-[11px] uppercase tracking-widest transition-colors ${bg ? "text-muted-foreground" : "text-white/80"}`}>
               Tingo - Arequipa
             </p>
           </div>
@@ -195,13 +202,27 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
         <nav className="hidden lg:flex items-center gap-6">
           {links.map((l) =>
             l.route ? (
-              <Link key={l.href} to={"/sacramentos" as any} className={`text-sm font-medium transition-colors hover:text-gold ${bg ? "text-foreground/80" : "text-white/90"}`} activeProps={{ className: "text-gold" }}>
+              <Link
+                key={l.href}
+                to={"/sacramentos" as any}
+                className={`text-sm font-medium transition-colors select-none outline-none focus:outline-none focus:ring-0 hover:text-gold ${
+                  bg ? "text-foreground/80" : "text-white/90"
+                }`}
+                activeProps={{ className: "text-gold" }}
+              >
                 {l.label}
               </Link>
             ) : (
-              <span key={l.href} onClick={() => handleNavClick(l.href)} className={`text-sm font-medium transition-colors hover:text-gold cursor-pointer ${bg ? "text-foreground/80" : "text-white/90"}`}>
+              <button
+                key={l.href}
+                type="button"
+                onClick={() => handleNavClick(l.href)}
+                className={`text-sm font-medium transition-colors select-none outline-none focus:outline-none focus:ring-0 hover:text-gold cursor-pointer bg-transparent border-0 p-0 ${
+                  bg ? "text-foreground/80" : "text-white/90"
+                }`}
+              >
                 {l.label}
-              </span>
+              </button>
             ),
           )}
 
@@ -209,12 +230,13 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
 
           <div className="flex items-center gap-3">
             {isMobileDevice && <InstallPWA />}
-            <span
+            <button
+              type="button"
               onClick={() => handleNavClick("contacto")}
-              className="px-4 py-2 rounded-full bg-gradient-gold text-primary-foreground text-sm font-semibold shadow-card hover:shadow-elegant transition-shadow cursor-pointer"
+              className="px-4 py-2 rounded-full bg-gradient-gold text-primary-foreground text-sm font-semibold shadow-card hover:shadow-elegant transition-shadow cursor-pointer select-none outline-none focus:outline-none focus:ring-0 border-0"
             >
               Visítanos
-            </span>
+            </button>
           </div>
         </nav>
 
@@ -223,7 +245,9 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
           <EvangelioDropdown bg={bg} />
           <button
             onClick={() => setDrawerOpen((v) => !v)}
-            className={`p-2 rounded-lg transition-colors ${bg ? "text-foreground hover:bg-secondary" : "text-white hover:bg-white/10"}`}
+            className={`p-2 rounded-lg transition-colors select-none outline-none focus:outline-none focus:ring-0 ${
+              bg ? "text-foreground hover:bg-secondary" : "text-white hover:bg-white/10"
+            }`}
             aria-label="Menú"
           >
             {drawerOpen ? <X size={24} /> : <Menu size={24} />}
@@ -233,22 +257,22 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
 
       {/* ═══════════════════ OVERLAY ═══════════════════ */}
       {drawerOpen && (
-      <div
-        className="lg:hidden fixed inset-0 top-16 bg-black/40 backdrop-blur-sm z-[55]"
-        onClick={() => setDrawerOpen(false)}
-      />
-    )}
+        <div
+          className="lg:hidden fixed inset-0 top-16 bg-black/50 backdrop-blur-sm z-[101] select-none"
+          onClick={() => setDrawerOpen(false)}
+        />
+      )}
 
       {/* ═══════════════════ DRAWER MÓVIL ═══════════════════ */}
       <div
-        className={`lg:hidden fixed top-16 right-0 bottom-0 w-[300px] max-w-[85vw] bg-background border-l border-border shadow-2xl z-[60] flex flex-col transition-transform duration-300 ease-out ${
-        drawerOpen ? "translate-x-0" : "translate-x-full pointer-events-none"
-      }`}
+        className={`lg:hidden fixed top-16 right-0 bottom-0 w-[300px] max-w-[85vw] bg-background border-l border-border shadow-2xl z-[105] flex flex-col transition-transform duration-300 ease-out select-none ${
+          drawerOpen ? "translate-x-0" : "translate-x-full pointer-events-none"
+        }`}
       >
         {/* Encabezado del drawer */}
         <div className="px-5 pt-5 pb-4 border-b border-border/50">
-          <div className="flex items-center gap-3">
-            <img src="/assets/logo.webp" alt="" className="h-9 w-9 rounded-full object-cover" />
+          <div className="flex items-center gap-3 select-none">
+            <img src="/assets/logo.webp" alt="" className="h-9 w-9 rounded-full object-cover pointer-events-none" />
             <div>
               <p className="font-display text-sm font-semibold text-foreground">Parroquia Santísima Trinidad</p>
               <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Tingo - Arequipa</p>
@@ -266,7 +290,7 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
                   key={l.href}
                   to={"/sacramentos" as any}
                   onClick={() => setDrawerOpen(false)}
-                  className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-foreground/85 hover:bg-secondary/60 transition-colors"
+                  className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-foreground/85 hover:bg-secondary/60 transition-colors select-none outline-none focus:outline-none focus:ring-0"
                 >
                   <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gold/10">
                     <Icon size={16} className="text-gold" />
@@ -276,16 +300,17 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
               );
             }
             return (
-              <span
+              <button
                 key={l.href}
+                type="button"
                 onClick={() => handleNavClick(l.href)}
-                className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-foreground/85 hover:bg-secondary/60 transition-colors cursor-pointer"
+                className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-foreground/85 hover:bg-secondary/60 transition-colors cursor-pointer select-none outline-none focus:outline-none focus:ring-0 bg-transparent border-0 text-left"
               >
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gold/10">
                   <Icon size={16} className="text-gold" />
                 </span>
                 {l.label}
-              </span>
+              </button>
             );
           })}
 
@@ -294,7 +319,7 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => setDrawerOpen(false)}
-            className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-foreground/85 hover:bg-secondary/60 transition-colors"
+            className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-foreground/85 hover:bg-secondary/60 transition-colors select-none outline-none focus:outline-none focus:ring-0"
           >
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gold/10">
               <BookOpen size={16} className="text-gold" />
@@ -304,13 +329,13 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
         </nav>
 
         {/* Footer del drawer */}
-        <div className="px-5 py-4 border-t border-border/50 space-y-3">
+        <div className="px-5 py-4 border-t border-border/50 space-y-3 select-none">
           {isMobileDevice && <InstallPWA />}
-          <a href="tel:+51915049850" className="flex items-center gap-2.5 text-xs text-muted-foreground">
+          <a href="tel:+51915049850" className="flex items-center gap-2.5 text-xs text-muted-foreground outline-none focus:outline-none">
             <Phone size={12} className="text-gold" />
             +51 915 049 850
           </a>
-          <a href="mailto:pstrinidadtingo@gmail.com" className="flex items-center gap-2.5 text-xs text-muted-foreground">
+          <a href="mailto:pstrinidadtingo@gmail.com" className="flex items-center gap-2.5 text-xs text-muted-foreground outline-none focus:outline-none">
             <Mail size={12} className="text-gold" />
             pstrinidadtingo@gmail.com
           </a>

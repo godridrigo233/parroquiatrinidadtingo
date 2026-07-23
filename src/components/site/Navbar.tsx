@@ -93,14 +93,25 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [isMobileDevice, setIsMobileDevice] = useState(false);
+  const [isHome, setIsHome] = useState(true);
   const clicks = useRef(0);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
+    const checkRoute = () => setIsHome(window.location.pathname === "/");
+    checkRoute();
+    window.addEventListener("popstate", checkRoute);
+    return () => window.removeEventListener("popstate", checkRoute);
+  }, []);
+
+  useEffect(() => {
+    const onScroll = () => {
+      setScrolled(window.scrollY > 20);
+      setIsHome(window.location.pathname === "/");
+    };
     onScroll();
-    window.addEventListener("scroll", onScroll);
+    window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
@@ -137,7 +148,7 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
     }
   };
 
-  const bg = scrolled || forceBackground;
+  const bg = forceBackground || !isHome || scrolled;
 
   const handleNavClick = useCallback((href: string, route?: boolean) => {
     if (route) {

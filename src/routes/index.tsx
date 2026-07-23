@@ -197,6 +197,21 @@ function Home() {
     ...staleConfig,
   });
 
+  const { data: rawSchedules = [], isLoading: loadingSchedules } = useQuery({
+    queryKey: ["home_schedules"],
+    queryFn: async () => {
+      const { data } = await supabase.from("schedules").select("*").order("sort_order");
+      return (data as Schedule[]) || [];
+    },
+    ...staleConfig,
+  });
+
+  const groupedSchedules: Record<string, Schedule[]> = {};
+  rawSchedules.forEach((s) => {
+    if (!groupedSchedules[s.category]) groupedSchedules[s.category] = [];
+    groupedSchedules[s.category].push(s);
+  });
+
   const globalLoading = loadingMinistries || loadingEvents || loadingGallery || loadingDonations;
 
   return (
@@ -274,6 +289,9 @@ function Home() {
       </section>
       <Suspense fallback={<SectionSkeleton height="h-[1800px]" />}>
         <AboutSection ministries={ministries} loadingMinistries={loadingMinistries} />
+      </Suspense>
+      <Suspense fallback={<SectionSkeleton height="h-[700px]" />}>
+        <HorariosSection groupedSchedules={groupedSchedules} loadingSchedules={loadingSchedules} />
       </Suspense>
       <Suspense fallback={<SectionSkeleton height="h-[700px]" />}>
         <SacramentosSection />

@@ -24,7 +24,7 @@ export default function SacramentosSection() {
           </p>
         </Reveal>
 
-        <div className="mt-14 grid sm:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6">
+        <div className="mt-14 flex flex-wrap justify-center gap-5 md:gap-6">
           {sacramentos.map((s, i) => {
             const Icon = s.icon;
             return (
@@ -32,7 +32,7 @@ export default function SacramentosSection() {
                 <Link
                   to="/sacramentos"
                   hash={s.hash}
-                  className="group relative block h-full overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-card transition-all duration-300 hover:-translate-y-1.5 hover:shadow-elegant active:scale-[0.99]"
+                  className="group relative block h-full w-[280px] sm:w-[calc(50%-0.75rem)] lg:w-[calc(25%-1.125rem)] overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-card transition-all duration-300 hover:-translate-y-1.5 hover:shadow-elegant active:scale-[0.99]"
                 >
                   {/* Halo de color al hover */}
                   <span

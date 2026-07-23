@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useMatches } from "@tanstack/react-router";
 import { Menu, X, BookOpen, MessageCircle, Home, Church, Users, Heart, Music, CalendarDays, Image, Droplets, Phone, Mail, MapPin } from "lucide-react";
 import { InstallPWA } from "@/components/site/InstallPWA";
 
@@ -21,7 +21,6 @@ function scrollToSection(id: string) {
   if (el) {
     el.scrollIntoView({ behavior: "smooth", block: "start" });
   } else {
-    // Si no existe la sección (ej: estamos en otra ruta), navegar al home con hash
     window.location.href = `/#${id}`;
   }
 }
@@ -90,26 +89,33 @@ function EvangelioDropdown({ bg }: { bg: boolean }) {
 }
 
 export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) {
-  const [scrolled, setScrolled] = useState(false);
-  const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(() => window.scrollY > 20);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [isMobileDevice, setIsMobileDevice] = useState(false);
-  const [isHome, setIsHome] = useState(true);
   const clicks = useRef(0);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navigate = useNavigate();
+  const matches = useMatches();
 
+  // Determinar si estamos en home
+  const isHome = matches.some((m) => m.pathname === "/");
+
+  // Cerrar drawer al navegar a otra ruta
   useEffect(() => {
-    const checkRoute = () => setIsHome(window.location.pathname === "/");
-    checkRoute();
-    window.addEventListener("popstate", checkRoute);
-    return () => window.removeEventListener("popstate", checkRoute);
+    setDrawerOpen(false);
+  }, [matches]);
+
+  // Cerrar drawer con tecla Escape
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setDrawerOpen(false);
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
   }, []);
 
   useEffect(() => {
-    const onScroll = () => {
-      setScrolled(window.scrollY > 20);
-      setIsHome(window.location.pathname === "/");
-    };
+    const onScroll = () => setScrolled(window.scrollY > 20);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -123,20 +129,16 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
       );
       setIsMobileDevice(isSmallScreen && isTouchOrMobile);
     };
-
     checkMobile();
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
+  // Bloquear scroll del body cuando drawer abierto
   useEffect(() => {
-    if (open) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
+    document.body.style.overflow = drawerOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
-  }, [open]);
+  }, [drawerOpen]);
 
   const onLogoClick = () => {
     clicks.current += 1;
@@ -148,23 +150,17 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
     }
   };
 
-  const bg = forceBackground || !isHome || scrolled;
+  // SIEMPRE mostrar fondo cuando no estamos en home o cuando hay forceBackground
+  const bg = !!forceBackground || !isHome || scrolled;
 
-  const handleNavClick = useCallback((href: string, route?: boolean) => {
-    if (route) {
-      // Para rutas internas (Sacramentos), usar navigate
+  const handleNavClick = useCallback((href: string, isRoute?: boolean) => {
+    setDrawerOpen(false);
+    if (isRoute) {
       navigate({ to: `/${href}` });
     } else {
-      // Para anchors del home, scroll suave
       scrollToSection(href);
     }
-    setOpen(false);
   }, [navigate]);
-
-  const linkClass = (active = false) =>
-    `text-sm font-medium transition-colors hover:text-gold cursor-pointer ${
-      bg ? "text-foreground/80" : "text-white/90"
-    } ${active ? "text-gold" : ""}`;
 
   return (
     <header
@@ -180,7 +176,7 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
           className="flex items-center gap-3 select-none"
           aria-label="Logo parroquia"
         >
-          <img src={"/assets/logo.webp"} alt="" className="h-10 w-10 rounded-full overflow-hidden object-cover" />
+          <img src="/assets/logo.webp" alt="" className="h-10 w-10 rounded-full overflow-hidden object-cover" />
           <div className="hidden sm:block leading-tight text-left">
             <p className={`font-display text-base font-semibold ${bg ? "text-foreground" : "text-white"}`}>
               Parroquia Santísima Trinidad
@@ -195,17 +191,17 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
         <nav className="hidden lg:flex items-center gap-6">
           {links.map((l) =>
             l.route ? (
-              <Link key={l.href} to={`/${l.href}`} className={linkClass()} activeProps={{ className: "text-gold" }}>
+              <Link key={l.href} to={"/sacramentos" as any} className={`text-sm font-medium transition-colors hover:text-gold ${bg ? "text-foreground/80" : "text-white/90"}`} activeProps={{ className: "text-gold" }}>
                 {l.label}
               </Link>
             ) : (
-              <span key={l.href} onClick={() => handleNavClick(l.href)} className={linkClass()}>
+              <span key={l.href} onClick={() => handleNavClick(l.href)} className={`text-sm font-medium transition-colors hover:text-gold cursor-pointer ${bg ? "text-foreground/80" : "text-white/90"}`}>
                 {l.label}
               </span>
             ),
           )}
 
-          <EvangelioDropdown bg={!!bg} />
+          <EvangelioDropdown bg={bg} />
 
           <div className="flex items-center gap-3">
             {isMobileDevice && <InstallPWA />}
@@ -220,29 +216,29 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
 
         {/* BOTÓN HAMBURUESA (Móvil) */}
         <div className="lg:hidden flex items-center gap-1">
-          <EvangelioDropdown bg={!!bg} />
+          <EvangelioDropdown bg={bg} />
           <button
-            onClick={() => setOpen((v) => !v)}
+            onClick={() => setDrawerOpen((v) => !v)}
             className={`p-2 rounded-lg transition-colors ${bg ? "text-foreground hover:bg-secondary" : "text-white hover:bg-white/10"}`}
             aria-label="Menú"
           >
-            {open ? <X size={24} /> : <Menu size={24} />}
+            {drawerOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
       </div>
 
       {/* ═══════════════════ OVERLAY ═══════════════════ */}
-      <div
-        className={`lg:hidden fixed inset-0 top-16 bg-black/40 backdrop-blur-sm z-40 transition-opacity duration-300 pointer-events-auto ${
-          open ? "opacity-100" : "opacity-0 pointer-events-none"
-        }`}
-        onClick={() => setOpen(false)}
-      />
+      {drawerOpen && (
+        <div
+          className="lg:hidden fixed inset-0 top-16 bg-black/40 backdrop-blur-sm z-[55]"
+          onClick={() => setDrawerOpen(false)}
+        />
+      )}
 
       {/* ═══════════════════ DRAWER MÓVIL ═══════════════════ */}
       <div
-        className={`lg:hidden fixed top-16 right-0 bottom-0 w-[300px] max-w-[85vw] bg-background border-l border-border shadow-2xl z-50 flex flex-col transition-transform duration-300 ease-out ${
-          open ? "translate-x-0" : "translate-x-full"
+        className={`lg:hidden fixed top-16 right-0 bottom-0 w-[300px] max-w-[85vw] bg-background border-l border-border shadow-2xl z-[60] flex flex-col transition-transform duration-300 ease-out ${
+          drawerOpen ? "translate-x-0" : "translate-x-full pointer-events-none"
         }`}
       >
         {/* Encabezado del drawer */}
@@ -264,8 +260,8 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
               return (
                 <Link
                   key={l.href}
-                  to={`/${l.href}`}
-                  onClick={() => setOpen(false)}
+                  to={"/sacramentos" as any}
+                  onClick={() => setDrawerOpen(false)}
                   className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-foreground/85 hover:bg-secondary/60 transition-colors"
                 >
                   <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gold/10">
@@ -289,12 +285,11 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
             );
           })}
 
-          {/* Evangelio */}
           <a
             href={EVANGELIO_URL}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={() => setOpen(false)}
+            onClick={() => setDrawerOpen(false)}
             className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-foreground/85 hover:bg-secondary/60 transition-colors"
           >
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gold/10">
@@ -307,18 +302,11 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
         {/* Footer del drawer */}
         <div className="px-5 py-4 border-t border-border/50 space-y-3">
           {isMobileDevice && <InstallPWA />}
-
-          <a
-            href="tel:+51915049850"
-            className="flex items-center gap-2.5 text-xs text-muted-foreground"
-          >
+          <a href="tel:+51915049850" className="flex items-center gap-2.5 text-xs text-muted-foreground">
             <Phone size={12} className="text-gold" />
             +51 915 049 850
           </a>
-          <a
-            href="mailto:pstrinidadtingo@gmail.com"
-            className="flex items-center gap-2.5 text-xs text-muted-foreground"
-          >
+          <a href="mailto:pstrinidadtingo@gmail.com" className="flex items-center gap-2.5 text-xs text-muted-foreground">
             <Mail size={12} className="text-gold" />
             pstrinidadtingo@gmail.com
           </a>

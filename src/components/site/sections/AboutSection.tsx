@@ -32,7 +32,7 @@ const locationsData: {
   {
     key: "Sede Central", icon: "⛪", ubicacion: "Calle Ferrocarril 200, Tingo", horario: "Dom 8am/6pm | Lun-Sáb 6pm",
     encargado: "Rvdo. P. Tomy Thengumparambil, CMI",
-    photos: ["/assets/parroquia-1.jpg", "/assets/church-interior.webp", "/assets/hero-church.webp"],
+    photos: ["/assets/parroquia-1.jpg", "/assets/parroquia-2.jpg", "/assets/parroquia-3.jpg", "/assets/church-interior.webp", "/assets/hero-church.webp"],
     busStop: "Paradero 'Cruce de Tingo'",
     sitInstructions: "Bus SIT Cuenca 10 (Rojo/Granate). Bajar en el Cruce de Tingo y caminar 2 cuadras por Calle Ferrocarril.",
     lat: -16.431900735593253, lng: -71.56158179593903,

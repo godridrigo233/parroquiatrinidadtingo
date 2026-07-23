@@ -140,6 +140,18 @@ function Home() {
     };
   }, []);
 
+  // Scroll suave al hash al cargar la página (ej: /#horarios)
+  useEffect(() => {
+    const hash = window.location.hash.replace("#", "").trim();
+    if (!hash) return;
+    // Esperar a que las secciones lazy-loaded se rendericen
+    const timeout = setTimeout(() => {
+      const el = document.getElementById(hash);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 300);
+    return () => clearTimeout(timeout);
+  }, []);
+
   const staleConfig = { staleTime: 1000 * 60 * 15, gcTime: 1000 * 60 * 30 };
 
   

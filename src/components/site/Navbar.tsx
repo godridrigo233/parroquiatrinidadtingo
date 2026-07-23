@@ -1,20 +1,30 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Menu, X, BookOpen, MessageCircle, Home, Church, Users, Heart, Music, CalendarDays, Image, Droplets, Phone, Mail, MapPin } from "lucide-react";
 import { InstallPWA } from "@/components/site/InstallPWA";
 
 const links = [
-  { href: "/#inicio", label: "Inicio", icon: Home },
-  { href: "/#parroquia", label: "Parroquia", icon: Church },
-  { href: "/#sacerdotes", label: "Sacerdotes", icon: Users },
-  { href: "/#devociones", label: "Devociones", icon: Heart },
-  { href: "/#ministerios", label: "Ministerios", icon: Music },
-  { href: "/#horarios", label: "Horarios", icon: CalendarDays },
-  { href: "/#galeria", label: "Galería", icon: Image },
-  { href: "/sacramentos", label: "Sacramentos", route: true, icon: Droplets },
+  { href: "inicio", label: "Inicio", icon: Home },
+  { href: "parroquia", label: "Parroquia", icon: Church },
+  { href: "sacerdotes", label: "Sacerdotes", icon: Users },
+  { href: "devociones", label: "Devociones", icon: Heart },
+  { href: "ministerios", label: "Ministerios", icon: Music },
+  { href: "horarios", label: "Horarios", icon: CalendarDays },
+  { href: "galeria", label: "Galería", icon: Image },
+  { href: "sacramentos", label: "Sacramentos", icon: Droplets, route: true },
 ];
 
 const EVANGELIO_URL = "https://www.vaticannews.va/es/evangelio-de-hoy.html";
+
+function scrollToSection(id: string) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+  } else {
+    // Si no existe la sección (ej: estamos en otra ruta), navegar al home con hash
+    window.location.href = `/#${id}`;
+  }
+}
 
 function EvangelioDropdown({ bg }: { bg: boolean }) {
   const [open, setOpen] = useState(false);
@@ -108,7 +118,6 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // Bloquear scroll cuando el menú está abierto
   useEffect(() => {
     if (open) {
       document.body.style.overflow = "hidden";
@@ -130,8 +139,19 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
 
   const bg = scrolled || forceBackground;
 
+  const handleNavClick = useCallback((href: string, route?: boolean) => {
+    if (route) {
+      // Para rutas internas (Sacramentos), usar navigate
+      navigate({ to: `/${href}` });
+    } else {
+      // Para anchors del home, scroll suave
+      scrollToSection(href);
+    }
+    setOpen(false);
+  }, [navigate]);
+
   const linkClass = (active = false) =>
-    `text-sm font-medium transition-colors hover:text-gold ${
+    `text-sm font-medium transition-colors hover:text-gold cursor-pointer ${
       bg ? "text-foreground/80" : "text-white/90"
     } ${active ? "text-gold" : ""}`;
 
@@ -139,7 +159,7 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
     <header
       className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
         bg
-          ? "bg-background/90 backdrop-blur-md border-b border-border shadow-card"
+          ? "bg-background/95 backdrop-blur-md border-b border-border shadow-card"
           : "bg-transparent"
       }`}
     >
@@ -164,13 +184,13 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
         <nav className="hidden lg:flex items-center gap-6">
           {links.map((l) =>
             l.route ? (
-              <Link key={l.href} to={l.href} className={linkClass()} activeProps={{ className: "text-gold" }}>
+              <Link key={l.href} to={`/${l.href}`} className={linkClass()} activeProps={{ className: "text-gold" }}>
                 {l.label}
               </Link>
             ) : (
-              <a key={l.href} href={l.href} className={linkClass()}>
+              <span key={l.href} onClick={() => handleNavClick(l.href)} className={linkClass()}>
                 {l.label}
-              </a>
+              </span>
             ),
           )}
 
@@ -178,13 +198,12 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
 
           <div className="flex items-center gap-3">
             {isMobileDevice && <InstallPWA />}
-            <Link
-              to="/"
-              hash="contacto"
-              className="px-4 py-2 rounded-full bg-gradient-gold text-primary-foreground text-sm font-semibold shadow-card hover:shadow-elegant transition-shadow"
+            <span
+              onClick={() => handleNavClick("contacto")}
+              className="px-4 py-2 rounded-full bg-gradient-gold text-primary-foreground text-sm font-semibold shadow-card hover:shadow-elegant transition-shadow cursor-pointer"
             >
               Visítanos
-            </Link>
+            </span>
           </div>
         </nav>
 
@@ -192,7 +211,7 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
         <div className="lg:hidden flex items-center gap-1">
           <EvangelioDropdown bg={!!bg} />
           <button
-            onClick={() => setOpen(!open)}
+            onClick={() => setOpen((v) => !v)}
             className={`p-2 rounded-lg transition-colors ${bg ? "text-foreground hover:bg-secondary" : "text-white hover:bg-white/10"}`}
             aria-label="Menú"
           >
@@ -202,12 +221,12 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
       </div>
 
       {/* ═══════════════════ OVERLAY ═══════════════════ */}
-      {open && (
-        <div
-          className="lg:hidden fixed inset-0 top-16 bg-black/40 backdrop-blur-sm z-40 transition-opacity duration-300"
-          onClick={() => setOpen(false)}
-        />
-      )}
+      <div
+        className={`lg:hidden fixed inset-0 top-16 bg-black/40 backdrop-blur-sm z-40 transition-opacity duration-300 pointer-events-auto ${
+          open ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={() => setOpen(false)}
+      />
 
       {/* ═══════════════════ DRAWER MÓVIL ═══════════════════ */}
       <div
@@ -228,34 +247,34 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
 
         {/* Links */}
         <nav className="flex-1 overflow-y-auto px-3 py-3">
-          {links.map((l, i) => {
+          {links.map((l) => {
             const Icon = l.icon;
-            return l.route ? (
-              <Link
+            if (l.route) {
+              return (
+                <Link
+                  key={l.href}
+                  to={`/${l.href}`}
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-foreground/85 hover:bg-secondary/60 transition-colors"
+                >
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gold/10">
+                    <Icon size={16} className="text-gold" />
+                  </span>
+                  {l.label}
+                </Link>
+              );
+            }
+            return (
+              <span
                 key={l.href}
-                to={l.href}
-                onClick={() => setOpen(false)}
-                className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-foreground/85 hover:bg-secondary/60 transition-colors"
-                style={{ animationDelay: `${i * 40}ms` }}
+                onClick={() => handleNavClick(l.href)}
+                className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-foreground/85 hover:bg-secondary/60 transition-colors cursor-pointer"
               >
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gold/10">
                   <Icon size={16} className="text-gold" />
                 </span>
                 {l.label}
-              </Link>
-            ) : (
-              <a
-                key={l.href}
-                href={l.href}
-                onClick={() => setOpen(false)}
-                className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-foreground/85 hover:bg-secondary/60 transition-colors"
-                style={{ animationDelay: `${i * 40}ms` }}
-              >
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gold/10">
-                  <Icon size={16} className="text-gold" />
-                </span>
-                {l.label}
-              </a>
+              </span>
             );
           })}
 

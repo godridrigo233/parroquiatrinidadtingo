@@ -342,6 +342,13 @@ function SacramentosPage() {
     });
   }, []);
 
+  const handleSelectSacramento = (s: typeof sacramentos[number]) => {
+    setSelected(s);
+    requestAnimationFrame(() => {
+      detalleRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  };
+
   return (
     <div className="min-h-screen bg-[#F0F4F8] text-[#0F1B2D]">
       <Navbar forceBackground />
@@ -352,7 +359,9 @@ function SacramentosPage() {
         <div className="relative h-[340px] md:h-[420px] w-full">
           <img
             src="/assets/hero-sacramentos.jpg"
-            loading="lazy"
+            fetchPriority="high"
+            loading="eager"
+            decoding="async"
             alt="Manos sosteniendo el cáliz sagrado"
             className="absolute inset-0 w-full h-full object-cover"
           />
@@ -401,15 +410,18 @@ function SacramentosPage() {
                 return (
                   <button
                     key={s.id}
-                    onClick={() => setSelected(s)}
-                    className={`group flex flex-col items-center text-center p-4 rounded-2xl border transition-all duration-200 w-[130px] sm:w-[145px] ${
+                    onClick={() => handleSelectSacramento(s)}
+                    className={`group relative flex flex-col items-center text-center p-4 rounded-2xl border transition-all duration-300 w-[130px] sm:w-[145px] hover:scale-105 hover:shadow-lg ${
                       isActive
-                        ? "border-[#C8A45C] bg-[#E8EEF4] shadow-md"
-                        : "border-[#CBD5E1] bg-white hover:border-[#C8A45C]/50 hover:shadow-sm"
+                        ? "border-[#C8A45C] bg-[#E8EEF4] shadow-md ring-1 ring-[#C8A45C]/30"
+                        : "border-[#CBD5E1] bg-white hover:border-[#C8A45C]/50 hover:shadow-md"
                     }`}
                   >
+                    {isActive && (
+                      <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-[3px] bg-[#C8A45C] rounded-full" />
+                    )}
                     <span
-                      className="h-12 w-12 rounded-full flex items-center justify-center mb-2 transition-transform group-hover:scale-105"
+                      className="h-12 w-12 rounded-full flex items-center justify-center mb-2 transition-transform group-hover:scale-110"
                       style={{ backgroundColor: s.color + "18" }}
                     >
                       <Icon size={22} style={{ color: s.color }} />
@@ -437,6 +449,7 @@ function SacramentosPage() {
                   src={`/assets/sacramento-${selected.id}.${selected.id === 'confirmacion' ? 'png' : 'jpg'}`}
                   alt={selected.title}
                   loading="lazy"
+                  decoding="async"
                   className="absolute inset-0 w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#0F1B2D]/60 to-transparent" />
@@ -592,7 +605,7 @@ function SacramentosPage() {
               {(selected.faq ?? []).map((item, i) => (
                 <div
                   key={i}
-                  className="bg-[#E8EEF4] rounded-2xl border border-[#CBD5E1] p-6"
+                  className="bg-[#E8EEF4] rounded-2xl border border-[#CBD5E1] p-6 hover:shadow-md hover:-translate-y-1 transition-all duration-300"
                 >
                   <div className="flex items-start gap-3 mb-3">
                     <span
@@ -689,7 +702,7 @@ function SacramentosPage() {
       {/* ════════════════ FOOTER ════════════════ */}
       <footer className="bg-[#0F1B2D] text-white/80 py-12 px-5 lg:px-8">
         <div className="max-w-6xl mx-auto">
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-10">
             {/* Columna 1: Logo & misión */}
             <div>
               <div className="flex items-center gap-3 mb-4">

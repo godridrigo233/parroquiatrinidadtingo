@@ -92,7 +92,7 @@ const sacramentos = [
     faq: [
       {
         q: "¿Cuánto dura la catequesis?",
-        a: "La catequesis de Primera Comunión tiene una duración de 1 año.",
+        a: "La catequesis de Eucaristía tiene una duración de 1 año.",
       },
       {
         q: "¿Cuál es la edad mínima?",
@@ -198,7 +198,7 @@ const sacramentos = [
       cuando: "Antes o después de cada misa.",
       donde: "En el confesionario del templo.",
       padrinos: "No aplica.",
-      anticipacion: "Previo en la celebración de la Primera Comunión.",
+      anticipacion: "Previo en la celebración de la Eucaristía.",
     },
     horario: "Antes o después de misa.",
     faq: [
@@ -207,7 +207,7 @@ const sacramentos = [
         a: "No, puede acercarse antes o después de cualquier misa para confesarse.",
       },
     ],
-    tiempo: "Previo a la celebración de Primera Comunión.",
+    tiempo: "Previo a la celebración de Eucaristía.",
   },
   {
     id: "uncion",
@@ -277,7 +277,7 @@ export const Route = createFileRoute("/sacramentos")({
       {
         name: "description",
         content:
-          "Requisitos para Bautismo, Primera Comunión, Matrimonio, Confesión, Unción y Orden en la Parroquia Santísima Trinidad de Tingo, Arequipa.",
+          "Requisitos para Bautismo, Eucaristía, Matrimonio, Penitencia (Confesión), Unción y Orden en la Parroquia Santísima Trinidad de Tingo, Arequipa.",
       },
       {
         property: "og:title",

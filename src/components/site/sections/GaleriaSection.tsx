@@ -7,8 +7,8 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 type GalleryImage = { id: string; title: string | null; category: string | null; image_url: string; sort_order: number };
 
 const galleryImgs = [
-  { src: "/assets/gallery-primera-comunion-misa.jpg", label: "Primera Comunión" },
-  { src: "/assets/gallery-ninos-primera-comunion.jpg", label: "Niños de Primera Comunión" },
+  { src: "/assets/gallery-primera-comunion-misa.jpg", label: "Eucaristía" },
+  { src: "/assets/gallery-ninos-primera-comunion.jpg", label: "Niños de Eucaristía" },
   { src: "/assets/gallery-bendicion-ninos.jpg", label: "Bendición de los niños" },
   { src: "/assets/gallery-comunidad-oracion.jpg", label: "Comunidad en oración" },
   { src: "/assets/gallery-confirmacion-jovenes.jpg", label: "Catequistas" },

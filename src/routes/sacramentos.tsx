@@ -7,6 +7,7 @@ import {
   Heart,
   HandHeart,
   Cross,
+  Flame,
   Phone,
   Clock,
   CheckCircle2,
@@ -100,6 +101,44 @@ const sacramentos = [
       },
     ],
     tiempo: "Inicio de catequesis: marzo de cada año.",
+  },
+  {
+    id: "confirmacion",
+    icon: Flame,
+    color: "#D4652A",
+    title: "Confirmación",
+    intro:
+      "Confirmación en la fe. El Espíritu Santo sella y fortalece al cristiano para ser testigo de Cristo.",
+    descripcion:
+      "El sacramento que fortalece la gracia bautismal. El Espíritu Santo nos da sus dones para vivir y defender la fe.",
+    requisitos: [
+      "Edad mínima: 14 años o cursar 3ro de secundaria.",
+      "Catequesis de 2 años aproximadamente.",
+      "Pago de inscripción.",
+      "Partida de Nacimiento del joven (original y actualizada).",
+      "Partida de Bautismo del joven (original y actualizada).",
+      "Padrinos casados por la Iglesia, o padrinos solteros confirmados no convivientes.",
+      "Ambos padrinos casados o solteros, presentar partida de confirmación.",
+    ],
+    informacion: {
+      cuando: "Según calendario de catequesis.",
+      donde: "En el templo parroquial.",
+      padrinos: "Máximo 2 padrinos.",
+      anticipacion: "Inicio de catequesis: abril de cada año.",
+    },
+    horario: "Inscripciones en secretaría parroquial.",
+    nota: "Para confirmación de adultos mayores de 19 años, la catequesis tiene una duración aproximada de 6 meses, iniciando en el mes de mayo de cada año.",
+    faq: [
+      {
+        q: "¿Cuánto dura la catequesis?",
+        a: "La catequesis de Confirmación tiene una duración aproximada de 2 años para jóvenes, y 6 meses para adultos mayores de 19 años.",
+      },
+      {
+        q: "¿Qué requisitos tienen los padrinos?",
+        a: "Los padrinos deben ser casados por la Iglesia, o solteros confirmados no convivientes. Ambos deben presentar su partida de confirmación.",
+      },
+    ],
+    tiempo: "Inicio de catequesis: abril de cada año.",
   },
   {
     id: "matrimonio",

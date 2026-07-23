@@ -111,37 +111,40 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
-  // ── FIX UNIVERSAL MÓVIL: Detección profunda de scroll en cualquier contenedor ──
+  // ── FIX GEOMÉTRICO DEFINITIVO PARA MÓVILES ──
   useEffect(() => {
-    const onScroll = (e?: Event) => {
-      // 1. Revisa si el evento viene de un contenedor interno que se está moviendo
-      const target = e?.target as HTMLElement | null;
-      const targetScroll = target && "scrollTop" in target ? target.scrollTop : 0;
-
-      // 2. Revisa la ventana global y el contenedor #root
-      const winScroll =
-        window.scrollY ||
-        window.pageYOffset ||
-        document.documentElement.scrollTop ||
-        document.body.scrollTop ||
-        0;
-      const rootScroll = document.getElementById("root")?.scrollTop || 0;
-
-      // 3. Si CUALQUIERA de ellos se movió más de 20px, activa el fondo sólido
-      const maxScroll = Math.max(winScroll, rootScroll, targetScroll);
-      setScrolled(maxScroll > 20);
+    const checkGeometricalScroll = () => {
+      // 1. Buscamos la sección Hero (#inicio) que está al tope de tu web
+      const heroSection = document.getElementById("inicio");
+      
+      if (heroSection) {
+        // getBoundingClientRect().top mide la distancia real del techo del Hero hasta el borde de tu pantalla
+        const rect = heroSection.getBoundingClientRect();
+        // Si el techo del Hero subió más de 20px (coordenada negativa), YA BAJAMOS. ¡Fondo sólido activado!
+        const isPastHero = rect.top < -20;
+        
+        // Verificación secundaria de respaldo por si el navegador informa scroll de ventana tradicional
+        const winScroll = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
+        
+        setScrolled(isPastHero || winScroll > 20);
+      } else {
+        // Si no encuentra #inicio, activa el fondo por defecto para seguridad
+        setScrolled(true);
+      }
     };
 
     if (isHome) {
-      onScroll(); // Evalúa posición inicial
-      // Usamos useCapture (true) en window Y document para atrapar el scroll de navegadores rebeldes como Safari iOS
-      window.addEventListener("scroll", onScroll, true);
-      document.addEventListener("scroll", onScroll, true);
-      window.addEventListener("touchmove", () => onScroll(), { passive: true });
+      checkGeometricalScroll();
+      // Escuchamos en todos los canales de movimiento táctil y visual del celular
+      window.addEventListener("scroll", checkGeometricalScroll, true);
+      document.addEventListener("scroll", checkGeometricalScroll, true);
+      window.addEventListener("touchmove", checkGeometricalScroll, { passive: true });
+      window.addEventListener("resize", checkGeometricalScroll);
       return () => {
-        window.removeEventListener("scroll", onScroll, true);
-        document.removeEventListener("scroll", onScroll, true);
-        window.removeEventListener("touchmove", () => onScroll());
+        window.removeEventListener("scroll", checkGeometricalScroll, true);
+        document.removeEventListener("scroll", checkGeometricalScroll, true);
+        window.removeEventListener("touchmove", checkGeometricalScroll);
+        window.removeEventListener("resize", checkGeometricalScroll);
       };
     } else {
       setScrolled(true);
@@ -176,7 +179,6 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
     }
   };
 
-  // El menú siempre se vuelve sólido si bajas, si no estás en home, O SI EL CAJÓN MÓVIL ESTÁ ABIERTO
   const bg = !!forceBackground || !isHome || scrolled || drawerOpen;
 
   const handleNavClick = useCallback((href: string, isRoute?: boolean) => {

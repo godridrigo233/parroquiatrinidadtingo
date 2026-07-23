@@ -171,9 +171,7 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
   return (
     <header
       className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
-        bg
-          ? "bg-background/95 backdrop-blur-md border-b border-border shadow-card"
-          : "bg-transparent"
+        bg ? "bg-background/95 backdrop-blur-md border-b border-border shadow-card" : "bg-transparent"
       }`}
     >
       <div className="max-w-7xl mx-auto px-5 lg:px-8 h-16 flex items-center justify-between">
@@ -235,17 +233,17 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
 
       {/* ═══════════════════ OVERLAY ═══════════════════ */}
       {drawerOpen && (
-        <div
-          className="lg:hidden fixed inset-0 top-16 bg-black/40 backdrop-blur-sm z-[55]"
-          onClick={() => setDrawerOpen(false)}
-        />
-      )}
+      <div
+        className="lg:hidden fixed inset-0 top-16 bg-black/40 backdrop-blur-sm z-[55]"
+        onClick={() => setDrawerOpen(false)}
+      />
+    )}
 
       {/* ═══════════════════ DRAWER MÓVIL ═══════════════════ */}
       <div
         className={`lg:hidden fixed top-16 right-0 bottom-0 w-[300px] max-w-[85vw] bg-background border-l border-border shadow-2xl z-[60] flex flex-col transition-transform duration-300 ease-out ${
-          drawerOpen ? "translate-x-0" : "translate-x-full pointer-events-none"
-        }`}
+        drawerOpen ? "translate-x-0" : "translate-x-full pointer-events-none"
+      }`}
       >
         {/* Encabezado del drawer */}
         <div className="px-5 pt-5 pb-4 border-b border-border/50">

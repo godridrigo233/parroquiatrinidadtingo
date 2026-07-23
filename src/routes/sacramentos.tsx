@@ -444,7 +444,7 @@ function SacramentosPage() {
               <div className="relative rounded-2xl overflow-hidden aspect-[3/4] lg:aspect-auto lg:h-full min-h-[360px]">
                 {/* Reemplazar src con imagen real del sacramento */}
                 <img
-                  src={`/assets/sacramento-${selected.id}.jpg`}
+                  src={`/assets/sacramento-${selected.id}.${selected.id === 'confirmacion' ? 'png' : 'jpg'}`}
                   alt={selected.title}
                   loading="lazy"
                   className="absolute inset-0 w-full h-full object-cover"

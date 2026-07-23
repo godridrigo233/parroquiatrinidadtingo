@@ -97,7 +97,7 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
   const navigate = useNavigate();
   const matches = useMatches();
 
-  const isHome = matches.some((m) => m.pathname === "/");
+  const isHome = window.location.pathname === "/" || matches.some((m) => m.pathname === "/");
 
   useEffect(() => {
     setDrawerOpen(false);
@@ -111,40 +111,32 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
-  // ── FIX GEOMÉTRICO DEFINITIVO PARA MÓVILES ──
+  // ── DETECCIÓN DE SCROLL ──
   useEffect(() => {
-    const checkGeometricalScroll = () => {
-      // 1. Buscamos la sección Hero (#inicio) que está al tope de tu web
+    const checkScroll = () => {
       const heroSection = document.getElementById("inicio");
-      
       if (heroSection) {
-        // getBoundingClientRect().top mide la distancia real del techo del Hero hasta el borde de tu pantalla
         const rect = heroSection.getBoundingClientRect();
-        // Si el techo del Hero subió más de 20px (coordenada negativa), YA BAJAMOS. ¡Fondo sólido activado!
         const isPastHero = rect.top < -20;
-        
-        // Verificación secundaria de respaldo por si el navegador informa scroll de ventana tradicional
         const winScroll = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
-        
         setScrolled(isPastHero || winScroll > 20);
       } else {
-        // Si no encuentra #inicio, activa el fondo por defecto para seguridad
-        setScrolled(true);
+        const winScroll = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
+        setScrolled(winScroll > 20);
       }
     };
 
     if (isHome) {
-      checkGeometricalScroll();
-      // Escuchamos en todos los canales de movimiento táctil y visual del celular
-      window.addEventListener("scroll", checkGeometricalScroll, true);
-      document.addEventListener("scroll", checkGeometricalScroll, true);
-      window.addEventListener("touchmove", checkGeometricalScroll, { passive: true });
-      window.addEventListener("resize", checkGeometricalScroll);
+      checkScroll();
+      window.addEventListener("scroll", checkScroll, true);
+      document.addEventListener("scroll", checkScroll, true);
+      window.addEventListener("touchmove", checkScroll, { passive: true });
+      window.addEventListener("resize", checkScroll);
       return () => {
-        window.removeEventListener("scroll", checkGeometricalScroll, true);
-        document.removeEventListener("scroll", checkGeometricalScroll, true);
-        window.removeEventListener("touchmove", checkGeometricalScroll);
-        window.removeEventListener("resize", checkGeometricalScroll);
+        window.removeEventListener("scroll", checkScroll, true);
+        document.removeEventListener("scroll", checkScroll, true);
+        window.removeEventListener("touchmove", checkScroll);
+        window.removeEventListener("resize", checkScroll);
       };
     } else {
       setScrolled(true);
@@ -270,7 +262,7 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
         </div>
       </div>
 
-      {/* ═══════════════════ OVERLAY ═══════════════════ */}
+      {/* OVERLAY */}
       {drawerOpen && (
         <div
           className="lg:hidden fixed inset-0 top-16 bg-black/50 backdrop-blur-sm z-[101] select-none"
@@ -278,13 +270,12 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
         />
       )}
 
-      {/* ═══════════════════ DRAWER MÓVIL ═══════════════════ */}
+      {/* DRAWER MÓVIL */}
       <div
         className={`lg:hidden fixed top-16 right-0 bottom-0 w-[300px] max-w-[85vw] bg-background border-l border-border shadow-2xl z-[105] flex flex-col transition-transform duration-300 ease-out select-none ${
           drawerOpen ? "translate-x-0" : "translate-x-full pointer-events-none"
         }`}
       >
-        {/* Encabezado del drawer */}
         <div className="px-5 pt-5 pb-4 border-b border-border/50">
           <div className="flex items-center gap-3 select-none">
             <img src="/assets/logo.webp" alt="" className="h-9 w-9 rounded-full object-cover pointer-events-none" />
@@ -295,7 +286,6 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
           </div>
         </div>
 
-        {/* Links */}
         <nav className="flex-1 overflow-y-auto px-3 py-3">
           {links.map((l) => {
             const Icon = l.icon;
@@ -343,7 +333,6 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
           </a>
         </nav>
 
-        {/* Footer del drawer */}
         <div className="px-5 py-4 border-t border-border/50 space-y-3 select-none">
           {isMobileDevice && <InstallPWA />}
           <a href="tel:+51915049850" className="flex items-center gap-2.5 text-xs text-muted-foreground outline-none focus:outline-none">

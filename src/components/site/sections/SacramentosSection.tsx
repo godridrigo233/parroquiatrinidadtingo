@@ -1,10 +1,11 @@
 import { Link } from "@tanstack/react-router";
-import { Droplets, Cookie, HeartHandshake, Heart, HandHeart, Cross, ArrowRight } from "lucide-react";
+import { Droplets, Cookie, HeartHandshake, Heart, HandHeart, Cross, Flame, ArrowRight } from "lucide-react";
 import { Reveal } from "@/components/site/Reveal";
 
 const sacramentos = [
   { icon: Droplets, title: "Bautismo", color: "#3B7A8C", intro: "Puerta de entrada a la vida cristiana. Por el agua y el Espíritu nacemos a la fe.", hash: "bautismo" },
   { icon: Cookie, title: "Primera Comunión", color: "#C8A030", intro: "Encuentro con el Señor presente en la Eucaristía. Pan de vida para el camino.", hash: "primera-comunion" },
+  { icon: Flame, title: "Confirmación", color: "#D4652A", intro: "El Espíritu Santo sella y fortalece al cristiano para ser testigo de Cristo.", hash: "confirmacion" },
   { icon: HeartHandshake, title: "Matrimonio", color: "#7A3B3B", intro: "Alianza de amor entre un varón y una mujer, signo del amor de Cristo por su Iglesia.", hash: "matrimonio" },
   { icon: Heart, title: "Reconciliación", color: "#4A7C59", intro: "El abrazo misericordioso del Padre que perdona y restaura.", hash: "reconciliacion" },
   { icon: HandHeart, title: "Unción de los Enfermos", color: "#6B6B3D", intro: "Consuelo y fortaleza para quienes atraviesan enfermedad grave o edad avanzada.", hash: "uncion" },
@@ -23,7 +24,7 @@ export default function SacramentosSection() {
           </p>
         </Reveal>
 
-        <div className="mt-14 grid sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+        <div className="mt-14 grid sm:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6">
           {sacramentos.map((s, i) => {
             const Icon = s.icon;
             return (
@@ -61,7 +62,7 @@ export default function SacramentosSection() {
         </div>
         <Reveal className="mt-14 text-center">
           <Link to="/sacramentos" className="inline-flex items-center gap-3 px-9 py-4 text-lg rounded-full bg-gradient-gold text-primary-foreground font-semibold shadow-card hover:shadow-elegant transition-shadow">
-            Ver requisitos de sacramentos <ArrowRight size={18} />
+            Ver todos los sacramentos <ArrowRight size={18} />
           </Link>
         </Reveal>
       </div>

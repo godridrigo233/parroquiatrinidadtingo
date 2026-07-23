@@ -71,7 +71,7 @@ const sacramentos = [
     id: "primera-comunion",
     icon: Cookie,
     color: "#C8A030",
-    title: "Primera Comunión",
+    title: "Eucaristía",
     intro:
       "Encuentro con el Señor presente en la Eucaristía. Pan de vida para el camino.",
     descripcion:
@@ -185,7 +185,7 @@ const sacramentos = [
     id: "reconciliacion",
     icon: Heart,
     color: "#4A7C59",
-    title: "Reconciliación",
+    title: "Penitencia (Confesión)",
     intro:
       "El abrazo misericordioso del Padre que perdona y restaura.",
     descripcion:

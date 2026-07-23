@@ -4,10 +4,10 @@ import { Reveal } from "@/components/site/Reveal";
 
 const sacramentos = [
   { icon: Droplets, title: "Bautismo", color: "#3B7A8C", intro: "Puerta de entrada a la vida cristiana.", hash: "bautismo" },
-  { icon: Cookie, title: "Primera Comunión", color: "#C8A030", intro: "Encuentro con Jesús en la Eucaristía.", hash: "primera-comunion" },
+  { icon: Cookie, title: "Eucaristía", color: "#C8A030", intro: "Encuentro con Jesús en la Eucaristía.", hash: "primera-comunion" },
   { icon: Flame, title: "Confirmación", color: "#D4652A", intro: "El Espíritu Santo fortalece la fe.", hash: "confirmacion" },
   { icon: HeartHandshake, title: "Matrimonio", color: "#7A3B3B", intro: "Alianza de amor bendecida por Dios.", hash: "matrimonio" },
-  { icon: Heart, title: "Reconciliación", color: "#4A7C59", intro: "El abrazo misericordioso del Padre.", hash: "reconciliacion" },
+  { icon: Heart, title: "Penitencia (Confesión)", color: "#4A7C59", intro: "El abrazo misericordioso del Padre.", hash: "reconciliacion" },
   { icon: HandHeart, title: "Unción de los Enfermos", color: "#6B6B3D", intro: "Consuelo y fortaleza en la enfermedad.", hash: "uncion" },
   { icon: Cross, title: "Orden Sacerdotal", color: "#5C3D6E", intro: "Vocación al servicio de Dios.", hash: "orden" },
 ];

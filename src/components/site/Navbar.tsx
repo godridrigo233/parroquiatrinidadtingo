@@ -111,26 +111,38 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
-  // ── FIX BLINDADO PARA MÓVILES: Detección multicanal de scroll ──
+  // ── FIX UNIVERSAL MÓVIL: Detección profunda de scroll en cualquier contenedor ──
   useEffect(() => {
-    const onScroll = () => {
-      // Revisa todas las posibles fuentes de scroll en navegadores móviles (iOS/Android)
-      const scrollPos =
+    const onScroll = (e?: Event) => {
+      // 1. Revisa si el evento viene de un contenedor interno que se está moviendo
+      const target = e?.target as HTMLElement | null;
+      const targetScroll = target && "scrollTop" in target ? target.scrollTop : 0;
+
+      // 2. Revisa la ventana global y el contenedor #root
+      const winScroll =
         window.scrollY ||
         window.pageYOffset ||
         document.documentElement.scrollTop ||
         document.body.scrollTop ||
-        (document.getElementById("root")?.scrollTop ?? 0) ||
         0;
-      
-      setScrolled(scrollPos > 20);
+      const rootScroll = document.getElementById("root")?.scrollTop || 0;
+
+      // 3. Si CUALQUIERA de ellos se movió más de 20px, activa el fondo sólido
+      const maxScroll = Math.max(winScroll, rootScroll, targetScroll);
+      setScrolled(maxScroll > 20);
     };
 
     if (isHome) {
-      onScroll(); // Evalúa posición al montar
-      // EL TRUCO: capture: true obliga al navegador móvil a reportar el scroll sin importar qué contenedor se mueva
-      window.addEventListener("scroll", onScroll, { passive: true, capture: true });
-      return () => window.removeEventListener("scroll", onScroll, { capture: true });
+      onScroll(); // Evalúa posición inicial
+      // Usamos useCapture (true) en window Y document para atrapar el scroll de navegadores rebeldes como Safari iOS
+      window.addEventListener("scroll", onScroll, true);
+      document.addEventListener("scroll", onScroll, true);
+      window.addEventListener("touchmove", () => onScroll(), { passive: true });
+      return () => {
+        window.removeEventListener("scroll", onScroll, true);
+        document.removeEventListener("scroll", onScroll, true);
+        window.removeEventListener("touchmove", () => onScroll());
+      };
     } else {
       setScrolled(true);
     }
@@ -164,7 +176,8 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
     }
   };
 
-  const bg = !!forceBackground || !isHome || scrolled;
+  // El menú siempre se vuelve sólido si bajas, si no estás en home, O SI EL CAJÓN MÓVIL ESTÁ ABIERTO
+  const bg = !!forceBackground || !isHome || scrolled || drawerOpen;
 
   const handleNavClick = useCallback((href: string, isRoute?: boolean) => {
     setDrawerOpen(false);

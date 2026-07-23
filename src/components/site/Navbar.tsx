@@ -89,7 +89,7 @@ function EvangelioDropdown({ bg }: { bg: boolean }) {
 }
 
 export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) {
-  const [scrolled, setScrolled] = useState(() => window.scrollY > 20);
+  const [scrolled, setScrolled] = useState(true); // FIX: empieza en true para evitar flash transparente
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isMobileDevice, setIsMobileDevice] = useState(false);
   const clicks = useRef(0);
@@ -114,12 +114,18 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
+  // FIX: scroll-detection solo activo en home; fuera de home siempre con fondo
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+
+    if (isHome) {
+      onScroll(); // evalúa posición actual al entrar al home
+      window.addEventListener("scroll", onScroll, { passive: true });
+      return () => window.removeEventListener("scroll", onScroll);
+    } else {
+      setScrolled(true); // fuera de home siempre con fondo
+    }
+  }, [isHome]);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -214,7 +220,7 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
           </div>
         </nav>
 
-        {/* BOTÓN HAMBURUESA (Móvil) */}
+        {/* BOTÓN HAMBURGUESA (Móvil) */}
         <div className="lg:hidden flex items-center gap-1">
           <EvangelioDropdown bg={bg} />
           <button

@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Plus, Trash2, Pencil, Save } from "lucide-react";
 import { toast } from "sonner";
 import { logActivity } from "@/utils/Logactivity";
+import imageCompression from "browser-image-compression";
 
 // ────────────────────────────────────────────────
 //  useTable — ahora registra el delete en activity_log
@@ -137,10 +138,16 @@ export function EventsManager({ showToast }: { showToast?: (m: string, t?: "succ
     if (!["png", "jpg", "jpeg"].includes(ext)) {
       throw new Error("Formato no permitido. Usa PNG, JPG o JPEG.");
     }
+    const compressed = await imageCompression(f, {
+      maxSizeMB: 0.5,
+      maxWidthOrHeight: 1200,
+      useWebWorker: true,
+      fileType: ext === "png" ? "image/png" : "image/jpeg",
+    });
     const path = `events/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
     const { error: upErr } = await supabase.storage
       .from("parroquia-images")
-      .upload(path, f, { contentType: f.type, upsert: false, cacheControl: '31536000' });
+      .upload(path, compressed, { contentType: compressed.type, upsert: false, cacheControl: '31536000' });
     if (upErr) throw upErr;
     return supabase.storage.from("parroquia-images").getPublicUrl(path).data.publicUrl;
   };

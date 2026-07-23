@@ -5,6 +5,7 @@
 //     error logger plugins, and sandbox detection (port/host/strictPort).
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import type { Plugin } from "vite";
+import { ViteImageOptimizer } from "vite-plugin-image-optimizer";
 
 const PARISH_STATIC_DATA = `
 == IDENTIDAD ==
@@ -390,6 +391,67 @@ export default defineConfig({
     ssr: {
       noExternal: ["ai", "@ai-sdk/groq", "@ai-sdk/react"],
     },
-    plugins: [chatDevPlugin()],
+    plugins: [
+      chatDevPlugin(),
+      // Comprime y convierte imágenes estáticas a WebP/AVIF durante el build.
+      // Genera versiones ligeras sin pérdida visible de calidad (quality: 80).
+      ViteImageOptimizer({
+        test: /\.(jpe?g|png|webp)$/i,
+        includePublic: true,
+        logStats: true,
+        png: { quality: 80 },
+        jpeg: { quality: 80 },
+        jpg: { quality: 80 },
+        webp: {
+          quality: 80,
+          lossless: false,
+          resize: { enabled: true, maxWidth: 1600, maxHeight: 1600 },
+        },
+        avif: { quality: 65, lossless: false },
+      }),
+      // Genera también versiones webp de todas las imágenes en public (para <picture>)
+      (function generateWebp(): Plugin {
+        return {
+          name: "parish-webp-generator",
+          apply: "build",
+          async writeBundle() {
+            const fs = await import("node:fs/promises");
+            const path = await import("node:path");
+            const sharp = (await import("sharp")).default;
+            const publicDir = path.resolve("public");
+            async function walk(dir: string): Promise<string[]> {
+              const entries = await fs.readdir(dir, { withFileTypes: true });
+              const files = await Promise.all(
+                entries.map(async (e) => {
+                  const full = path.join(dir, e.name);
+                  return e.isDirectory() ? walk(full) : [full];
+                })
+              );
+              return files.flat();
+            }
+            const all = await walk(publicDir);
+            const images = all.filter((f) => /\.(png|jpe?g)$/i.test(f) && !f.endsWith(".ico"));
+            let count = 0;
+            for (const img of images) {
+              const webpPath = img.replace(/\.(png|jpe?g)$/i, ".webp");
+              try {
+                await fs.access(webpPath);
+              } catch {
+                try {
+                  await sharp(img)
+                    .resize({ width: 1600, withoutEnlargement: true })
+                    .webp({ quality: 80 })
+                    .toFile(webpPath);
+                  count++;
+                } catch {
+                  // skip corrupt images silently
+                }
+              }
+            }
+            if (count > 0) console.log(`[parish-webp] ${count} imágenes convertidas a webp.`);
+          },
+        };
+      })(),
+    ],
   },
 });

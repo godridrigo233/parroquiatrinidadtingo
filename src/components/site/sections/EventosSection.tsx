@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Facebook, Calendar, Clock, MapPin, MessageCircle, ArrowRight } from "lucide-react";
 import { Reveal } from "@/components/site/Reveal";
 import { AddToCalendar } from "@/components/site/AddToCalendar";
+import { getSupabaseImageUrl } from "@/lib/image-url";
 
 type Eventt = { id: string; title: string; description: string | null; event_date: string; location: string | null; image_url?: string | null };
 
@@ -197,7 +198,7 @@ export default function EventosSection({
                     <div key={e.id} className="border-l-2 border-gold pl-4">
                       {e.image_url && (
                         <div className="mb-3 aspect-video w-full overflow-hidden rounded-xl">
-                          <img src={e.image_url} alt={e.title} loading="lazy" className="w-full h-full object-cover" />
+                          <img src={getSupabaseImageUrl(e.image_url, { width: 600 })} alt={e.title} loading="lazy" className="w-full h-full object-cover" />
                         </div>
                       )}
                       <p className="font-display text-xl">{e.title}</p>

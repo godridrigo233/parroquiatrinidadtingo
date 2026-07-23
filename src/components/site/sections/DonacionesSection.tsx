@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Reveal } from "@/components/site/Reveal";
 import { Heart, Copy, Check, Smartphone, Landmark } from "lucide-react";
+import { getSupabaseImageUrl } from "@/lib/image-url";
 
 export type DonationRow = { 
   id: string; title: string; bank_name: string; account_number: string | null; 
@@ -71,7 +72,7 @@ export function DonacionesSection({ items }: { items: DonationRow[] }) {
                   {/* Visualización del QR mejorada */}
                   {item.qr_image_url ? (
                     <div className="w-52 h-52 bg-white p-4 rounded-[2rem] border-2 border-secondary mb-4 flex items-center justify-center shadow-sm">
-                      <img src={item.qr_image_url} alt="QR Donación" className="w-full h-full object-contain" />
+                      <img src={getSupabaseImageUrl(item.qr_image_url, { width: 400, quality: 90 })} alt="QR Donación" loading="lazy" className="w-full h-full object-contain" />
                     </div>
                   ) : (
                     /* Tarjeta de Cuenta Bancaria */

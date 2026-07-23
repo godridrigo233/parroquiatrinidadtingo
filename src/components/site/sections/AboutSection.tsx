@@ -312,6 +312,8 @@ export default function AboutSection({
                                     key={src}
                                     src={src}
                                     alt={`${activeLocation.key} ${idx + 1}`}
+                                    loading="lazy"
+                                    decoding="async"
                                     className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
                                     style={{ opacity: idx === slideIndex ? 1 : 0 }}
                                   />

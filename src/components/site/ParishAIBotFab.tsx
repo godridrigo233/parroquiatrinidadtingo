@@ -169,7 +169,7 @@ function TypingDots() {
   );
 }
 
-const AVATAR_IMAGE_PATH = "/assets/hermano-elias-avatar.png";
+const AVATAR_IMAGE_PATH = "/assets/hermano-elias-avatar.webp";
 const STORAGE_KEY_MSGS = "parish_bot_messages_v3";
 const STORAGE_KEY_DATE = "parish_bot_date_v3";
 

@@ -1,17 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Menu, X, BookOpen, MessageCircle } from "lucide-react";
+import { Menu, X, BookOpen, MessageCircle, Home, Church, Users, Heart, Music, CalendarDays, Image, Droplets, Phone, Mail, MapPin } from "lucide-react";
 import { InstallPWA } from "@/components/site/InstallPWA";
 
 const links = [
-  { href: "/#inicio", label: "Inicio" },
-  { href: "/#parroquia", label: "Parroquia" },
-  { href: "/#sacerdotes", label: "Sacerdotes" },
-  { href: "/#devociones", label: "Devociones" },
-  { href: "/#ministerios", label: "Ministerios" },
-  { href: "/#horarios", label: "Horarios" },
-  { href: "/#galeria", label: "Galería" },
-  { href: "/sacramentos", label: "Sacramentos", route: true },
+  { href: "/#inicio", label: "Inicio", icon: Home },
+  { href: "/#parroquia", label: "Parroquia", icon: Church },
+  { href: "/#sacerdotes", label: "Sacerdotes", icon: Users },
+  { href: "/#devociones", label: "Devociones", icon: Heart },
+  { href: "/#ministerios", label: "Ministerios", icon: Music },
+  { href: "/#horarios", label: "Horarios", icon: CalendarDays },
+  { href: "/#galeria", label: "Galería", icon: Image },
+  { href: "/sacramentos", label: "Sacramentos", route: true, icon: Droplets },
 ];
 
 const EVANGELIO_URL = "https://www.vaticannews.va/es/evangelio-de-hoy.html";
@@ -36,7 +36,6 @@ function EvangelioDropdown({ bg }: { bg: boolean }) {
 
   return (
     <div ref={ref} className="relative">
-      {/* BOTÓN CRUZ */}
       <button
         onClick={() => setOpen((v) => !v)}
         aria-label="Evangelio del día"
@@ -52,7 +51,6 @@ function EvangelioDropdown({ bg }: { bg: boolean }) {
         <span className="text-base leading-none select-none">✝</span>
       </button>
 
-      {/* DROPDOWN */}
       {open && (
         <div className="absolute right-0 top-full mt-2 w-52 bg-card border border-border rounded-xl shadow-elegant overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-150">
           <p className="px-4 pt-3 pb-1 text-[10px] uppercase tracking-widest font-bold text-muted-foreground">
@@ -84,7 +82,7 @@ function EvangelioDropdown({ bg }: { bg: boolean }) {
 export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
-  const [isMobileDevice, setIsMobileDevice] = useState(false); // ⭐ Estado para detectar celulares reales
+  const [isMobileDevice, setIsMobileDevice] = useState(false);
   const clicks = useRef(0);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navigate = useNavigate();
@@ -96,7 +94,6 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // ⭐ useEffect inteligente para detectar si es un dispositivo móvil real
   useEffect(() => {
     const checkMobile = () => {
       const isSmallScreen = window.innerWidth < 1024;
@@ -110,6 +107,16 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
+
+  // Bloquear scroll cuando el menú está abierto
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [open]);
 
   const onLogoClick = () => {
     clicks.current += 1;
@@ -167,12 +174,9 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
             ),
           )}
 
-          {/* ✝ EVANGELIO — botón cruz con dropdown */}
           <EvangelioDropdown bg={!!bg} />
 
-          {/* BOTONES DERECHOS */}
           <div className="flex items-center gap-3">
-            {/* ⭐ Solo se renderiza en escritorio si se detecta una tablet grande real (iPad Pro, etc.) */}
             {isMobileDevice && <InstallPWA />}
             <Link
               to="/"
@@ -184,11 +188,12 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
           </div>
         </nav>
 
-        {/* BOTÓN HAMBURGUESA (Móvil) */}
+        {/* BOTÓN HAMBURUESA (Móvil) */}
         <div className="lg:hidden flex items-center gap-1">
+          <EvangelioDropdown bg={!!bg} />
           <button
             onClick={() => setOpen(!open)}
-            className={`p-2 ${bg ? "text-foreground" : "text-white"}`}
+            className={`p-2 rounded-lg transition-colors ${bg ? "text-foreground hover:bg-secondary" : "text-white hover:bg-white/10"}`}
             aria-label="Menú"
           >
             {open ? <X size={24} /> : <Menu size={24} />}
@@ -196,49 +201,103 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
         </div>
       </div>
 
-      {/* NAVEGACIÓN MÓVIL */}
+      {/* ═══════════════════ OVERLAY ═══════════════════ */}
       {open && (
-        <div className="lg:hidden bg-background border-t border-border">
-          <nav className="px-5 py-4 flex flex-col gap-1">
-            {links.map((l) =>
-              l.route ? (
-                <Link
-                  key={l.href}
-                  to={l.href}
-                  onClick={() => setOpen(false)}
-                  className="py-2.5 text-foreground/90 border-b border-border/50 text-sm"
-                >
-                  {l.label}
-                </Link>
-              ) : (
-                <a
-                  key={l.href}
-                  href={l.href}
-                  onClick={() => setOpen(false)}
-                  className="py-2.5 text-foreground/90 border-b border-border/50 text-sm"
-                >
-                  {l.label}
-                </a>
-              ),
-            )}
-            <a
-              href={EVANGELIO_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => setOpen(false)}
-              className="py-2.5 border-b border-border/50 text-sm flex items-center gap-2 text-foreground/90"
-            >
-              <BookOpen size={14} className="text-gold" />
-              Evangelio del día
-            </a>
-            {isMobileDevice && (
-              <div className="mt-4 flex flex-col gap-3">
-                <InstallPWA />
-              </div>
-            )}
-          </nav>
-        </div>
+        <div
+          className="lg:hidden fixed inset-0 top-16 bg-black/40 backdrop-blur-sm z-40 transition-opacity duration-300"
+          onClick={() => setOpen(false)}
+        />
       )}
+
+      {/* ═══════════════════ DRAWER MÓVIL ═══════════════════ */}
+      <div
+        className={`lg:hidden fixed top-16 right-0 bottom-0 w-[300px] max-w-[85vw] bg-background border-l border-border shadow-2xl z-50 flex flex-col transition-transform duration-300 ease-out ${
+          open ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
+        {/* Encabezado del drawer */}
+        <div className="px-5 pt-5 pb-4 border-b border-border/50">
+          <div className="flex items-center gap-3">
+            <img src="/assets/logo.webp" alt="" className="h-9 w-9 rounded-full object-cover" />
+            <div>
+              <p className="font-display text-sm font-semibold text-foreground">Parroquia Santísima Trinidad</p>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Tingo - Arequipa</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Links */}
+        <nav className="flex-1 overflow-y-auto px-3 py-3">
+          {links.map((l, i) => {
+            const Icon = l.icon;
+            return l.route ? (
+              <Link
+                key={l.href}
+                to={l.href}
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-foreground/85 hover:bg-secondary/60 transition-colors"
+                style={{ animationDelay: `${i * 40}ms` }}
+              >
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gold/10">
+                  <Icon size={16} className="text-gold" />
+                </span>
+                {l.label}
+              </Link>
+            ) : (
+              <a
+                key={l.href}
+                href={l.href}
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-foreground/85 hover:bg-secondary/60 transition-colors"
+                style={{ animationDelay: `${i * 40}ms` }}
+              >
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gold/10">
+                  <Icon size={16} className="text-gold" />
+                </span>
+                {l.label}
+              </a>
+            );
+          })}
+
+          {/* Evangelio */}
+          <a
+            href={EVANGELIO_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-foreground/85 hover:bg-secondary/60 transition-colors"
+          >
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gold/10">
+              <BookOpen size={16} className="text-gold" />
+            </span>
+            Evangelio del día
+          </a>
+        </nav>
+
+        {/* Footer del drawer */}
+        <div className="px-5 py-4 border-t border-border/50 space-y-3">
+          {isMobileDevice && <InstallPWA />}
+
+          <a
+            href="tel:+51915049850"
+            className="flex items-center gap-2.5 text-xs text-muted-foreground"
+          >
+            <Phone size={12} className="text-gold" />
+            +51 915 049 850
+          </a>
+          <a
+            href="mailto:pstrinidadtingo@gmail.com"
+            className="flex items-center gap-2.5 text-xs text-muted-foreground"
+          >
+            <Mail size={12} className="text-gold" />
+            pstrinidadtingo@gmail.com
+          </a>
+          <div className="flex items-start gap-2.5 text-xs text-muted-foreground">
+            <MapPin size={12} className="text-gold mt-0.5 shrink-0" />
+            <span>Calle Ferrocarril 200, Tingo</span>
+          </div>
+        </div>
+      </div>
     </header>
   );
 }

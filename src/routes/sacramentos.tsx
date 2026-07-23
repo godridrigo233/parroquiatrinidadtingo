@@ -18,7 +18,6 @@ import {
   ChevronRight,
   Facebook, Instagram,
   Mail,
-  HelpCircle,
 } from "lucide-react";
 import { Navbar } from "@/components/site/Navbar";
 import { Reveal } from "@/components/site/Reveal";
@@ -395,7 +394,7 @@ function SacramentosPage() {
           </Reveal>
 
           <Reveal>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-5">
+            <div className="flex flex-wrap justify-center gap-4 md:gap-5">
               {sacramentos.map((s) => {
                 const Icon = s.icon;
                 const isActive = selected.id === s.id;
@@ -403,30 +402,21 @@ function SacramentosPage() {
                   <button
                     key={s.id}
                     onClick={() => setSelected(s)}
-                    className={`group flex flex-col items-center text-center p-5 rounded-2xl border transition-all duration-200 ${
+                    className={`group flex flex-col items-center text-center p-4 rounded-2xl border transition-all duration-200 w-[130px] sm:w-[145px] ${
                       isActive
                         ? "border-[#C8A45C] bg-[#E8EEF4] shadow-md"
                         : "border-[#CBD5E1] bg-white hover:border-[#C8A45C]/50 hover:shadow-sm"
                     }`}
                   >
                     <span
-                      className="h-16 w-16 rounded-full flex items-center justify-center mb-3 transition-transform group-hover:scale-105"
+                      className="h-12 w-12 rounded-full flex items-center justify-center mb-2 transition-transform group-hover:scale-105"
                       style={{ backgroundColor: s.color + "18" }}
                     >
-                      <Icon size={28} style={{ color: s.color }} />
+                      <Icon size={22} style={{ color: s.color }} />
                     </span>
-                    <h3 className="font-display text-sm font-semibold text-[#0F1B2D] leading-tight mb-1.5">
+                    <h3 className="font-display text-xs font-semibold text-[#0F1B2D] leading-tight">
                       {s.title}
                     </h3>
-                    <p className="text-[11px] text-[#5A6A7E] leading-snug mb-3 line-clamp-3">
-                      {s.intro}
-                    </p>
-                    <span
-                      className="inline-flex items-center gap-1 text-xs font-semibold px-4 py-1.5 rounded-full text-white transition-opacity"
-                      style={{ backgroundColor: s.color }}
-                    >
-                      Ver más
-                    </span>
                   </button>
                 );
               })}
@@ -439,9 +429,9 @@ function SacramentosPage() {
       <section className="py-16 md:py-20 px-5 lg:px-8 bg-[#F0F4F8] scroll-mt-20">
         <div ref={detalleRef} className="max-w-6xl mx-auto">
           <Reveal key={selected.id}>
-            <div className="grid lg:grid-cols-[380px_1fr] gap-8 items-start">
+            <div className="grid lg:grid-cols-[340px_1fr] gap-6 items-start">
               {/* Imagen lateral */}
-              <div className="relative rounded-2xl overflow-hidden aspect-[3/4] lg:aspect-auto lg:h-full min-h-[360px]">
+              <div className="relative rounded-2xl overflow-hidden aspect-[4/3] lg:aspect-[3/4] min-h-[220px] lg:min-h-[360px]">
                 {/* Reemplazar src con imagen real del sacramento */}
                 <img
                   src={`/assets/sacramento-${selected.id}.${selected.id === 'confirmacion' ? 'png' : 'jpg'}`}
@@ -465,41 +455,14 @@ function SacramentosPage() {
 
               {/* Contenido detallado */}
               <div className="bg-white rounded-2xl border border-[#CBD5E1] shadow-sm overflow-hidden">
-                {/* Tabs de cabecera */}
-                <div className="flex border-b border-[#CBD5E1]">
-                  <div className="flex-1 flex items-center gap-2 px-5 py-4 border-b-2 border-[#C8A45C] bg-[#E8EEF4]">
-                    <CheckCircle2
-                      size={16}
-                      className="text-[#C8A45C] shrink-0"
-                    />
-                    <span className="text-xs uppercase tracking-[0.15em] font-bold text-[#0F1B2D]">
-                      Requisitos
-                    </span>
-                  </div>
-                  <div className="flex-1 flex items-center gap-2 px-5 py-4">
-                    <HelpCircle
-                      size={16}
-                      className="text-[#7B8A9E] shrink-0"
-                    />
-                    <span className="text-xs uppercase tracking-[0.15em] font-bold text-[#7B8A9E]">
-                      Información
-                    </span>
-                  </div>
-                  <div className="flex-1 flex items-center gap-2 px-5 py-4">
-                    <FileText
-                      size={16}
-                      className="text-[#7B8A9E] shrink-0"
-                    />
-                    <span className="text-xs uppercase tracking-[0.15em] font-bold text-[#7B8A9E]">
-                      Acciones
-                    </span>
-                  </div>
-                </div>
-
                 {/* Contenido en 3 columnas */}
                 <div className="grid md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-[#CBD5E1]">
                   {/* Col 1: Requisitos */}
                   <div className="p-5">
+                    <div className="flex items-center gap-2 mb-3">
+                      <CheckCircle2 size={14} className="text-[#C8A45C]" />
+                      <span className="text-[10px] uppercase tracking-[0.15em] font-bold text-[#0F1B2D]">Requisitos</span>
+                    </div>
                     <ul className="space-y-3">
                       {selected.requisitos.map((r, i) => (
                         <li
@@ -524,6 +487,10 @@ function SacramentosPage() {
 
                   {/* Col 2: Información */}
                   <div className="p-5 space-y-4">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Calendar size={14} className="text-[#C8A45C]" />
+                      <span className="text-[10px] uppercase tracking-[0.15em] font-bold text-[#0F1B2D]">Información</span>
+                    </div>
                     <div className="flex items-start gap-2.5">
                       <Calendar
                         size={15}
@@ -584,6 +551,10 @@ function SacramentosPage() {
 
                   {/* Col 3: Acciones */}
                   <div className="p-5 space-y-3">
+                    <div className="flex items-center gap-2 mb-1">
+                      <FileText size={14} className="text-[#C8A45C]" />
+                      <span className="text-[10px] uppercase tracking-[0.15em] font-bold text-[#0F1B2D]">Acciones</span>
+                    </div>
                     <a
                       href="tel:+51915049850"
                       className="flex items-center gap-2.5 w-full px-4 py-3 rounded-xl text-white text-sm font-semibold transition-opacity hover:opacity-90"
@@ -661,24 +632,24 @@ function SacramentosPage() {
           </Reveal>
 
           <Reveal>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div className="flex flex-wrap justify-center gap-4">
               {sacramentos.map((s) => {
                 const Icon = s.icon;
                 return (
                   <div
                     key={s.id}
-                    className="bg-white rounded-2xl border border-[#CBD5E1] p-5 text-center"
+                    className="bg-white rounded-2xl border border-[#CBD5E1] p-4 text-center w-[130px] sm:w-[145px]"
                   >
                     <span
-                      className="inline-flex h-12 w-12 rounded-full items-center justify-center mb-3"
+                      className="inline-flex h-10 w-10 rounded-full items-center justify-center mb-2"
                       style={{ backgroundColor: s.color + "15" }}
                     >
-                      <Icon size={22} style={{ color: s.color }} />
+                      <Icon size={20} style={{ color: s.color }} />
                     </span>
-                    <h4 className="font-display text-xs font-bold text-[#0F1B2D] mb-1.5">
+                    <h4 className="font-display text-xs font-bold text-[#0F1B2D] mb-1">
                       {s.title}
                     </h4>
-                    <p className="text-[11px] text-[#5A6A7E] leading-snug">
+                    <p className="text-[10px] text-[#5A6A7E] leading-snug">
                       {s.tiempo}
                     </p>
                   </div>

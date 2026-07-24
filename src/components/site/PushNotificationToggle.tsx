@@ -84,7 +84,7 @@ export function PushNotificationToggle() {
       className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-gold text-primary-foreground text-xs font-bold shadow-md hover:opacity-95 transition-all active:scale-95 disabled:opacity-50 cursor-pointer select-none"
     >
       <BellRing size={15} className="animate-bounce text-primary-foreground" />
-      <span>{loading ? "Activando..." : "🔔 Activar Avisos en el Celular"}</span>
+      <span>{loading ? "Activando..." : "Activar Avisos en el Celular"}</span>
     </button>
   );
 }

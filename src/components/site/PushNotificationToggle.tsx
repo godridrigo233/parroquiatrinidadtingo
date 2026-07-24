@@ -22,82 +22,69 @@ export function PushNotificationToggle() {
   useEffect(() => {
     let isMounted = true;
 
-    async function checkSubscription() {
+    async function preWarmAndCheck() {
       if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
-        if (isMounted) setIsSubscribed(true);
+        if (isMounted) setIsSubscribed(true); // Ocultar si no hay soporte
         return;
       }
 
       try {
-        const reg = await navigator.serviceWorker.getRegistration("/");
-        if (reg && reg.pushManager) {
-          const sub = await reg.pushManager.getSubscription();
+        // 🔥 PRE-CALENTAMIENTO: Registramos el SW en silencio apenas se abre la app
+        // Esto garantiza que cuando el usuario toque el botón, el motor YA ESTÉ ACTIVO en iOS
+        const reg = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
+        
+        // Esperamos a que esté listo en segundo plano sin congelar la interfaz
+        const readyReg = await navigator.serviceWorker.ready;
+
+        if (readyReg && readyReg.pushManager) {
+          const sub = await readyReg.pushManager.getSubscription();
           if (isMounted) setIsSubscribed(!!sub);
         } else {
           if (isMounted) setIsSubscribed(false);
         }
       } catch (err) {
+        console.warn("Error en pre-calentamiento de SW:", err);
         if (isMounted) setIsSubscribed(false);
       }
     }
 
-    checkSubscription();
+    preWarmAndCheck();
     return () => { isMounted = false; };
   }, []);
 
   const subscribeToPush = async () => {
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
-      alert("Tu celular no soporta alertas. En iPhone recuerda agregar primero la web a tu Pantalla de Inicio.");
+      alert("Tu dispositivo no soporta alertas. En iPhone asegúrate de agregar la web a tu Pantalla de Inicio.");
       return;
     }
 
     setLoading(true);
 
     try {
-      // 1. PRIMERO PEDIMOS PERMISO (Sin reloj corriendo)
+      // 1. Pedimos permiso nativo primero (Sin tiempo límite)
       const permission = await Notification.requestPermission();
       if (permission !== "granted") {
-        alert("Permiso denegado. Puedes activarlo en Configuración > Notificaciones.");
+        alert("Permiso denegado. Para activarlo, ve a Configuración > Notificaciones en tu iPhone y permite los avisos para esta app.");
         setLoading(false);
         return;
       }
 
-      // 2. TEMPORIZADOR DE SEGURIDAD (15 segundos)
+      // 2. TEMPORIZADOR DE SEGURIDAD (15 Segundos)
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("El sistema tardó en conectar con Apple APNs. Inténtalo nuevamente.")), 15000)
+        setTimeout(() => reject(new Error("La red tardó en conectar con Apple APNs. Verifica tu internet e inténtalo de nuevo.")), 15000)
       );
 
+      // 3. DISPARO DIRECTO A APNs (Como el SW ya se pre-calentó, esto es instantáneo)
       const pushTask = async () => {
-        // Registramos explícitamente el Service Worker
-        const reg = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
+        // Tomamos el Service Worker que ya está listo y esperando
+        const readyReg = await navigator.serviceWorker.ready;
 
-        // 🔥 EL TRUCO PARA iOS: Si el Service Worker está instalando o esperando, lo obligamos a activarse
-        if (!reg.active) {
-          const worker = reg.installing || reg.waiting;
-          if (worker) {
-            await new Promise<void>((resolve) => {
-              if (worker.state === "activated") {
-                resolve();
-              } else {
-                worker.addEventListener("statechange", (e: any) => {
-                  if (e.target.state === "activated") resolve();
-                });
-              }
-            });
-          } else {
-            // Si no atrapó el worker, esperamos el evento oficial .ready
-            await navigator.serviceWorker.ready;
-          }
+        if (!readyReg || !readyReg.pushManager) {
+          throw new Error("El sistema de notificaciones de iOS no está disponible.");
         }
 
-        // En iOS, necesitamos asegurar que reg.active exista para llamar a pushManager
-        const activeReg = reg.active || (await navigator.serviceWorker.ready);
-        if (!activeReg || !activeReg.pushManager) {
-          throw new Error("El motor de notificaciones no logró activarse en iOS.");
-        }
-
-        // Suscribimos el dispositivo generando el token VAPID
-        const subscription = await activeReg.pushManager.subscribe({
+        // Suscribimos directamente a los servidores de Apple/Google
+        const subscription = await readyReg.pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY),
         });
@@ -117,13 +104,14 @@ export function PushNotificationToggle() {
         return true;
       };
 
+      // Corremos la suscripción en paralelo con el reloj de 15 segundos
       await Promise.race([pushTask(), timeoutPromise]);
 
       setIsSubscribed(true);
       alert("¡Listo! Ahora recibirás los avisos importantes de la parroquia en tu pantalla.");
     } catch (error: any) {
       console.error("Error al suscribirse:", error);
-      alert(`No se pudo activar: ${error.message || "Error de conexión"}`);
+      alert(`No se pudo activar: ${error.message || "Error de conexión con la nube"}`);
     } finally {
       setLoading(false);
     }
@@ -141,7 +129,7 @@ export function PushNotificationToggle() {
       className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-gold text-primary-foreground text-xs font-bold shadow-md hover:opacity-95 transition-all active:scale-95 disabled:opacity-50 cursor-pointer select-none"
     >
       <BellRing size={15} className="animate-bounce text-primary-foreground" />
-      <span>{loading ? "Conectando con el celular..." : "🔔 Activar Avisos en el Celular"}</span>
+      <span>{loading ? "Conectando con los servidores..." : "Activar Avisos en el Celular"}</span>
     </button>
   );
 }

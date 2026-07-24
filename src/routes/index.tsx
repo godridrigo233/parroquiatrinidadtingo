@@ -293,14 +293,13 @@ function Home() {
       <Suspense fallback={<SectionSkeleton height="h-[700px]" />}>
         <HorariosSection groupedSchedules={groupedSchedules} loadingSchedules={loadingSchedules} />
       </Suspense>
-      <Suspense fallback={<SectionSkeleton height="h-[700px]" />}>
-        <SacramentosSection />
-      </Suspense>
 
       <Suspense fallback={<SectionSkeleton height="h-[700px]" />}>
         <GaleriaSection gallery={gallery} />
       </Suspense>
-
+      <Suspense fallback={<SectionSkeleton height="h-[700px]" />}>
+        <SacramentosSection />
+        </Suspense>
       <Suspense fallback={<SectionSkeleton height="h-[500px]" />}>
         <DonacionesSection items={donations} />
       </Suspense>

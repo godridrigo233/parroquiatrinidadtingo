@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { Link, useNavigate, useMatches } from "@tanstack/react-router";
 import { Menu, X, BookOpen, MessageCircle, Home, Church, Users, Heart, Music, CalendarDays, Image, Droplets, Phone, Mail, MapPin } from "lucide-react";
 import { InstallPWA } from "@/components/site/InstallPWA";
+import { PushNotificationToggle } from "@/components/site/PushNotificationToggle"; // 👈 1. IMPORTACIÓN DEL COMPONENTE
 
 const links = [
   { href: "inicio", label: "Inicio", icon: Home },
@@ -373,6 +374,7 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
         {/* Footer del cajón */}
         <div className="px-5 py-4 border-t border-border/60 space-y-3 bg-secondary/20 select-none">
           {isMobileDevice && <InstallPWA />}
+          {isMobileDevice && <PushNotificationToggle />} {/* 👈 2. AQUÍ SE AGREGA EN MÓVILES */}
           <a href="tel:+51915049850" className="flex items-center gap-2.5 text-xs text-muted-foreground outline-none focus:outline-none">
             <Phone size={13} className="text-gold" />
             +51 915 049 850

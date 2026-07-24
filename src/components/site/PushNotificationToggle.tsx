@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { BellRing } from "lucide-react";
+import { useState } from "react";
+import { BellRing, Check, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const PUBLIC_VAPID_KEY = "BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U";
@@ -16,74 +16,41 @@ function urlBase64ToUint8Array(base64String: string) {
 }
 
 export function PushNotificationToggle() {
-  const [isSubscribed, setIsSubscribed] = useState<boolean | null>(null);
+  const [isSubscribed, setIsSubscribed] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    let isMounted = true;
-
-    async function preWarmAndCheck() {
-      if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
-        if (isMounted) setIsSubscribed(true); // Ocultar si no hay soporte
-        return;
-      }
-
-      try {
-        // 🔥 PRE-CALENTAMIENTO: Registramos el SW en silencio apenas se abre la app
-        // Esto garantiza que cuando el usuario toque el botón, el motor YA ESTÉ ACTIVO en iOS
-        const reg = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
-        
-        // Esperamos a que esté listo en segundo plano sin congelar la interfaz
-        const readyReg = await navigator.serviceWorker.ready;
-
-        if (readyReg && readyReg.pushManager) {
-          const sub = await readyReg.pushManager.getSubscription();
-          if (isMounted) setIsSubscribed(!!sub);
-        } else {
-          if (isMounted) setIsSubscribed(false);
-        }
-      } catch (err) {
-        console.warn("Error en pre-calentamiento de SW:", err);
-        if (isMounted) setIsSubscribed(false);
-      }
-    }
-
-    preWarmAndCheck();
-    return () => { isMounted = false; };
-  }, []);
-
   const subscribeToPush = async () => {
+    // 1. Validación estricta para iOS y navegadores compatibles
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
-      alert("Tu dispositivo no soporta alertas. En iPhone asegúrate de agregar la web a tu Pantalla de Inicio.");
+      alert("Tu navegador o dispositivo no soporta notificaciones push. En iPhone, asegúrate de haber instalado la PWA en tu Pantalla de Inicio.");
       return;
     }
 
     setLoading(true);
 
     try {
-      // 1. Pedimos permiso nativo primero (Sin tiempo límite)
+      // 2. Pedimos el permiso nativo al usuario
       const permission = await Notification.requestPermission();
       if (permission !== "granted") {
-        alert("Permiso denegado. Para activarlo, ve a Configuración > Notificaciones en tu iPhone y permite los avisos para esta app.");
+        alert("Permiso denegado. Para activarlo en tu iPhone, ve a Configuración > Notificaciones y permite las alertas para esta app.");
         setLoading(false);
         return;
       }
 
-      // 2. TEMPORIZADOR DE SEGURIDAD (15 Segundos)
+      // 3. Seguro de tiempo límite (15 segundos)
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("La red tardó en conectar con Apple APNs. Verifica tu internet e inténtalo de nuevo.")), 15000)
+        setTimeout(() => reject(new Error("La red tardó en conectar con los servidores. Verifica tu conexión.")), 15000)
       );
 
-      // 3. DISPARO DIRECTO A APNs (Como el SW ya se pre-calentó, esto es instantáneo)
+      // 4. Registro y suscripción directa
       const pushTask = async () => {
-        // Tomamos el Service Worker que ya está listo y esperando
+        const reg = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
         const readyReg = await navigator.serviceWorker.ready;
 
         if (!readyReg || !readyReg.pushManager) {
-          throw new Error("El sistema de notificaciones de iOS no está disponible.");
+          throw new Error("El sistema de notificaciones no está disponible en este dispositivo.");
         }
 
-        // Suscribimos directamente a los servidores de Apple/Google
         const subscription = await readyReg.pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY),
@@ -104,41 +71,35 @@ export function PushNotificationToggle() {
         return true;
       };
 
-      // Corremos la suscripción en paralelo con el reloj de 15 segundos
       await Promise.race([pushTask(), timeoutPromise]);
 
       setIsSubscribed(true);
       alert("¡Listo! Ahora recibirás los avisos importantes de la parroquia en tu pantalla.");
     } catch (error: any) {
       console.error("Error al suscribirse:", error);
-      alert(`No se pudo activar: ${error.message || "Error de conexión con la nube"}`);
+      alert(`No se pudo activar: ${error.message || "Error de conexión"}`);
     } finally {
       setLoading(false);
     }
   };
 
-  if (isSubscribed === null) {
-    return (
-      <div className="w-full text-center py-2 text-[11px] text-muted-foreground animate-pulse">
-        Verificando alertas...
-      </div>
-    );
-  }
-
-  if (isSubscribed === true) {
+  // Si ya se suscribió en esta sesión, mostramos el estado activo
+  if (isSubscribed) {
     return (
       <div className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-bold select-none">
-        <span>✔ Avisos activos en este iPhone</span>
+        <span className="flex items-center gap-1.5"><Check size={14} /> Avisos activos</span>
         <button 
+          type="button"
           onClick={() => setIsSubscribed(false)} 
-          className="text-[10px] underline ml-2 opacity-80 hover:opacity-100"
+          className="text-[11px] underline opacity-80 hover:opacity-100 flex items-center gap-1 font-normal"
         >
-          Probar de nuevo
+          <RefreshCw size={11} /> Reiniciar
         </button>
       </div>
     );
   }
 
+  // El botón aparece instantáneamente sin quedarse colgado en "Verificando..."
   return (
     <button
       type="button"
@@ -147,7 +108,7 @@ export function PushNotificationToggle() {
       className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-gold text-primary-foreground text-xs font-bold shadow-md hover:opacity-95 transition-all active:scale-95 disabled:opacity-50 cursor-pointer select-none"
     >
       <BellRing size={15} className="animate-bounce text-primary-foreground" />
-      <span>{loading ? "Conectando con los servidores..." : "Activar Avisos en el Celular"}</span>
+      <span>{loading ? "Conectando..." : "Activar Avisos en el Celular"}</span>
     </button>
   );
 }

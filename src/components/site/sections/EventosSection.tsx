@@ -1,10 +1,22 @@
 import { useEffect, useState } from "react";
-import { Facebook, Calendar, Clock, MapPin, MessageCircle, ArrowRight } from "lucide-react";
+import { Facebook, Calendar, Clock, MapPin, MessageCircle, ArrowRight, Megaphone } from "lucide-react";
 import { Reveal } from "@/components/site/Reveal";
 import { AddToCalendar } from "@/components/site/AddToCalendar";
 import { getSupabaseImageUrl } from "@/lib/image-url";
 
 type Eventt = { id: string; title: string; description: string | null; event_date: string; location: string | null; image_url?: string | null };
+
+function getProximityLabel(dateStr: string): string | null {
+  const d = new Date(dateStr);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const eventDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const diffDays = (eventDay.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
+  if (diffDays < 0) return null;
+  if (diffDays === 0) return "Hoy";
+  if (diffDays <= 7) return "Esta semana";
+  return null;
+}
 
 type FacebookPost = {
   id: string;
@@ -185,38 +197,74 @@ export default function EventosSection({
 
         {loadingEvents ? (
           <Reveal className="mt-10">
-            <div className="rounded-2xl bg-gradient-to-br from-primary to-primary/80 p-8 w-full animate-pulse h-48" />
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="rounded-2xl bg-white/5 border border-white/10 p-6 animate-pulse">
+                  <div className="aspect-video rounded-xl bg-white/10 mb-4" />
+                  <div className="h-5 bg-white/10 rounded w-10/12 mb-3" />
+                  <div className="h-3 bg-white/10 rounded w-6/12 mb-2" />
+                  <div className="h-3 bg-white/10 rounded w-5/12" />
+                </div>
+              ))}
+            </div>
           </Reveal>
         ) : events.length > 0 && (
           <Reveal className="mt-10">
-            <div className="rounded-2xl bg-gradient-to-br from-primary to-primary/80 text-primary-foreground p-8 shadow-elegant">
-              <p className="uppercase tracking-[0.2em] text-xs text-gold font-semibold">Próximos eventos</p>
-              <div className="mt-5 grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {events.map((e) => {
-                  const d = new Date(e.event_date);
-                  return (
-                    <div key={e.id} className="border-l-2 border-gold pl-4">
-                      {e.image_url && (
-                        <div className="mb-3 aspect-video w-full overflow-hidden rounded-xl">
-                          <img src={getSupabaseImageUrl(e.image_url, { width: 600 })} alt={e.title} loading="lazy" className="w-full h-full object-cover" />
-                        </div>
-                      )}
-                      <p className="font-display text-xl">{e.title}</p>
-                      <p className="text-sm text-primary-foreground/80 mt-1 flex items-center gap-1.5">
-                        <Calendar size={14} /> {d.toLocaleDateString("es-PE", { day: "numeric", month: "long" })}
-                        <span className="opacity-60">·</span>
-                        <Clock size={14} /> {d.toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" })}
-                      </p>
-                      {e.location && (
+            <div className="relative rounded-2xl bg-gradient-to-br from-[#0F1B2D] to-[#1A2940] text-primary-foreground p-8 shadow-elegant overflow-hidden">
+              {/* Fondo decorativo */}
+              <div className="absolute -top-32 -right-32 w-80 h-80 bg-gold/5 rounded-full blur-3xl pointer-events-none" />
+              <div className="relative">
+                <div className="flex items-center gap-2 mb-5">
+                  <Megaphone size={16} className="text-gold" />
+                  <p className="uppercase tracking-[0.2em] text-xs text-gold font-semibold">Próximos eventos</p>
+                </div>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {events.map((e, idx) => {
+                    const d = new Date(e.event_date);
+                    const proximity = getProximityLabel(e.event_date);
+                    const isClosest = idx === 0 && !!proximity;
+                    return (
+                      <div
+                        key={e.id}
+                        className={`group relative border-l-3 pl-5 py-1 rounded-r-xl transition-colors duration-300 hover:bg-white/[0.07] ${
+                          isClosest ? "border-gold" : "border-gold/40 hover:border-gold/70"
+                        }`}
+                      >
+                        {proximity && (
+                          <span className={`absolute -top-1 right-2 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${
+                            proximity === "Hoy" ? "bg-red-500/20 text-red-300" : "bg-gold/20 text-gold"
+                          }`}>
+                            {proximity}
+                          </span>
+                        )}
+                        {e.image_url && (
+                          <div className="mb-3 aspect-video w-full overflow-hidden rounded-xl">
+                            <img
+                              src={getSupabaseImageUrl(e.image_url, { width: 600 })}
+                              alt={e.title}
+                              loading="lazy"
+                              decoding="async"
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            />
+                          </div>
+                        )}
+                        <p className="font-display text-xl">{e.title}</p>
                         <p className="text-sm text-primary-foreground/80 mt-1 flex items-center gap-1.5">
-                          <MapPin size={14} /> {e.location}
+                          <Calendar size={14} className="text-gold/70" /> {d.toLocaleDateString("es-PE", { day: "numeric", month: "long", year: "numeric" })}
+                          <span className="opacity-40">·</span>
+                          <Clock size={14} className="text-gold/70" /> {d.toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" })}
                         </p>
-                      )}
-                      {e.description && <p className="text-sm text-primary-foreground/70 mt-2">{e.description}</p>}
-                      <AddToCalendar event={e} />
-                    </div>
-                  );
-                })}
+                        {e.location && (
+                          <p className="text-sm text-primary-foreground/80 mt-1 flex items-center gap-1.5">
+                            <MapPin size={14} className="text-gold/70" /> {e.location}
+                          </p>
+                        )}
+                        {e.description && <p className="text-sm text-primary-foreground/60 mt-2 leading-relaxed">{e.description}</p>}
+                        <AddToCalendar event={e} />
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </Reveal>

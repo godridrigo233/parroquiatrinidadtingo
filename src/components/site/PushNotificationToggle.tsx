@@ -20,75 +20,96 @@ export function PushNotificationToggle() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if ("serviceWorker" in navigator && "PushManager" in window) {
-      navigator.serviceWorker.register("/sw.js").then((reg) => {
-        reg.pushManager.getSubscription().then((sub) => {
-          if (sub) {
-            setIsSubscribed(true);
-          } else {
-            setIsSubscribed(false);
-          }
-        });
-      }).catch(() => {
-        // Si sw.js falla o no existe, mostramos el botón de todas formas
-        setIsSubscribed(false);
-      });
-    } else {
-      setIsSubscribed(true); // Ocultamos si el navegador no soporta push
+    let isMounted = true;
+
+    async function checkSubscription() {
+      if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+        if (isMounted) setIsSubscribed(true);
+        return;
+      }
+
+      try {
+        const reg = await navigator.serviceWorker.getRegistration("/");
+        if (reg && reg.pushManager) {
+          const sub = await reg.pushManager.getSubscription();
+          if (isMounted) setIsSubscribed(!!sub);
+        } else {
+          if (isMounted) setIsSubscribed(false);
+        }
+      } catch (err) {
+        if (isMounted) setIsSubscribed(false);
+      }
     }
+
+    checkSubscription();
+    return () => { isMounted = false; };
   }, []);
 
   const subscribeToPush = async () => {
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
-      alert("Tu navegador actual no soporta notificaciones push. Si usas iPhone, asegúrate de añadir la web a tu pantalla de inicio.");
+      alert("Tu celular actual no soporta este tipo de alertas. Si usas iPhone, asegúrate de agregar primero la web a tu Pantalla de Inicio.");
       return;
     }
 
     setLoading(true);
 
     try {
-      // 1. BLINDAJE: Temporizador de 10 segundos para evitar que se quede "cargando..." por siempre
+      // 1. PRIMERO PEDIMOS PERMISO (SIN TIEMPO LÍMITE)
+      // Así el feligrés puede leer la alerta del celular el tiempo que necesite sin que el código falle
+      const permission = await Notification.requestPermission();
+      if (permission !== "granted") {
+        alert("Permiso denegado. Para activarlo después, ve a la configuración de tu navegador y permite las notificaciones para este sitio.");
+        setLoading(false);
+        return;
+      }
+
+      // 2. UNA VEZ CONCEDIDO EL PERMISO, INICIAMOS LA CONEXIÓN TÉCNICA (Con seguro de 15 segundos)
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("El sistema tardó demasiado. Verifica tu conexión o que el archivo /sw.js exista en el servidor.")), 10000)
+        setTimeout(() => reject(new Error("La red tardó en conectar con Google/Apple. Verifica tu internet e inténtalo de nuevo.")), 15000)
       );
 
-      // 2. TAREA PRINCIPAL: Registrar y obtener permiso
       const pushTask = async () => {
-        // Forzamos el registro para capturar errores 404 si falta el archivo
-        const reg = await navigator.serviceWorker.register("/sw.js");
-        const registration = await navigator.serviceWorker.ready;
-        
-        const permission = await Notification.requestPermission();
-        if (permission !== "granted") {
-          throw new Error("Has denegado o bloqueado el permiso de notificaciones en tu celular.");
+        // Registramos o actualizamos el Service Worker
+        const reg = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
+
+        // En móviles, a veces reg.pushManager está disponible de inmediato en el registro
+        // Si no, esperamos al Service Worker activo
+        let pushManager = reg.pushManager;
+        if (!pushManager) {
+          const activeReg = await navigator.serviceWorker.ready;
+          pushManager = activeReg.pushManager;
         }
 
-        const subscription = await registration.pushManager.subscribe({
+        // Suscribimos el dispositivo generando el token VAPID
+        const subscription = await pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY),
         });
 
         const subJson = subscription.toJSON();
 
+        // Guardamos en Supabase
         const { error } = await supabase.from("push_subscriptions").insert({
           endpoint: subJson.endpoint,
           keys: subJson.keys,
         });
 
-        if (error && !error.message.includes("duplicate")) throw error;
+        if (error && !error.message.includes("duplicate")) {
+          throw new Error(`Error en base de datos: ${error.message}`);
+        }
+
         return true;
       };
 
-      // Ejecutamos una carrera: el que termine primero (la suscripción o el temporizador de 10 seg)
+      // Corremos la suscripción en paralelo con el reloj de 15 segundos
       await Promise.race([pushTask(), timeoutPromise]);
 
       setIsSubscribed(true);
-      alert("¡Listo! Ya estás suscrito para recibir los avisos parroquiales.");
+      alert("¡Listo! Ahora recibirás los avisos importantes de la parroquia en tu pantalla.");
     } catch (error: any) {
       console.error("Error al suscribirse:", error);
-      alert(`No se pudo activar: ${error.message || "Error desconocido"}`);
+      alert(`No se pudo activar: ${error.message || "Error de conexión"}`);
     } finally {
-      // Esto GARANTIZA que el botón jamás se quede pegado en "Activando..."
       setLoading(false);
     }
   };
@@ -105,7 +126,7 @@ export function PushNotificationToggle() {
       className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-gold text-primary-foreground text-xs font-bold shadow-md hover:opacity-95 transition-all active:scale-95 disabled:opacity-50 cursor-pointer select-none"
     >
       <BellRing size={15} className="animate-bounce text-primary-foreground" />
-      <span>{loading ? "Activando... (Esperando permiso)" : "🔔 Activar Avisos en el Celular"}</span>
+      <span>{loading ? "Conectando con el celular..." : "Activar Avisos en el Celular"}</span>
     </button>
   );
 }

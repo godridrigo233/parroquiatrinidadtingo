@@ -16,7 +16,7 @@ function urlBase64ToUint8Array(base64String: string) {
 }
 
 export function PushNotificationToggle() {
-  const [isSubscribed, setIsSubscribed] = useState<boolean | null>(null); // null mientras carga
+  const [isSubscribed, setIsSubscribed] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -24,54 +24,75 @@ export function PushNotificationToggle() {
       navigator.serviceWorker.register("/sw.js").then((reg) => {
         reg.pushManager.getSubscription().then((sub) => {
           if (sub) {
-            setIsSubscribed(true); // Ya está suscrito
+            setIsSubscribed(true);
           } else {
-            setIsSubscribed(false); // No está suscrito, hay que mostrar el botón
+            setIsSubscribed(false);
           }
         });
+      }).catch(() => {
+        // Si sw.js falla o no existe, mostramos el botón de todas formas
+        setIsSubscribed(false);
       });
     } else {
-      setIsSubscribed(true); // Si no lo soporta el navegador, lo ocultamos para que no rompa la UI
+      setIsSubscribed(true); // Ocultamos si el navegador no soporta push
     }
   }, []);
 
   const subscribeToPush = async () => {
+    if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+      alert("Tu navegador actual no soporta notificaciones push. Si usas iPhone, asegúrate de añadir la web a tu pantalla de inicio.");
+      return;
+    }
+
     setLoading(true);
+
     try {
-      const registration = await navigator.serviceWorker.ready;
-      
-      const permission = await Notification.requestPermission();
-      if (permission !== "granted") {
-        alert("Has denegado los permisos de notificación en tu navegador.");
-        setLoading(false);
-        return;
-      }
+      // 1. BLINDAJE: Temporizador de 10 segundos para evitar que se quede "cargando..." por siempre
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("El sistema tardó demasiado. Verifica tu conexión o que el archivo /sw.js exista en el servidor.")), 10000)
+      );
 
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY),
-      });
+      // 2. TAREA PRINCIPAL: Registrar y obtener permiso
+      const pushTask = async () => {
+        // Forzamos el registro para capturar errores 404 si falta el archivo
+        const reg = await navigator.serviceWorker.register("/sw.js");
+        const registration = await navigator.serviceWorker.ready;
+        
+        const permission = await Notification.requestPermission();
+        if (permission !== "granted") {
+          throw new Error("Has denegado o bloqueado el permiso de notificaciones en tu celular.");
+        }
 
-      const subJson = subscription.toJSON();
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY),
+        });
 
-      const { error } = await supabase.from("push_subscriptions").insert({
-        endpoint: subJson.endpoint,
-        keys: subJson.keys,
-      });
+        const subJson = subscription.toJSON();
 
-      if (error && !error.message.includes("duplicate")) throw error;
+        const { error } = await supabase.from("push_subscriptions").insert({
+          endpoint: subJson.endpoint,
+          keys: subJson.keys,
+        });
 
-      setIsSubscribed(true); // Esto hará que el botón desaparezca automáticamente al instante
+        if (error && !error.message.includes("duplicate")) throw error;
+        return true;
+      };
+
+      // Ejecutamos una carrera: el que termine primero (la suscripción o el temporizador de 10 seg)
+      await Promise.race([pushTask(), timeoutPromise]);
+
+      setIsSubscribed(true);
       alert("¡Listo! Ya estás suscrito para recibir los avisos parroquiales.");
     } catch (error: any) {
       console.error("Error al suscribirse:", error);
-      alert("No se pudo activar la suscripción.");
+      alert(`No se pudo activar: ${error.message || "Error desconocido"}`);
     } finally {
+      // Esto GARANTIZA que el botón jamás se quede pegado en "Activando..."
       setLoading(false);
     }
   };
 
-  // Si todavía está revisando el navegador o el usuario YA ESTÁ SUSCRITO, no mostramos nada (desaparece)
   if (isSubscribed === null || isSubscribed === true) {
     return null;
   }
@@ -84,7 +105,7 @@ export function PushNotificationToggle() {
       className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-gold text-primary-foreground text-xs font-bold shadow-md hover:opacity-95 transition-all active:scale-95 disabled:opacity-50 cursor-pointer select-none"
     >
       <BellRing size={15} className="animate-bounce text-primary-foreground" />
-      <span>{loading ? "Activando..." : "Activar Avisos en el Celular"}</span>
+      <span>{loading ? "Activando... (Esperando permiso)" : "🔔 Activar Avisos en el Celular"}</span>
     </button>
   );
 }

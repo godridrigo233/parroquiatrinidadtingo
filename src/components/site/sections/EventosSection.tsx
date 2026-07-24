@@ -31,23 +31,18 @@ type FacebookPost = {
   description: string | null;
 };
 
-// 🛡️ SUBCOMPONENTE DE IMAGEN BLINDADO
-// Si los servidores de Facebook o el CDN fallan con error 403, el estado cambia al instante a la foto parroquial
-function FacebookImage({ src }: { src: string }) {
-  const [imgSrc, setImgSrc] = useState(src);
-  const fallbackImg = "https://images.unsplash.com/photo-1548625361-16a00e971cfd?q=80&w=600";
 
+// 🛡️ SUBCOMPONENTE DE IMAGEN QUE ELIMINA LA TARJETA SI LA FOTO FALLA
+function FacebookImage({ src, onFail }: { src: string; onFail: () => void }) {
   return (
     <img
-      src={imgSrc}
+      src={src}
       loading="lazy"
-      alt="Publicación de Facebook"
+      alt="Publicación parroquial de Facebook"
       referrerPolicy="no-referrer"
       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
       onError={() => {
-        if (imgSrc !== fallbackImg) {
-          setImgSrc(fallbackImg);
-        }
+        onFail();
       }}
     />
   );
@@ -70,41 +65,47 @@ function FacebookPostsGrid() {
         const data = await response.json();
 
         if (data.status === "ok" && data.items) {
-          const formattedPosts = data.items.slice(0, 3).map((item: any) => {
-            let rawImageUrl = item.enclosure?.link || item.thumbnail;
-            
-            if (!rawImageUrl && item.content) {
-              const imgMatch = item.content.match(/<img[^>]+src="([^">]+)"/);
-              if (imgMatch && imgMatch[1]) {
-                rawImageUrl = imgMatch[1];
+          const formattedPosts = data.items
+            .map((item: any) => {
+              let rawImageUrl = item.enclosure?.link || item.thumbnail;
+              
+              if (!rawImageUrl && item.content) {
+                const imgMatch = item.content.match(/<img[^>]+src="([^">]+)"/);
+                if (imgMatch && imgMatch[1]) {
+                  rawImageUrl = imgMatch[1];
+                }
               }
-            }
 
-            // 1. LIMPIEZA CLAVE: Convertimos las entidades &amp; de vuelta a símbolos & reales
-            const cleanUrl = rawImageUrl ? rawImageUrl.replace(/&amp;/g, '&') : null;
+              // 1. Limpieza de entidades HTML en la URL
+              const cleanUrl = rawImageUrl ? rawImageUrl.replace(/&amp;/g, '&') : null;
 
-            // 2. ESCUDO WESERV: Pasamos la URL limpia por el proxy anti-403 para evitar bloqueos
-            const finalImageUrl = cleanUrl 
-              ? `https://wsrv.nl/?url=${encodeURIComponent(cleanUrl)}&w=600&output=webp` 
-              : "https://images.unsplash.com/photo-1548625361-16a00e971cfd?q=80&w=600";
+              // 🔥 2. FILTRO ESTRICTO: SI NO HAY UNA IMAGEN REAL, RETORNAMOS NULL
+              if (!cleanUrl) return null;
 
-            const cleanDescription = (item.content || item.description || "")
-              .replace(/<[^>]*>?/gm, '')
-              .replace(/\(Feed generated with FetchRSS\)/gi, '')
-              .trim() || "Mira nuestra última actividad o aviso parroquial en nuestra página oficial.";
+              // 3. Escudo WSRV para evitar bloqueos 403 de Facebook
+              const finalImageUrl = `https://wsrv.nl/?url=${encodeURIComponent(cleanUrl)}&w=600&output=webp`;
 
-            return {
-              id: item.guid || item.link || Math.random().toString(),
-              post_url: item.link || "https://www.facebook.com/parroquiasantisimatrinidadtingo",
-              description: cleanDescription,
-              image_url: finalImageUrl
-            };
-          });
+              const cleanDescription = (item.content || item.description || "")
+                .replace(/<[^>]*>?/gm, '')
+                .replace(/\(Feed generated with FetchRSS\)/gi, '')
+                .trim() || "Mira nuestra última actividad o aviso parroquial en nuestra página oficial.";
+
+              return {
+                id: item.guid || item.link || Math.random().toString(),
+                post_url: item.link || "https://www.facebook.com/parroquiasantisimatrinidadtingo",
+                description: cleanDescription,
+                image_url: finalImageUrl
+              };
+            })
+            // 🔥 4. DESCARTAMOS TODOS LOS ESTADOS DE SOLO TEXTO (LOS QUE DIERON NULL)
+            .filter((post: any): post is FacebookPost => post !== null)
+            // 🔥 5. RECIÉN AQUÍ TOMAMOS LAS 3 PRIMERAS PUBLICACIONES QUE SÍ TIENEN FOTO
+            .slice(0, 3);
           
           setPosts(formattedPosts);
         }
       } catch (error) {
-        console.warn("Feed de Facebook temporalmente en modo de enlace directo:", error);
+        console.warn("Feed de Facebook temporalmente no disponible:", error);
       } finally {
         setIsLoading(false);
       }
@@ -112,6 +113,10 @@ function FacebookPostsGrid() {
 
     fetchFacebookFeed();
   }, []);
+
+  const handleRemoveBrokenPost = (idToRemove: string) => {
+    setPosts((currentPosts) => currentPosts.filter((p) => p.id !== idToRemove));
+  };
 
   if (isLoading) {
     return (
@@ -134,7 +139,7 @@ function FacebookPostsGrid() {
   if (posts.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-border bg-card/50 py-12 px-6 text-center">
-        <p className="text-muted-foreground mb-4">Aún no hay publicaciones recientes.</p>
+        <p className="text-muted-foreground mb-4">Aún no hay publicaciones recientes con fotografía.</p>
         <a
           href="https://www.facebook.com/parroquiasantisimatrinidadtingo/"
           target="_blank"
@@ -158,13 +163,10 @@ function FacebookPostsGrid() {
           className="group flex flex-col h-full rounded-2xl bg-white border border-border/60 shadow-md hover:shadow-xl hover:-translate-y-1.5 transition-all duration-500 overflow-hidden"
         >
           <div className="relative aspect-video overflow-hidden bg-muted">
-            {post.image_url ? (
-              <FacebookImage src={post.image_url} />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-muted-foreground bg-primary/5">
-                <Facebook size={48} className="opacity-20" />
-              </div>
-            )}
+            <FacebookImage 
+              src={post.image_url!} 
+              onFail={() => handleRemoveBrokenPost(post.id)} 
+            />
             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           </div>
 

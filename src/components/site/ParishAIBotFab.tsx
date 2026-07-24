@@ -621,6 +621,7 @@ function ParishAIBotFabWidget() {
                         <PhoneCall size={13} className="text-[#C8A45C]" />
                         <span>Llamar a Secretaría</span>
                       </a>
+                      {/*
                       <a
                         href="https://wa.me/51915049850?text=Hola,%20vengo%20del%20asistente%20virtual%20de%20la%20web%20y%20quisiera%20hacer%20una%20consulta%20parroquial..."
                         target="_blank"
@@ -630,6 +631,7 @@ function ParishAIBotFabWidget() {
                         <MessageCircle size={14} className="fill-white" />
                         <span>WhatsApp Secretaría</span>
                       </a>
+                      */}
                     </div>
                   )}
                 </div>

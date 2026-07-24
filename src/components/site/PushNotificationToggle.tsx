@@ -16,6 +16,10 @@ function urlBase64ToUint8Array(base64String: string) {
   return outputArray;
 }
 
+function timeout<T>(ms: number, msg: string): Promise<never> {
+  return new Promise((_, reject) => setTimeout(() => reject(new Error(msg)), ms));
+}
+
 export function PushNotificationToggle() {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
@@ -84,92 +88,83 @@ export function PushNotificationToggle() {
     }
 
     setLoading(true);
+    let stepToastId: string | number | undefined;
 
     try {
-      // Pedir permiso nativo
+      // ── Paso 1: Permiso de notificaciones ──
+      stepToastId = toast.loading("Solicitando permiso de notificaciones...");
       const permission = await Notification.requestPermission();
       if (permission !== "granted") {
-        toast.error("Permiso denegado. Actívalo en Configuración > Notificaciones de tu navegador.", { duration: 5000 });
+        toast.dismiss(stepToastId);
+        toast.error("Permiso denegado. Actívalo en Configuración > Notificaciones.", { duration: 5000 });
         setLoading(false);
         return;
       }
+      toast.dismiss(stepToastId);
 
-      // Obtener registro existente del SW, o esperar al activo
-      let reg = await navigator.serviceWorker.getRegistration();
-      if (!reg) {
-        reg = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
-      }
+      // ── Paso 2: Registrar y activar el Service Worker ──
+      stepToastId = toast.loading("Activando servicio de notificaciones...");
+      const reg = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
+      await navigator.serviceWorker.ready; // espera activación real, nativo, sin polling
+      toast.dismiss(stepToastId);
 
-      // Esperar a que el SW esté listo (activo)
-      await new Promise<void>((resolve, reject) => {
-        const maxWait = 10000;
-        const start = Date.now();
-        const check = () => {
-          if (reg!.active && reg!.active.state === "activated") return resolve();
-          if (Date.now() - start > maxWait) return reject(new Error("El Service Worker tardó demasiado en activarse."));
-          setTimeout(check, 100);
-        };
-        check();
-      });
+      // ── Paso 3: Suscripción al sistema de push del navegador ──
+      stepToastId = toast.loading("Registrando dispositivo en el sistema de notificaciones...");
+      let subscription: PushSubscription | null = null;
 
-      if (!reg.pushManager) {
-        throw new Error("Push no disponible en este dispositivo.");
-      }
+      // Primero miramos si ya hay una suscripción local
+      subscription = await reg.pushManager.getSubscription();
 
-      // Verificar suscripción existente (evitar duplicados)
-      const existingSub = await reg.pushManager.getSubscription();
-      if (existingSub) {
-        const subJson = existingSub.toJSON();
-        const { data } = await (supabase as any)
-          .from("push_subscriptions")
-          .select("id")
-          .eq("endpoint", subJson.endpoint)
-          .maybeSingle();
+      if (subscription) {
+        // Ya existe: verificamos/insertamos en BD
+        const subJson = subscription.toJSON();
+        const { data } = await Promise.race([
+          (supabase as any).from("push_subscriptions").select("id").eq("endpoint", subJson.endpoint).maybeSingle(),
+          timeout(10000, "Error de conexión con el servidor."),
+        ]);
 
         if (data) {
+          toast.dismiss(stepToastId);
           setIsSubscribed(true);
           toast.success("Ya estabas suscrito a los avisos parroquiales.");
           setLoading(false);
           return;
         }
 
-        // Suscripción existe localmente pero no en BD → guardarla
-        const { error: insertErr } = await (supabase as any).from("push_subscriptions").upsert({
-          endpoint: subJson.endpoint,
-          keys: subJson.keys,
-        }, { onConflict: "endpoint" });
+        await Promise.race([
+          (supabase as any).from("push_subscriptions").upsert(
+            { endpoint: subJson.endpoint, keys: subJson.keys },
+            { onConflict: "endpoint" }
+          ),
+          timeout(10000, "Error de conexión con el servidor."),
+        ]);
+      } else {
+        // Nueva suscripción (puede colgar si el servicio de push del navegador no responde)
+        subscription = await Promise.race([
+          reg.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY),
+          }),
+          timeout(15000, "El servicio de notificaciones del dispositivo no respondió. Verifica tu conexión a internet."),
+        ]);
 
-        if (insertErr) throw new Error(`Error al guardar: ${insertErr.message}`);
-
-        setIsSubscribed(true);
-        toast.success("¡Listo! Recibirás avisos parroquiales en tu celular.");
-        setLoading(false);
-        return;
+        const subJson = subscription.toJSON();
+        await Promise.race([
+          (supabase as any).from("push_subscriptions").upsert(
+            { endpoint: subJson.endpoint, keys: subJson.keys },
+            { onConflict: "endpoint" }
+          ),
+          timeout(10000, "Error al guardar en el servidor."),
+        ]);
       }
 
-      // Nueva suscripción
-      const subscription = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY),
-      });
-
-      const subJson = subscription.toJSON();
-      const { error: insertErr } = await (supabase as any).from("push_subscriptions").upsert({
-        endpoint: subJson.endpoint,
-        keys: subJson.keys,
-      }, { onConflict: "endpoint" });
-
-      if (insertErr) throw new Error(`Error al guardar: ${insertErr.message}`);
-
+      toast.dismiss(stepToastId);
       setIsSubscribed(true);
-      toast.success("¡Listo! Recibirás los avisos importantes de la parroquia en tu pantalla.", {
-        duration: 4000,
-      });
+      toast.success("¡Listo! Recibirás los avisos de la parroquia en tu celular.", { duration: 4000 });
     } catch (error: any) {
+      if (stepToastId) toast.dismiss(stepToastId);
       console.error("[Push] Error:", error);
-      toast.error(error.message || "No se pudo activar. Verifica tu conexión y vuelve a intentar.", {
-        duration: 6000,
-      });
+      toast.error(error.message || "No se pudo activar. Verifica tu conexión y vuelve a intentar.", { duration: 6000 });
     } finally {
       setLoading(false);
     }
@@ -184,13 +179,16 @@ export function PushNotificationToggle() {
         if (subscription) {
           const subJson = subscription.toJSON();
           await subscription.unsubscribe();
-          await (supabase as any).from("push_subscriptions").delete().eq("endpoint", subJson.endpoint);
+          await Promise.race([
+            (supabase as any).from("push_subscriptions").delete().eq("endpoint", subJson.endpoint),
+            timeout(8000, "Error al eliminar del servidor."),
+          ]);
         }
       }
       setIsSubscribed(false);
       toast.success("Avisos desactivados. No recibirás más notificaciones.", { duration: 4000 });
     } catch (error: any) {
-      toast.error("No se pudo desactivar. Intenta de nuevo.");
+      toast.error(error.message || "No se pudo desactivar. Intenta de nuevo.");
     } finally {
       setLoading(false);
     }

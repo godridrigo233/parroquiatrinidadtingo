@@ -77,21 +77,7 @@ export function PushNotificationToggle() {
     (window.matchMedia("(display-mode: standalone)").matches ||
      (window.navigator as any).standalone === true);
 
-  const isIOS =
-    typeof window !== "undefined" &&
-    /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
-
-  const needsInstallForPush = isIOS && !isPWAStandalone;
-
   const subscribeToPush = async () => {
-    // Validación para iOS: debe estar instalada como PWA
-    if (needsInstallForPush) {
-      toast.error("En iPhone, instala primero la app en tu pantalla de inicio. Luego activa los avisos aquí.", {
-        duration: 6000,
-      });
-      return;
-    }
-
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
       toast.error("Tu navegador no soporta notificaciones push.", { duration: 5000 });
       return;
@@ -209,6 +195,9 @@ export function PushNotificationToggle() {
       setLoading(false);
     }
   };
+
+  // ── Solo se muestra si la PWA está instalada ──
+  if (!isPWAStandalone) return null;
 
   // ── Verificando estado al montar ──
   if (isChecking) {

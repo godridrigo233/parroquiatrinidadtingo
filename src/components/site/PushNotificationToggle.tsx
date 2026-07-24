@@ -47,41 +47,57 @@ export function PushNotificationToggle() {
 
   const subscribeToPush = async () => {
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
-      alert("Tu celular actual no soporta este tipo de alertas. Si usas iPhone, asegúrate de agregar primero la web a tu Pantalla de Inicio.");
+      alert("Tu celular no soporta alertas. En iPhone recuerda agregar primero la web a tu Pantalla de Inicio.");
       return;
     }
 
     setLoading(true);
 
     try {
-      // 1. PRIMERO PEDIMOS PERMISO (SIN TIEMPO LÍMITE)
-      // Así el feligrés puede leer la alerta del celular el tiempo que necesite sin que el código falle
+      // 1. PRIMERO PEDIMOS PERMISO (Sin reloj corriendo)
       const permission = await Notification.requestPermission();
       if (permission !== "granted") {
-        alert("Permiso denegado. Para activarlo después, ve a la configuración de tu navegador y permite las notificaciones para este sitio.");
+        alert("Permiso denegado. Puedes activarlo en Configuración > Notificaciones.");
         setLoading(false);
         return;
       }
 
-      // 2. UNA VEZ CONCEDIDO EL PERMISO, INICIAMOS LA CONEXIÓN TÉCNICA (Con seguro de 15 segundos)
+      // 2. TEMPORIZADOR DE SEGURIDAD (15 segundos)
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("La red tardó en conectar con Google/Apple. Verifica tu internet e inténtalo de nuevo.")), 15000)
+        setTimeout(() => reject(new Error("El sistema tardó en conectar con Apple APNs. Inténtalo nuevamente.")), 15000)
       );
 
       const pushTask = async () => {
-        // Registramos o actualizamos el Service Worker
+        // Registramos explícitamente el Service Worker
         const reg = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
 
-        // En móviles, a veces reg.pushManager está disponible de inmediato en el registro
-        // Si no, esperamos al Service Worker activo
-        let pushManager = reg.pushManager;
-        if (!pushManager) {
-          const activeReg = await navigator.serviceWorker.ready;
-          pushManager = activeReg.pushManager;
+        // 🔥 EL TRUCO PARA iOS: Si el Service Worker está instalando o esperando, lo obligamos a activarse
+        if (!reg.active) {
+          const worker = reg.installing || reg.waiting;
+          if (worker) {
+            await new Promise<void>((resolve) => {
+              if (worker.state === "activated") {
+                resolve();
+              } else {
+                worker.addEventListener("statechange", (e: any) => {
+                  if (e.target.state === "activated") resolve();
+                });
+              }
+            });
+          } else {
+            // Si no atrapó el worker, esperamos el evento oficial .ready
+            await navigator.serviceWorker.ready;
+          }
+        }
+
+        // En iOS, necesitamos asegurar que reg.active exista para llamar a pushManager
+        const activeReg = reg.active || (await navigator.serviceWorker.ready);
+        if (!activeReg || !activeReg.pushManager) {
+          throw new Error("El motor de notificaciones no logró activarse en iOS.");
         }
 
         // Suscribimos el dispositivo generando el token VAPID
-        const subscription = await pushManager.subscribe({
+        const subscription = await activeReg.pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY),
         });
@@ -101,7 +117,6 @@ export function PushNotificationToggle() {
         return true;
       };
 
-      // Corremos la suscripción en paralelo con el reloj de 15 segundos
       await Promise.race([pushTask(), timeoutPromise]);
 
       setIsSubscribed(true);
@@ -126,7 +141,7 @@ export function PushNotificationToggle() {
       className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-gold text-primary-foreground text-xs font-bold shadow-md hover:opacity-95 transition-all active:scale-95 disabled:opacity-50 cursor-pointer select-none"
     >
       <BellRing size={15} className="animate-bounce text-primary-foreground" />
-      <span>{loading ? "Conectando con el celular..." : "Activar Avisos en el Celular"}</span>
+      <span>{loading ? "Conectando con el celular..." : "🔔 Activar Avisos en el Celular"}</span>
     </button>
   );
 }

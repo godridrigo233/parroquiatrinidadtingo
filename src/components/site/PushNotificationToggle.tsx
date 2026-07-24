@@ -117,8 +117,26 @@ export function PushNotificationToggle() {
     }
   };
 
-  if (isSubscribed === null || isSubscribed === true) {
-    return null;
+  if (isSubscribed === null) {
+    return (
+      <div className="w-full text-center py-2 text-[11px] text-muted-foreground animate-pulse">
+        Verificando alertas...
+      </div>
+    );
+  }
+
+  if (isSubscribed === true) {
+    return (
+      <div className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-bold select-none">
+        <span>✔ Avisos activos en este iPhone</span>
+        <button 
+          onClick={() => setIsSubscribed(false)} 
+          className="text-[10px] underline ml-2 opacity-80 hover:opacity-100"
+        >
+          Probar de nuevo
+        </button>
+      </div>
+    );
   }
 
   return (

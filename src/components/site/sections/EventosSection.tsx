@@ -9,6 +9,12 @@ type Eventt = { id: string; title: string; description: string | null; event_dat
 function getProximityLabel(dateStr: string): string | null {
   const d = new Date(dateStr);
   const now = new Date();
+  const diffMs = now.getTime() - d.getTime();
+  const diffMinutes = diffMs / (1000 * 60);
+
+  // Evento ya empezó y no han pasado más de 60 min → "En curso"
+  if (diffMinutes >= 0 && diffMinutes <= 60) return "En curso";
+
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const eventDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
   const diffDays = (eventDay.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
@@ -231,7 +237,8 @@ export default function EventosSection({
                         }`}
                       >
                         {proximity && (
-                          <span className={`absolute -top-1 right-2 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide ${
+                          <span className={`absolute -top-1 right-2 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide animate-in fade-in zoom-in duration-200 ${
+                            proximity === "En curso" ? "bg-emerald-500/20 text-emerald-300" :
                             proximity === "Hoy" ? "bg-red-500/20 text-red-300" : "bg-gold/20 text-gold"
                           }`}>
                             {proximity}

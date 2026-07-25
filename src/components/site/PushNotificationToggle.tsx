@@ -33,7 +33,16 @@ export function PushNotificationToggle() {
     const check = () => {
       const standalone = mq.matches || (window.navigator as any).standalone === true;
       setIsStandalone(standalone);
-      console.log("[Push] PWA instalada?", standalone, "| display-mode:", mq.matches, "| navigator.standalone:", (window.navigator as any).standalone);
+
+      // 🔍 DIAGNÓSTICO TEMPORAL — muestra un popup con los valores de detección
+      alert(
+        `[Push Diagnóstico]\n\n` +
+        `PWA detectada: ${standalone ? "SÍ ✅" : "NO ❌"}\n` +
+        `display-mode standalone: ${mq.matches ? "✅" : "❌"}\n` +
+        `navigator.standalone (iOS): ${(window.navigator as any).standalone === true ? "✅" : "❌"}\n` +
+        `User Agent: ${navigator.userAgent.slice(0, 60)}...\n\n` +
+        `${standalone ? "✔ La app está instalada. El botón de avisos debería aparecer." : "✘ No estás en modo app. El botón NO debería aparecer en la web."}`
+      );
     };
     check();
     mq.addEventListener("change", check);

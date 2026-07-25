@@ -39,6 +39,8 @@ self.addEventListener('activate', (event) => {
 // Estrategia: Stale-While-Revalidate (Sirve rápido desde caché, y actualiza en silencio por detrás)
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
+  // Ignorar peticiones de extensiones del navegador (chrome-extension://, etc.)
+  if (!event.request.url.startsWith("http")) return;
 
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {

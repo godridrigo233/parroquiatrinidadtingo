@@ -43,19 +43,22 @@ export function AdminPushSender() {
     setLastResult(null);
 
     try {
-      // Llamamos a la Edge Function de Supabase que dispara las notificaciones
-      const { data, error } = await supabase.functions.invoke("enviar-push-masivo", {
-        body: {
+      const res = await fetch("/api/enviar-push-masivo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
           title: title.trim(),
           body: body.trim(),
           url: url.trim() || "/",
-        },
+        }),
       });
 
-      if (error) throw error;
+      const data = await res.json();
 
-      setLastResult(`¡Éxito! El aviso fue enviado correctamente a los dispositivos suscritos.`);
-      setBody(""); // Limpiamos el mensaje
+      if (!res.ok) throw new Error(data.error || "Error del servidor");
+
+      setLastResult(data.message || "¡Aviso enviado correctamente!");
+      setBody("");
     } catch (error: any) {
       console.error("Error al enviar push masivo:", error);
       alert(`Ocurrió un error al enviar: ${error.message || "Error de conexión"}`);

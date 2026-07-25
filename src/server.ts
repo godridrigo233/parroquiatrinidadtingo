@@ -5,6 +5,7 @@ import { renderErrorPage } from "./lib/error-page";
 import { createGroq } from "@ai-sdk/groq";
 import { streamText, convertToModelMessages } from "ai";
 import { createClient } from "@supabase/supabase-js";
+import webpush from "web-push";
 
 // ============================================================================
 // DATOS ESTÁTICOS DE LA PARROQUIA
@@ -393,6 +394,82 @@ ${PARISH_STATIC_DATA}${dynamicContext}
         } catch (err) {
           console.error("[Chat] Error en streamText:", err);
           return new Response(JSON.stringify({ error: String(err) }), {
+            status: 500, headers: { "content-type": "application/json" },
+          });
+        }
+      }
+
+      // ── Envío de notificaciones push masivas ──
+      if (url.pathname === "/api/enviar-push-masivo" && request.method === "POST") {
+        try {
+          const { title, body, url: pushUrl } = await request.json();
+
+          if (!body) {
+            return new Response(JSON.stringify({ error: "El mensaje es obligatorio." }), {
+              status: 400, headers: { "content-type": "application/json" },
+            });
+          }
+
+          const privateKey = process.env.PRIVATE_VAPID_KEY;
+          const publicKey = process.env.PUBLIC_VAPID_KEY;
+
+          if (!privateKey || !publicKey) {
+            return new Response(JSON.stringify({ error: "Configuración VAPID incompleta." }), {
+              status: 500, headers: { "content-type": "application/json" },
+            });
+          }
+
+          webpush.setVapidDetails("mailto:pstrinidadtingo@gmail.com", publicKey, privateKey);
+
+          const supabaseUrl = process.env.SUPABASE_URL;
+          const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+          const sb = createClient(supabaseUrl!, supabaseKey!);
+
+          const { data: suscriptores, error: dbError } = await sb.from("push_subscriptions").select("*");
+
+          if (dbError || !suscriptores?.length) {
+            return new Response(JSON.stringify({ message: "No hay suscriptores aún." }), {
+              status: 200, headers: { "content-type": "application/json" },
+            });
+          }
+
+          const payload = JSON.stringify({
+            title: title || "Parroquia Santísima Trinidad",
+            body,
+            url: pushUrl || "/#noticias",
+            icon: "/assets/logo.webp",
+          });
+
+          let enviados = 0;
+          let eliminados = 0;
+
+          await Promise.allSettled(
+            suscriptores.map(async (sub: any) => {
+              try {
+                await webpush.sendNotification(
+                  { endpoint: sub.endpoint, keys: sub.keys },
+                  payload
+                );
+                enviados++;
+              } catch (err: any) {
+                console.error("[Push] Error enviando:", err.statusCode, err.message);
+                if (err.statusCode === 404 || err.statusCode === 410) {
+                  await sb.from("push_subscriptions").delete().eq("id", sub.id);
+                  eliminados++;
+                }
+              }
+            })
+          );
+
+          return new Response(JSON.stringify({
+            success: true,
+            message: `Aviso enviado a ${enviados} dispositivos (${eliminados} registros limpiados).`,
+          }), {
+            status: 200, headers: { "content-type": "application/json" },
+          });
+        } catch (err: any) {
+          console.error("[Push] Error en endpoint:", err);
+          return new Response(JSON.stringify({ error: err.message }), {
             status: 500, headers: { "content-type": "application/json" },
           });
         }

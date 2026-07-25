@@ -3,7 +3,7 @@ import { BellRing, Check, RefreshCw, BellOff } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
-const PUBLIC_VAPID_KEY = "BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U";
+const PUBLIC_VAPID_KEY = "BJLswLik8W3GnuH3ddJS-gtGv5FVRhwvpBY9XniCBtvQbXRtCgWpxB8mUScpvabh087Wb0BIVaF9RQfXiPMMilI";
 
 function urlBase64ToUint8Array(base64String: string) {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);

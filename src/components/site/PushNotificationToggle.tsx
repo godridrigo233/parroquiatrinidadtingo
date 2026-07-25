@@ -30,17 +30,7 @@ export function PushNotificationToggle() {
   const [isStandalone, setIsStandalone] = useState(false);
   useEffect(() => {
     const mq = window.matchMedia("(display-mode: standalone)");
-    const check = () => {
-      const standalone = mq.matches || (window.navigator as any).standalone === true;
-      setIsStandalone(standalone);
-
-      // 🔍 DIAGNÓSTICO
-      alert(
-        `📱 PWA: ${standalone ? "INSTALADA ✅" : "NO INSTALADA ❌"}\n` +
-        `display-mode: ${mq.matches ? "standalone ✅" : "browser ❌"}\n` +
-        `iOS standalone: ${(window.navigator as any).standalone ? "SÍ ✅" : "NO ❌"}`
-      );
-    };
+    const check = () => setIsStandalone(mq.matches || (window.navigator as any).standalone === true);
     check();
     mq.addEventListener("change", check);
     return () => mq.removeEventListener("change", check);
@@ -51,81 +41,55 @@ export function PushNotificationToggle() {
     if (!isStandalone) return;
 
     let cancelled = false;
-    let msg = "";
     (async () => {
       try {
-        console.log("[Push] Verificando suscripción existente...");
-
         if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
-          msg = "❌ Navegador sin Push API";
-          if (!cancelled) { setMode("subscribe"); alert(`🔔 Suscripción\n\n${msg}`); }
+          if (!cancelled) setMode("subscribe");
           return;
         }
 
-        msg = `Permiso: ${Notification.permission}\n`;
-
         if (Notification.permission !== "granted") {
-          msg += "❌ Permiso NO concedido\nTocá 'Activar Avisos' para pedirlo.";
-          if (!cancelled) { setMode("subscribe"); alert(`🔔 Suscripción\n\n${msg}`); }
+          if (!cancelled) setMode("subscribe");
           return;
         }
 
         let reg = await navigator.serviceWorker.getRegistration();
 
-        // Si el SW está muerto (redundant) o no activo, revivirlo
         if (reg && (!reg.active || reg.active.state === "redundant")) {
-          msg += "⚠️ SW muerto, reviviendo...\n";
-          console.log("[Push] SW inactivo/redundant, reviviendo...");
-          const wasDead = !reg.active || reg.active.state === "redundant";
           await reg.unregister();
           const keys = await caches.keys();
           await Promise.all(keys.map((k) => caches.delete(k)));
           reg = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
-          msg += wasDead ? "✓ SW revivido\n" : "";
-          console.log("[Push] SW re-registrado.");
         }
 
         if (!reg) {
-          msg += "❌ SW no registrado";
-          if (!cancelled) { setMode("subscribe"); alert(`🔔 Suscripción\n\n${msg}`); }
+          if (!cancelled) setMode("subscribe");
           return;
         }
 
-        msg += `SW: activo=${!!reg.active} estado=${reg.active?.state || "ninguno"}\n`;
-
         const sub = await reg.pushManager.getSubscription();
         if (!sub) {
-          msg += "❌ Sin suscripción push\nTocá 'Activar Avisos' para suscribirte.";
-          if (!cancelled) { setMode("subscribe"); alert(`🔔 Suscripción\n\n${msg}`); }
+          if (!cancelled) setMode("subscribe");
           return;
         }
 
         const subJson = sub.toJSON();
-        msg += `Endpoint: ${subJson.endpoint?.slice(0, 50)}...\n`;
 
-        const { data, error } = await (supabase as any)
+        // upsert: si existe lo ignora, si no existe lo inserta
+        const { error } = await (supabase as any)
           .from("push_subscriptions")
-          .select("id")
-          .eq("endpoint", subJson.endpoint!)
-          .maybeSingle();
+          .upsert({ endpoint: subJson.endpoint, keys: subJson.keys }, { onConflict: "endpoint" });
 
         if (error) {
-          msg += `❌ Error BD: ${error.message}`;
-          if (!cancelled) { setMode("subscribe"); alert(`🔔 Suscripción\n\n${msg}`); }
+          console.error("[Push] Error upsert:", error);
+          if (!cancelled) setMode("subscribe");
           return;
         }
 
-        if (data) {
-          msg += "✅ SUSCRITO — recibirás avisos";
-          if (!cancelled) setMode("subscribed");
-        } else {
-          msg += "⚠️ Suscripción local pero NO en BD";
-          if (!cancelled) setMode("subscribe");
-        }
-
-        if (!cancelled) alert(`🔔 Suscripción\n\n${msg}`);
-      } catch (err: any) {
-        if (!cancelled) { setMode("subscribe"); alert(`🔔 Suscripción\n\n❌ Error: ${err.message || String(err)}`); }
+        if (!cancelled) setMode("subscribed");
+      } catch (err) {
+        console.error("[Push] Error verificando:", err);
+        if (!cancelled) setMode("subscribe");
       }
     })();
 
@@ -134,164 +98,78 @@ export function PushNotificationToggle() {
 
   // ── Handler de suscripción ──
   const handleSubscribe = useCallback(async () => {
-    console.log("[Push] Iniciando proceso de suscripción...");
     setWorking(true);
 
     try {
-      // 1. Verificar capacidad
       if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
         toast.error("Tu navegador no soporta notificaciones push.");
-        console.log("[Push] ❌ Sin soporte.");
         return;
       }
-      console.log("[Push] ✓ Navegador compatible.");
 
-      // 2. Pedir permiso
-      console.log("[Push] Solicitando permiso de notificación...");
       const permission = await Notification.requestPermission();
-      console.log("[Push] Permiso:", permission);
-
       if (permission !== "granted") {
-        toast.error("Permiso denegado. Para recibir avisos, activa las notificaciones en la configuración de tu navegador.");
+        toast.error("Permiso denegado. Activa las notificaciones en la configuración de tu navegador.");
         return;
       }
-      console.log("[Push] ✓ Permiso concedido.");
 
-      // 3. Registrar/revivir Service Worker
-      console.log("[Push] Verificando Service Worker...");
+      // Registrar/revivir SW
       let reg = await navigator.serviceWorker.getRegistration();
-
-      // Si el SW está muerto (redundant/ninguno), limpiar y re-registrar
       if (!reg || !reg.active || reg.active.state === "redundant") {
-        console.log("[Push] SW inactivo o redundante, reviviendo...");
-        if (reg) {
-          await reg.unregister();
-        }
-        // Limpiar cachés viejas que pudieron matar el SW
+        if (reg) await reg.unregister();
         try {
           const keys = await caches.keys();
           await Promise.all(keys.map((k) => caches.delete(k)));
-          console.log("[Push] Cachés limpiadas.");
         } catch {}
         reg = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
-        console.log("[Push] SW re-registrado.");
-      } else {
-        console.log("[Push] SW ya activo:", reg.active.state);
       }
 
-      // Esperar a que esté controlando la página
-      if (!reg.active || reg.active.state !== "activated") {
-        console.log("[Push] Esperando activación del SW...");
-        await new Promise<void>((resolve, reject) => {
-          const start = Date.now();
-          const check = () => {
-            navigator.serviceWorker.getRegistration().then((freshReg) => {
-              if (freshReg?.active && freshReg.active.state === "activated") {
-                console.log("[Push] ✓ SW activado.");
-                resolve();
-              } else if (Date.now() - start > 10000) {
-                reject(new Error("El Service Worker no se activó a tiempo. Recarga la app y vuelve a intentar."));
-              } else {
-                setTimeout(check, 300);
-              }
-            }).catch(reject);
-          };
-          check();
-        });
-      } else {
-        console.log("[Push] ✓ SW listo.");
-      }
-
-      // 4. Guardar suscripción en BD (select + insert, no depende de índice único)
-      const guardarEnBD = async (endpoint: string, keys: any) => {
-        // Verificar si ya existe
-        const { data: existente } = await (supabase as any)
-          .from("push_subscriptions")
-          .select("id")
-          .eq("endpoint", endpoint)
-          .maybeSingle();
-
-        if (existente) {
-          console.log("[Push] Ya estaba en BD.");
-          return { success: true };
-        }
-
-        // Insertar nuevo
-        const { error } = await (supabase as any)
-          .from("push_subscriptions")
-          .insert({ endpoint, keys });
-
-        if (error) {
-          console.error("[Push] Error al insertar:", error);
-          return { success: false, error: error.message };
-        }
-
-        console.log("[Push] Insertado en BD.");
-        return { success: true };
-      };
-
-      // 4a. ¿Ya hay suscripción local?
-      const subscription = await reg.pushManager.getSubscription();
-
-      if (subscription) {
-        console.log("[Push] Suscripción ya existe localmente.");
-        const subJson = subscription.toJSON();
-        const result = await guardarEnBD(subJson.endpoint!, subJson.keys);
-
-        if (!result.success) {
-          alert(`❌ Error al guardar: ${result.error}`);
-          throw new Error(result.error || "No se pudo guardar la suscripción.");
-        }
-
-        console.log("[Push] ✅ PROCESO COMPLETO.");
-        alert("✅ ¡Avisos activados!\n\nYa estás suscrito. Recibirás notificaciones de la parroquia.");
-
-        if (isMounted.current) {
-          setMode("subscribed");
-          toast.success("¡Listo! Recibirás avisos de la parroquia en tu celular.", {
-            duration: 4000,
-            position: "top-center",
-          });
-        }
-        return;
-      }
-
-      // 4b. Sin suscripción local: crearla
-      console.log("[Push] Creando nueva suscripción push...");
-      const newSub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY),
+      await new Promise<void>((resolve, reject) => {
+        const start = Date.now();
+        const check = () => {
+          navigator.serviceWorker.getRegistration().then((r) => {
+            if (r?.active?.state === "activated") resolve();
+            else if (Date.now() - start > 10000) reject(new Error("El Service Worker no se activó a tiempo. Recarga la app."));
+            else setTimeout(check, 300);
+          }).catch(reject);
+        };
+        check();
       });
-      console.log("[Push] ✓ Nueva suscripción creada:", newSub.endpoint.slice(0, 60));
 
-      const subJson = newSub.toJSON();
-      const result = await guardarEnBD(subJson.endpoint!, subJson.keys);
+      // Obtener o crear suscripción push
+      let subscription = await reg.pushManager.getSubscription();
 
-      if (!result.success) {
-        alert(`❌ Error al guardar: ${result.error}`);
-        throw new Error(result.error || "No se pudo guardar la suscripción.");
+      if (!subscription) {
+        subscription = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY),
+        });
       }
 
-      console.log("[Push] ✅ PROCESO COMPLETO.");
-      alert("✅ ¡Avisos activados!\n\nYa estás suscrito.");
+      // Guardar en BD con upsert
+      const subJson = subscription.toJSON();
+      const { error: dbError } = await (supabase as any)
+        .from("push_subscriptions")
+        .upsert({ endpoint: subJson.endpoint, keys: subJson.keys }, { onConflict: "endpoint" });
+
+      if (dbError) {
+        alert("❌ Error: " + (dbError.message || "No se pudo guardar."));
+        throw new Error(dbError.message);
+      }
 
       if (isMounted.current) {
         setMode("subscribed");
-        toast.success("¡Listo! Recibirás avisos importantes de la parroquia en tu celular.", {
+        toast.success("¡Listo! Recibirás avisos de la parroquia en tu celular.", {
           duration: 4000,
           position: "top-center",
         });
+        alert("✅ ¡Avisos activados!\n\nRecibirás las notificaciones de la parroquia.");
       }
     } catch (err: any) {
-      console.error("[Push] ❌ Error:", err);
+      console.error("[Push] Error:", err);
       if (isMounted.current) {
-        toast.error(err.message || "No se pudo activar. Intenta de nuevo.", {
-          duration: 5000,
-          position: "top-center",
-        });
+        toast.error(err.message || "No se pudo activar.", { duration: 5000, position: "top-center" });
       }
     } finally {
-      console.log("[Push] Fin del proceso.");
       if (isMounted.current) setWorking(false);
     }
   }, []);
@@ -306,30 +184,24 @@ export function PushNotificationToggle() {
         if (sub) {
           const subJson = sub.toJSON();
           await sub.unsubscribe();
-          await (supabase as any)
-            .from("push_subscriptions")
-            .delete()
-            .eq("endpoint", subJson.endpoint!);
-          console.log("[Push] Desuscrito.");
+          await (supabase as any).from("push_subscriptions").delete().eq("endpoint", subJson.endpoint!);
         }
       }
       if (isMounted.current) {
         setMode("subscribe");
         toast.success("Avisos desactivados.", { position: "top-center" });
       }
-    } catch (err: any) {
+    } catch {
       if (isMounted.current) toast.error("No se pudo desactivar.");
     } finally {
       if (isMounted.current) setWorking(false);
     }
   }, []);
 
-  // ── BLINDAJE: no mostrar absolutamente nada si no hay PWA instalada ──
-  if (!isStandalone) {
-    return null;
-  }
+  // ── BLINDAJE: solo PWA instalada ──
+  if (!isStandalone) return null;
 
-  // ── Verificando estado ──
+  // ── Verificando ──
   if (mode === "checking") {
     return (
       <div className="w-full flex items-center justify-center px-3 py-2.5 rounded-xl bg-secondary/50 text-muted-foreground text-xs select-none">

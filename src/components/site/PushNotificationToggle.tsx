@@ -202,27 +202,47 @@ export function PushNotificationToggle() {
         console.log("[Push] ✓ SW listo.");
       }
 
-      // 4. Obtener suscripción push
-      console.log("[Push] Verificando suscripción push existente...");
+      // 4. Guardar suscripción en BD (select + insert, no depende de índice único)
+      const guardarEnBD = async (endpoint: string, keys: any) => {
+        // Verificar si ya existe
+        const { data: existente } = await (supabase as any)
+          .from("push_subscriptions")
+          .select("id")
+          .eq("endpoint", endpoint)
+          .maybeSingle();
+
+        if (existente) {
+          console.log("[Push] Ya estaba en BD.");
+          return { success: true };
+        }
+
+        // Insertar nuevo
+        const { error } = await (supabase as any)
+          .from("push_subscriptions")
+          .insert({ endpoint, keys });
+
+        if (error) {
+          console.error("[Push] Error al insertar:", error);
+          return { success: false, error: error.message };
+        }
+
+        console.log("[Push] Insertado en BD.");
+        return { success: true };
+      };
+
+      // 4a. ¿Ya hay suscripción local?
       const subscription = await reg.pushManager.getSubscription();
 
       if (subscription) {
-        console.log("[Push] Suscripción push ya existe, guardando en BD sin re-suscribir...");
+        console.log("[Push] Suscripción ya existe localmente.");
         const subJson = subscription.toJSON();
+        const result = await guardarEnBD(subJson.endpoint!, subJson.keys);
 
-        const { error: dbError } = await (supabase as any)
-          .from("push_subscriptions")
-          .upsert(
-            { endpoint: subJson.endpoint, keys: subJson.keys },
-            { onConflict: "endpoint" }
-          );
-
-        if (dbError) {
-          console.error("[Push] Error BD:", dbError);
-          throw new Error("Error al guardar la suscripción.");
+        if (!result.success) {
+          alert(`❌ Error al guardar: ${result.error}`);
+          throw new Error(result.error || "No se pudo guardar la suscripción.");
         }
 
-        console.log("[Push] ✓ Guardado en BD (sin roundtrip a Apple).");
         console.log("[Push] ✅ PROCESO COMPLETO.");
         alert("✅ ¡Avisos activados!\n\nYa estás suscrito. Recibirás notificaciones de la parroquia.");
 
@@ -236,7 +256,7 @@ export function PushNotificationToggle() {
         return;
       }
 
-      // Si no hay suscripción, crearla
+      // 4b. Sin suscripción local: crearla
       console.log("[Push] Creando nueva suscripción push...");
       const newSub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
@@ -244,23 +264,14 @@ export function PushNotificationToggle() {
       });
       console.log("[Push] ✓ Nueva suscripción creada:", newSub.endpoint.slice(0, 60));
 
-      // Guardar en Supabase
       const subJson = newSub.toJSON();
-      console.log("[Push] Guardando en BD...");
+      const result = await guardarEnBD(subJson.endpoint!, subJson.keys);
 
-      const { error: dbError } = await (supabase as any)
-        .from("push_subscriptions")
-        .upsert(
-          { endpoint: subJson.endpoint, keys: subJson.keys },
-          { onConflict: "endpoint" }
-        );
-
-      if (dbError) {
-        console.error("[Push] Error BD:", dbError);
-        throw new Error("Error al guardar la suscripción.");
+      if (!result.success) {
+        alert(`❌ Error al guardar: ${result.error}`);
+        throw new Error(result.error || "No se pudo guardar la suscripción.");
       }
 
-      console.log("[Push] ✓ Guardado en BD.");
       console.log("[Push] ✅ PROCESO COMPLETO.");
       alert("✅ ¡Avisos activados!\n\nYa estás suscrito.");
 

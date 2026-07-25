@@ -29,11 +29,15 @@ export function PushNotificationToggle() {
   // ── Detectar si la PWA está instalada ──
   const [isStandalone, setIsStandalone] = useState(false);
   useEffect(() => {
-    const standalone =
-      window.matchMedia("(display-mode: standalone)").matches ||
-      (window.navigator as any).standalone === true;
-    setIsStandalone(standalone);
-    console.log("[Push] PWA instalada?", standalone);
+    const mq = window.matchMedia("(display-mode: standalone)");
+    const check = () => {
+      const standalone = mq.matches || (window.navigator as any).standalone === true;
+      setIsStandalone(standalone);
+      console.log("[Push] PWA instalada?", standalone, "| display-mode:", mq.matches, "| navigator.standalone:", (window.navigator as any).standalone);
+    };
+    check();
+    mq.addEventListener("change", check);
+    return () => mq.removeEventListener("change", check);
   }, []);
 
   // ── Verificar si ya hay suscripción activa ──
@@ -239,9 +243,8 @@ export function PushNotificationToggle() {
     }
   }, []);
 
-  // ── No mostrar si no está instalado como PWA ──
+  // ── BLINDAJE: no mostrar absolutamente nada si no hay PWA instalada ──
   if (!isStandalone) {
-    console.log("[Push] Oculto: PWA no instalada.");
     return null;
   }
 

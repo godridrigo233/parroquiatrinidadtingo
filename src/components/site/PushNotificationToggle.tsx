@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { BellRing, Check, RefreshCw, BellOff } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,6 +24,14 @@ export function PushNotificationToggle() {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
   const [loading, setLoading] = useState(false);
+  const failsafeRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Limpiar el failsafe al desmontar
+  useEffect(() => {
+    return () => {
+      if (failsafeRef.current) clearTimeout(failsafeRef.current);
+    };
+  }, []);
 
   // ── Al montar: verificar si ya hay suscripción activa ──
   useEffect(() => {
@@ -87,17 +95,28 @@ export function PushNotificationToggle() {
       return;
     }
 
-    setLoading(true);
+    // ───── FAILSAFE ABSOLUTO: si en 20s no terminó, fuerza reset de UI ─────
+    if (failsafeRef.current) clearTimeout(failsafeRef.current);
     let stepToastId: string | number | undefined;
 
+    failsafeRef.current = setTimeout(() => {
+      setLoading(false);
+      if (stepToastId) toast.dismiss(stepToastId);
+      toast.error("El proceso tardó demasiado. Reinicia la app y vuelve a intentarlo.", { duration: 6000 });
+    }, 20_000);
+
+    setLoading(true);
+
     try {
-      // ── Paso 1: Permiso de notificaciones ──
+      // ── Paso 1: Permiso de notificaciones (con timeout) ──
       stepToastId = toast.loading("Solicitando permiso de notificaciones...");
-      const permission = await Notification.requestPermission();
+      const permission = await Promise.race([
+        Notification.requestPermission(),
+        timeout(10_000, "No se recibió respuesta del sistema de permisos."),
+      ]);
       if (permission !== "granted") {
         toast.dismiss(stepToastId);
         toast.error("Permiso denegado. Actívalo en Configuración > Notificaciones.", { duration: 5000 });
-        setLoading(false);
         return;
       }
       toast.dismiss(stepToastId);
@@ -105,29 +124,24 @@ export function PushNotificationToggle() {
       // ── Paso 2: Registrar y activar el Service Worker ──
       stepToastId = toast.loading("Activando servicio de notificaciones...");
       const reg = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
-      await navigator.serviceWorker.ready; // espera activación real, nativo, sin polling
+      await navigator.serviceWorker.ready;
       toast.dismiss(stepToastId);
 
       // ── Paso 3: Suscripción al sistema de push del navegador ──
-      stepToastId = toast.loading("Registrando dispositivo en el sistema de notificaciones...");
-      let subscription: PushSubscription | null = null;
-
-      // Primero miramos si ya hay una suscripción local
-      subscription = await reg.pushManager.getSubscription();
+      stepToastId = toast.loading("Registrando dispositivo...");
+      let subscription = await reg.pushManager.getSubscription();
 
       if (subscription) {
-        // Ya existe: verificamos/insertamos en BD
         const subJson = subscription.toJSON();
         const { data } = await Promise.race([
           (supabase as any).from("push_subscriptions").select("id").eq("endpoint", subJson.endpoint).maybeSingle(),
-          timeout(10000, "Error de conexión con el servidor."),
+          timeout(10_000, "Error de conexión con el servidor."),
         ]);
 
         if (data) {
           toast.dismiss(stepToastId);
           setIsSubscribed(true);
           toast.success("Ya estabas suscrito a los avisos parroquiales.");
-          setLoading(false);
           return;
         }
 
@@ -136,16 +150,15 @@ export function PushNotificationToggle() {
             { endpoint: subJson.endpoint, keys: subJson.keys },
             { onConflict: "endpoint" }
           ),
-          timeout(10000, "Error de conexión con el servidor."),
+          timeout(10_000, "Error de conexión con el servidor."),
         ]);
       } else {
-        // Nueva suscripción (puede colgar si el servicio de push del navegador no responde)
         subscription = await Promise.race([
           reg.pushManager.subscribe({
             userVisibleOnly: true,
             applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY),
           }),
-          timeout(15000, "El servicio de notificaciones del dispositivo no respondió. Verifica tu conexión a internet."),
+          timeout(15_000, "El servicio de notificaciones del dispositivo no respondió."),
         ]);
 
         const subJson = subscription.toJSON();
@@ -154,7 +167,7 @@ export function PushNotificationToggle() {
             { endpoint: subJson.endpoint, keys: subJson.keys },
             { onConflict: "endpoint" }
           ),
-          timeout(10000, "Error al guardar en el servidor."),
+          timeout(10_000, "Error al guardar en el servidor."),
         ]);
       }
 
@@ -166,6 +179,7 @@ export function PushNotificationToggle() {
       console.error("[Push] Error:", error);
       toast.error(error.message || "No se pudo activar. Verifica tu conexión y vuelve a intentar.", { duration: 6000 });
     } finally {
+      if (failsafeRef.current) { clearTimeout(failsafeRef.current); failsafeRef.current = null; }
       setLoading(false);
     }
   };

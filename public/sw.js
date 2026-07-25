@@ -1,4 +1,4 @@
-const CACHE_NAME = 'parroquia-cache-v4'; // v4 — corrige addAll que mataba el SW
+const CACHE_NAME = 'parroquia-cache-v5'; // v5 — solo cachea mismo dominio, ignora APIs externas
 
 // Rutas esenciales que siempre deben estar disponibles en el templo
 const OFFLINE_URLS = [
@@ -36,11 +36,12 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Estrategia: Stale-While-Revalidate (Sirve rápido desde caché, y actualiza en silencio por detrás)
+// Estrategia: Stale-While-Revalidate (solo para assets del propio dominio)
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
-  // Ignorar peticiones de extensiones del navegador (chrome-extension://, etc.)
   if (!event.request.url.startsWith("http")) return;
+  // No cachear APIs externas (Facebook, Supabase, etc.)
+  if (!event.request.url.startsWith(self.location.origin)) return;
 
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {

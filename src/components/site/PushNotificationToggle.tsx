@@ -31,7 +31,15 @@ export function PushNotificationToggle() {
   useEffect(() => {
     const mq = window.matchMedia("(display-mode: standalone)");
     const check = () => {
-      setIsStandalone(mq.matches || (window.navigator as any).standalone === true);
+      const standalone = mq.matches || (window.navigator as any).standalone === true;
+      setIsStandalone(standalone);
+
+      // 🔍 DIAGNÓSTICO
+      alert(
+        `📱 PWA: ${standalone ? "INSTALADA ✅" : "NO INSTALADA ❌"}\n` +
+        `display-mode: ${mq.matches ? "standalone ✅" : "browser ❌"}\n` +
+        `iOS standalone: ${(window.navigator as any).standalone ? "SÍ ✅" : "NO ❌"}`
+      );
     };
     check();
     mq.addEventListener("change", check);
@@ -43,17 +51,22 @@ export function PushNotificationToggle() {
     if (!isStandalone) return;
 
     let cancelled = false;
+    let msg = "";
     (async () => {
       try {
         console.log("[Push] Verificando suscripción existente...");
 
         if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
-          if (!cancelled) setMode("subscribe");
+          msg = "❌ Navegador sin Push API";
+          if (!cancelled) { setMode("subscribe"); alert(`🔔 Suscripción\n\n${msg}`); }
           return;
         }
 
+        msg = `Permiso: ${Notification.permission}\n`;
+
         if (Notification.permission !== "granted") {
-          if (!cancelled) setMode("subscribe");
+          msg += "❌ Permiso NO concedido\nTocá 'Activar Avisos' para pedirlo.";
+          if (!cancelled) { setMode("subscribe"); alert(`🔔 Suscripción\n\n${msg}`); }
           return;
         }
 
@@ -61,40 +74,58 @@ export function PushNotificationToggle() {
 
         // Si el SW está muerto (redundant) o no activo, revivirlo
         if (reg && (!reg.active || reg.active.state === "redundant")) {
+          msg += "⚠️ SW muerto, reviviendo...\n";
           console.log("[Push] SW inactivo/redundant, reviviendo...");
+          const wasDead = !reg.active || reg.active.state === "redundant";
           await reg.unregister();
-          // Limpiar cachés viejas
           const keys = await caches.keys();
           await Promise.all(keys.map((k) => caches.delete(k)));
           reg = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
+          msg += wasDead ? "✓ SW revivido\n" : "";
           console.log("[Push] SW re-registrado.");
         }
 
         if (!reg) {
-          if (!cancelled) setMode("subscribe");
+          msg += "❌ SW no registrado";
+          if (!cancelled) { setMode("subscribe"); alert(`🔔 Suscripción\n\n${msg}`); }
           return;
         }
 
+        msg += `SW: activo=${!!reg.active} estado=${reg.active?.state || "ninguno"}\n`;
+
         const sub = await reg.pushManager.getSubscription();
         if (!sub) {
-          if (!cancelled) setMode("subscribe");
+          msg += "❌ Sin suscripción push\nTocá 'Activar Avisos' para suscribirte.";
+          if (!cancelled) { setMode("subscribe"); alert(`🔔 Suscripción\n\n${msg}`); }
           return;
         }
 
         const subJson = sub.toJSON();
-        const { data } = await (supabase as any)
+        msg += `Endpoint: ${subJson.endpoint?.slice(0, 50)}...\n`;
+
+        const { data, error } = await (supabase as any)
           .from("push_subscriptions")
           .select("id")
           .eq("endpoint", subJson.endpoint!)
           .maybeSingle();
 
+        if (error) {
+          msg += `❌ Error BD: ${error.message}`;
+          if (!cancelled) { setMode("subscribe"); alert(`🔔 Suscripción\n\n${msg}`); }
+          return;
+        }
+
         if (data) {
+          msg += "✅ SUSCRITO — recibirás avisos";
           if (!cancelled) setMode("subscribed");
         } else {
+          msg += "⚠️ Suscripción local pero NO en BD";
           if (!cancelled) setMode("subscribe");
         }
-      } catch {
-        if (!cancelled) setMode("subscribe");
+
+        if (!cancelled) alert(`🔔 Suscripción\n\n${msg}`);
+      } catch (err: any) {
+        if (!cancelled) { setMode("subscribe"); alert(`🔔 Suscripción\n\n❌ Error: ${err.message || String(err)}`); }
       }
     })();
 

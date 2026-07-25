@@ -204,24 +204,48 @@ export function PushNotificationToggle() {
 
       // 4. Obtener suscripción push
       console.log("[Push] Verificando suscripción push existente...");
-      let subscription = await reg.pushManager.getSubscription();
+      const subscription = await reg.pushManager.getSubscription();
 
       if (subscription) {
-        console.log("[Push] Suscripción push ya existe:", subscription.endpoint.slice(0, 60));
-        // Si ya existe, desuscribir primero para obtener una nueva
-        await subscription.unsubscribe();
-        console.log("[Push] Desuscrita anterior.");
+        console.log("[Push] Suscripción push ya existe, guardando en BD sin re-suscribir...");
+        const subJson = subscription.toJSON();
+
+        const { error: dbError } = await (supabase as any)
+          .from("push_subscriptions")
+          .upsert(
+            { endpoint: subJson.endpoint, keys: subJson.keys },
+            { onConflict: "endpoint" }
+          );
+
+        if (dbError) {
+          console.error("[Push] Error BD:", dbError);
+          throw new Error("Error al guardar la suscripción.");
+        }
+
+        console.log("[Push] ✓ Guardado en BD (sin roundtrip a Apple).");
+        console.log("[Push] ✅ PROCESO COMPLETO.");
+        alert("✅ ¡Avisos activados!\n\nYa estás suscrito. Recibirás notificaciones de la parroquia.");
+
+        if (isMounted.current) {
+          setMode("subscribed");
+          toast.success("¡Listo! Recibirás avisos de la parroquia en tu celular.", {
+            duration: 4000,
+            position: "top-center",
+          });
+        }
+        return;
       }
 
+      // Si no hay suscripción, crearla
       console.log("[Push] Creando nueva suscripción push...");
-      subscription = await reg.pushManager.subscribe({
+      const newSub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY),
       });
-      console.log("[Push] ✓ Nueva suscripción creada:", subscription.endpoint.slice(0, 60));
+      console.log("[Push] ✓ Nueva suscripción creada:", newSub.endpoint.slice(0, 60));
 
-      // 5. Guardar en Supabase
-      const subJson = subscription.toJSON();
+      // Guardar en Supabase
+      const subJson = newSub.toJSON();
       console.log("[Push] Guardando en BD...");
 
       const { error: dbError } = await (supabase as any)
@@ -236,8 +260,9 @@ export function PushNotificationToggle() {
         throw new Error("Error al guardar la suscripción.");
       }
 
-      console.log("[Push] ✓ Suscripción guardada en BD.");
-      console.log("[Push] ✅ PROCESO COMPLETO — notificaciones activadas.");
+      console.log("[Push] ✓ Guardado en BD.");
+      console.log("[Push] ✅ PROCESO COMPLETO.");
+      alert("✅ ¡Avisos activados!\n\nYa estás suscrito.");
 
       if (isMounted.current) {
         setMode("subscribed");

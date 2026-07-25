@@ -23,5 +23,3 @@ CREATE POLICY "Allow public select own subscription"
   TO anon, authenticated
   USING (true);
 
--- Solo el service_role (edge function) puede leer todas y borrar caducadas
--- (la edge function usa SUPABASE_SERVICE_ROLE_KEY, así que tiene acceso total)

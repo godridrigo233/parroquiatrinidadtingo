@@ -55,52 +55,73 @@ export function PushNotificationToggle() {
 
     let cancelled = false;
     (async () => {
+      let result = "";
+      let finalMode: typeof mode = "subscribe";
+
       try {
         console.log("[Push] Verificando suscripción existente...");
 
         if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
-          console.log("[Push] Sin soporte para Push.");
+          result = "❌ Navegador sin soporte para Push API.";
           if (!cancelled) setMode("subscribe");
           return;
         }
 
+        result += `Permiso notificaciones: ${Notification.permission}\n`;
+
         if (Notification.permission !== "granted") {
-          console.log("[Push] Permiso no concedido aún.");
+          result += "❌ Permiso de notificaciones NO concedido aún.";
           if (!cancelled) setMode("subscribe");
           return;
         }
 
         const reg = await navigator.serviceWorker.getRegistration();
         if (!reg) {
-          console.log("[Push] Sin registro SW previo.");
+          result += "❌ Service Worker no registrado.";
           if (!cancelled) setMode("subscribe");
           return;
         }
 
+        result += `SW activo: ${reg.active ? `✅ (${reg.active.state})` : "❌"}\n`;
+
         const sub = await reg.pushManager.getSubscription();
         if (!sub) {
-          console.log("[Push] Sin suscripción push previa.");
+          result += "❌ Sin suscripción push.";
           if (!cancelled) setMode("subscribe");
           return;
         }
 
         const subJson = sub.toJSON();
-        const { data } = await (supabase as any)
+        result += `Push endpoint: ${subJson.endpoint?.slice(0, 60)}...\n`;
+
+        const { data, error } = await (supabase as any)
           .from("push_subscriptions")
           .select("id")
           .eq("endpoint", subJson.endpoint!)
           .maybeSingle();
 
-        if (data) {
-          console.log("[Push] Suscripción confirmada en BD:", subJson.endpoint?.slice(0, 50));
-          if (!cancelled) setMode("subscribed");
-        } else {
-          console.log("[Push] Suscripción local existe pero no en BD.");
+        if (error) {
+          result += `❌ Error BD: ${error.message}`;
           if (!cancelled) setMode("subscribe");
+          return;
         }
-      } catch (err) {
-        console.error("[Push] Error verificando:", err);
-        if (!cancelled) setMode("subscribe");
+
+        if (data) {
+          result += "✅ Suscripción confirmada en la BD.\n✔ ESTÁS SUSCRITO. Deberías recibir avisos.";
+          finalMode = "subscribed";
+        } else {
+          result += "⚠️ Suscripción local existe pero NO está en la BD (huérfana).";
+          finalMode = "subscribe";
+        }
+      } catch (err: any) {
+        result += `❌ Error: ${err.message || String(err)}`;
+        finalMode = "subscribe";
+      } finally {
+        if (!cancelled) {
+          setMode(finalMode);
+          // 🔍 DIAGNÓSTICO TEMPORAL
+          alert(`[Push Suscripción]\n\n${result}`);
+        }
       }
     })();
 

@@ -31,18 +31,7 @@ export function PushNotificationToggle() {
   useEffect(() => {
     const mq = window.matchMedia("(display-mode: standalone)");
     const check = () => {
-      const standalone = mq.matches || (window.navigator as any).standalone === true;
-      setIsStandalone(standalone);
-
-      // 🔍 DIAGNÓSTICO TEMPORAL — muestra un popup con los valores de detección
-      alert(
-        `[Push Diagnóstico]\n\n` +
-        `PWA detectada: ${standalone ? "SÍ ✅" : "NO ❌"}\n` +
-        `display-mode standalone: ${mq.matches ? "✅" : "❌"}\n` +
-        `navigator.standalone (iOS): ${(window.navigator as any).standalone === true ? "✅" : "❌"}\n` +
-        `User Agent: ${navigator.userAgent.slice(0, 60)}...\n\n` +
-        `${standalone ? "✔ La app está instalada. El botón de avisos debería aparecer." : "✘ No estás en modo app. El botón NO debería aparecer en la web."}`
-      );
+      setIsStandalone(mq.matches || (window.navigator as any).standalone === true);
     };
     check();
     mq.addEventListener("change", check);
@@ -55,73 +44,57 @@ export function PushNotificationToggle() {
 
     let cancelled = false;
     (async () => {
-      let result = "";
-      let finalMode: typeof mode = "subscribe";
-
       try {
         console.log("[Push] Verificando suscripción existente...");
 
         if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
-          result = "❌ Navegador sin soporte para Push API.";
           if (!cancelled) setMode("subscribe");
           return;
         }
-
-        result += `Permiso notificaciones: ${Notification.permission}\n`;
 
         if (Notification.permission !== "granted") {
-          result += "❌ Permiso de notificaciones NO concedido aún.";
           if (!cancelled) setMode("subscribe");
           return;
         }
 
-        const reg = await navigator.serviceWorker.getRegistration();
+        let reg = await navigator.serviceWorker.getRegistration();
+
+        // Si el SW está muerto (redundant) o no activo, revivirlo
+        if (reg && (!reg.active || reg.active.state === "redundant")) {
+          console.log("[Push] SW inactivo/redundant, reviviendo...");
+          await reg.unregister();
+          // Limpiar cachés viejas
+          const keys = await caches.keys();
+          await Promise.all(keys.map((k) => caches.delete(k)));
+          reg = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
+          console.log("[Push] SW re-registrado.");
+        }
+
         if (!reg) {
-          result += "❌ Service Worker no registrado.";
           if (!cancelled) setMode("subscribe");
           return;
         }
-
-        result += `SW activo: ${reg.active ? `✅ (${reg.active.state})` : "❌"}\n`;
 
         const sub = await reg.pushManager.getSubscription();
         if (!sub) {
-          result += "❌ Sin suscripción push.";
           if (!cancelled) setMode("subscribe");
           return;
         }
 
         const subJson = sub.toJSON();
-        result += `Push endpoint: ${subJson.endpoint?.slice(0, 60)}...\n`;
-
-        const { data, error } = await (supabase as any)
+        const { data } = await (supabase as any)
           .from("push_subscriptions")
           .select("id")
           .eq("endpoint", subJson.endpoint!)
           .maybeSingle();
 
-        if (error) {
-          result += `❌ Error BD: ${error.message}`;
-          if (!cancelled) setMode("subscribe");
-          return;
-        }
-
         if (data) {
-          result += "✅ Suscripción confirmada en la BD.\n✔ ESTÁS SUSCRITO. Deberías recibir avisos.";
-          finalMode = "subscribed";
+          if (!cancelled) setMode("subscribed");
         } else {
-          result += "⚠️ Suscripción local existe pero NO está en la BD (huérfana).";
-          finalMode = "subscribe";
+          if (!cancelled) setMode("subscribe");
         }
-      } catch (err: any) {
-        result += `❌ Error: ${err.message || String(err)}`;
-        finalMode = "subscribe";
-      } finally {
-        if (!cancelled) {
-          setMode(finalMode);
-          // 🔍 DIAGNÓSTICO TEMPORAL
-          alert(`[Push Suscripción]\n\n${result}`);
-        }
+      } catch {
+        if (!cancelled) setMode("subscribe");
       }
     })();
 
@@ -153,38 +126,49 @@ export function PushNotificationToggle() {
       }
       console.log("[Push] ✓ Permiso concedido.");
 
-      // 3. Registrar Service Worker
-      console.log("[Push] Registrando Service Worker...");
+      // 3. Registrar/revivir Service Worker
+      console.log("[Push] Verificando Service Worker...");
       let reg = await navigator.serviceWorker.getRegistration();
-      if (!reg) {
+
+      // Si el SW está muerto (redundant/ninguno), limpiar y re-registrar
+      if (!reg || !reg.active || reg.active.state === "redundant") {
+        console.log("[Push] SW inactivo o redundante, reviviendo...");
+        if (reg) {
+          await reg.unregister();
+        }
+        // Limpiar cachés viejas que pudieron matar el SW
+        try {
+          const keys = await caches.keys();
+          await Promise.all(keys.map((k) => caches.delete(k)));
+          console.log("[Push] Cachés limpiadas.");
+        } catch {}
         reg = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
-        console.log("[Push] SW registrado.");
+        console.log("[Push] SW re-registrado.");
       } else {
-        console.log("[Push] SW ya registrado, estado:", reg.active?.state);
+        console.log("[Push] SW ya activo:", reg.active.state);
       }
 
-      // Esperar que el SW esté controlando la página
+      // Esperar a que esté controlando la página
       if (!reg.active || reg.active.state !== "activated") {
         console.log("[Push] Esperando activación del SW...");
         await new Promise<void>((resolve, reject) => {
           const start = Date.now();
           const check = () => {
-            // Volver a consultar el registro más reciente
             navigator.serviceWorker.getRegistration().then((freshReg) => {
               if (freshReg?.active && freshReg.active.state === "activated") {
                 console.log("[Push] ✓ SW activado.");
                 resolve();
-              } else if (Date.now() - start > 8000) {
-                reject(new Error("El Service Worker no se activó a tiempo."));
+              } else if (Date.now() - start > 10000) {
+                reject(new Error("El Service Worker no se activó a tiempo. Recarga la app y vuelve a intentar."));
               } else {
-                setTimeout(check, 200);
+                setTimeout(check, 300);
               }
             }).catch(reject);
           };
           check();
         });
       } else {
-        console.log("[Push] ✓ SW ya activo.");
+        console.log("[Push] ✓ SW listo.");
       }
 
       // 4. Obtener suscripción push

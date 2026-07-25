@@ -1,4 +1,4 @@
-const CACHE_NAME = 'parroquia-cache-v3'; // Subimos a v3 para activar la nueva lógica
+const CACHE_NAME = 'parroquia-cache-v4'; // v4 — corrige addAll que mataba el SW
 
 // Rutas esenciales que siempre deben estar disponibles en el templo
 const OFFLINE_URLS = [
@@ -12,7 +12,14 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(OFFLINE_URLS);
+      // addAll falla si un solo archivo da 404, matando el SW.
+      // Con allSettled, los archivos que sí se cacheen no bloquean la activación.
+      return Promise.allSettled(
+        OFFLINE_URLS.map((url) =>
+          fetch(url, { cache: 'no-store' })
+            .then((res) => { if (res.ok) return cache.put(url, res); else throw new Error(`HTTP ${res.status}`); })
+        )
+      );
     })
   );
 });

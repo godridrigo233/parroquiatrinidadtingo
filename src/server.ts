@@ -475,6 +475,80 @@ ${PARISH_STATIC_DATA}${dynamicContext}
         }
       }
 
+      // ── Envío automático de recordatorio de misa (llamado por GitHub Actions) ──
+      if (url.pathname === "/api/auto-misa-recordatorio" && request.method === "POST") {
+        try {
+          // Verificar secreto para que solo GitHub Actions pueda llamarlo
+          const authHeader = request.headers.get("authorization") || "";
+          const expectedSecret = process.env.CRON_SECRET;
+          if (!expectedSecret || authHeader !== `Bearer ${expectedSecret}`) {
+            return new Response(JSON.stringify({ error: "No autorizado." }), {
+              status: 403, headers: { "content-type": "application/json" },
+            });
+          }
+
+          const privateKey = process.env.PRIVATE_VAPID_KEY;
+          const publicKey = process.env.PUBLIC_VAPID_KEY;
+          if (!privateKey || !publicKey) {
+            return new Response(JSON.stringify({ error: "VAPID no configurado." }), {
+              status: 500, headers: { "content-type": "application/json" },
+            });
+          }
+
+          webpush.setVapidDetails("mailto:pstrinidadtingo@gmail.com", publicKey, privateKey);
+
+          const supabaseUrl = process.env.SUPABASE_URL;
+          const supabaseKey = process.env.SUPABASE_PUBLISHABLE_KEY;
+          const sb = createClient(supabaseUrl!, supabaseKey!);
+
+          const { data: suscriptores } = await sb.from("push_subscriptions").select("*");
+
+          if (!suscriptores?.length) {
+            return new Response(JSON.stringify({ message: "Sin suscriptores." }), {
+              status: 200, headers: { "content-type": "application/json" },
+            });
+          }
+
+          const esManana = new Date().getUTCHours() < 17; // antes de 5 PM UTC = misa de mañana Perú
+          const misaHora = esManana ? "8:00 AM" : "6:00 PM";
+
+          const payload = JSON.stringify({
+            title: "⛪ Recordatorio de Misa",
+            body: `Iniciamos la celebración eucarística a las ${misaHora} (en 30 min). ¡Te esperamos en familia!`,
+            url: "/#horarios",
+            icon: "/assets/logo.webp",
+          });
+
+          let enviados = 0;
+          let eliminados = 0;
+
+          await Promise.allSettled(
+            suscriptores.map(async (sub: any) => {
+              try {
+                await webpush.sendNotification({ endpoint: sub.endpoint, keys: sub.keys }, payload);
+                enviados++;
+              } catch (err: any) {
+                if (err.statusCode === 404 || err.statusCode === 410) {
+                  await sb.from("push_subscriptions").delete().eq("id", sub.id);
+                  eliminados++;
+                }
+              }
+            })
+          );
+
+          console.log(`[Cron] Misa ${misaHora} → ${enviados} enviados, ${eliminados} limpiados.`);
+          return new Response(JSON.stringify({
+            success: true,
+            message: `Aviso de misa ${misaHora}: ${enviados} enviados, ${eliminados} limpiados.`,
+          }), { status: 200, headers: { "content-type": "application/json" } });
+        } catch (err: any) {
+          console.error("[Cron] Error:", err);
+          return new Response(JSON.stringify({ error: err.message }), {
+            status: 500, headers: { "content-type": "application/json" },
+          });
+        }
+      }
+
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
       return await normalizeCatastrophicSsrResponse(response);

@@ -1,0 +1,20 @@
+name: Recordatorio de Misa Push
+
+on:
+  schedule:
+    # Domingo 7:30 AM Perú = 12:30 UTC
+    - cron: "30 12 * * 0"
+    # Domingo 5:30 PM Perú = 22:30 UTC
+    - cron: "30 22 * * 0"
+  workflow_dispatch: # permite ejecutar manualmente desde GitHub Actions
+
+jobs:
+  send-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enviar notificación push
+        run: |
+          curl -X POST https://parroquiatrinidadtingo.vercel.app/api/auto-misa-recordatorio \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json" \
+            --max-time 30

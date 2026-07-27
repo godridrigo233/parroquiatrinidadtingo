@@ -1,20 +1,28 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import webPush from "web-push";
 import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  process.env.VITE_SUPABASE_URL!,
-  process.env.VITE_SUPABASE_ANON_KEY!
-);
-
-webPush.setVapidDetails(
-  "mailto:pstrinidadtingo@gmail.com",
-  process.env.PUBLIC_VAPID_KEY!,
-  process.env.PRIVATE_VAPID_KEY!
-);
+import * as webPush from "web-push";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // 1. Usamos exactamente los nombres de variables que tienes en Vercel según tu foto
+  const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+  const supabaseKey = process.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY;
+  const vapidPublic = process.env.PUBLIC_VAPID_KEY;
+  const vapidPrivate = process.env.PRIVATE_VAPID_KEY;
+
+  if (!supabaseUrl || !supabaseKey || !vapidPublic || !vapidPrivate) {
+    console.error("Error: Faltan credenciales en las variables de entorno de Vercel.");
+    return res.status(500).json({ error: "Configuración incompleta en el servidor" });
+  }
+
   try {
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    webPush.setVapidDetails(
+      "mailto:pstrinidadtingo@gmail.com",
+      vapidPublic,
+      vapidPrivate
+    );
+
     const payload = JSON.stringify({
       title: "📖 Evangelio del Día",
       body: "Inicia tu mañana con la Palabra de Dios y la bendición parroquial. Toca para leer las lecturas.",
@@ -35,7 +43,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       webPush.sendNotification(
         { endpoint: sub.endpoint, keys: sub.keys },
         payload
-      ).catch((err) => {
+      ).catch((err: any) => {
         if (err.statusCode === 404 || err.statusCode === 410) {
           invalidEndpoints.push(sub.endpoint);
         }
@@ -52,6 +60,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json({ success: true, enviados: suscripciones.length });
   } catch (error: any) {
     console.error("Error en cron de Evangelio:", error);
-    return res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: error.message || "Error interno del servidor" });
   }
 }

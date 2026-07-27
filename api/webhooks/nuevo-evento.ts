@@ -1,30 +1,24 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { createClient } from "@supabase/supabase-js";
-import * as webPush from "web-push";
+import webPush from "web-push"; // 👈 Volvemos a la importación limpia por defecto
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // 1. Tomamos las URLs y Llaves usando exactamente los nombres de tu Vercel
   const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
   const supabaseKey = process.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY;
   const vapidPublic = process.env.PUBLIC_VAPID_KEY;
   const vapidPrivate = process.env.PRIVATE_VAPID_KEY;
 
-  // 2. Validación clara de entorno
-  if (!vapidPublic || !vapidPrivate) {
-    console.error("Error fatal: Faltan PUBLIC_VAPID_KEY o PRIVATE_VAPID_KEY.");
-    return res.status(500).json({ error: "Faltan llaves VAPID en Vercel" });
-  }
-
-  if (!supabaseUrl || !supabaseKey) {
-    console.error("Error fatal: No se encontró la URL o Llave PUBLISHABLE de Supabase.");
-    return res.status(500).json({ error: "Faltan credenciales de Supabase (PUBLISHABLE_KEY) en Vercel" });
+  if (!vapidPublic || !vapidPrivate || !supabaseUrl || !supabaseKey) {
+    return res.status(500).json({ error: "Configuración incompleta en el servidor" });
   }
 
   try {
-    // 3. Inicializamos los clientes
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    webPush.setVapidDetails(
+    // Si por alguna razón el empaquetador de Vercel lo anida en una propiedad default, la extraemos dinámicamente
+    const wp = (webPush as any).default || webPush;
+
+    wp.setVapidDetails(
       "mailto:pstrinidadtingo@gmail.com",
       vapidPublic,
       vapidPrivate
@@ -54,7 +48,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const invalidEndpoints: string[] = [];
     const promesas = suscripciones.map((sub: any) =>
-      webPush.sendNotification(
+      wp.sendNotification(
         { endpoint: sub.endpoint, keys: sub.keys },
         payload
       ).catch((err: any) => {

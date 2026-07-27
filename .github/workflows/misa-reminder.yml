@@ -2,10 +2,10 @@ name: Recordatorio de Misa Push
 
 on:
   schedule:
-    # Domingo 7:30 AM Perú = 12:30 UTC
-    - cron: "30 12 * * 0"
-    # Domingo 5:30 PM Perú = 22:30 UTC
-    - cron: "30 22 * * 0"
+    # Domingo 7:30 AM Perú ≈ 12:15 UTC (adelantado 15 min por posible delay de GitHub Actions)
+    - cron: "15 12 * * 0"
+    # Domingo 5:30 PM Perú ≈ 22:15 UTC
+    - cron: "15 22 * * 0"
   workflow_dispatch: # permite ejecutar manualmente desde GitHub Actions
 
 jobs:

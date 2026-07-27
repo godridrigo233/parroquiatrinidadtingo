@@ -62,4 +62,4 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.error("Error en webhook de evento:", error);
     return res.status(500).json({ error: error.message });
   }
-}
+}>

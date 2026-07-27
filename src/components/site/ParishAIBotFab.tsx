@@ -339,34 +339,100 @@ function ParishAIBotFabWidget() {
     handleSend(message);
   };
 
-  // ── 4. LECTURA EN VOZ ALTA (TEXT TO SPEECH OPTIMIZADO Y GRATUITO) ──
+  // ── 4. LECTURA EN VOZ ALTA (CON DETECCIÓN ASÍNCRONA DE VOZ MASCULINA) ──
   const getBestSpanishVoice = (): SpeechSynthesisVoice | null => {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) return null;
     
     const voices = window.speechSynthesis.getVoices();
-    
-    // 1. Buscamos primero voces "Neuronales" o "Naturales"
-    const neuralVoice = voices.find((v) => 
-      v.lang.startsWith("es") && 
-      (v.name.includes("Natural") || v.name.includes("Neural") || v.name.includes("Google"))
-    );
-    if (neuralVoice) return neuralVoice;
+    if (!voices || voices.length === 0) return null;
 
-    // 2. Buscamos voces humanas masculinas populares
-    const maleVoice = voices.find((v) => 
-      v.lang.startsWith("es") && 
-      (/Alvaro|Jorge|Alex|Pablo|Miguel|Diego/i.test(v.name))
-    );
+    // Filtramos estrictamente todas las voces en español
+    const spanishVoices = voices.filter((v) => v.lang.startsWith("es"));
+    if (spanishVoices.length === 0) return null;
+
+    // 1. Buscamos voces masculinas por nombre o identificadores estándar de Google/Microsoft/Apple
+    const maleVoice = spanishVoices.find((v) => {
+      const name = v.name.toLowerCase();
+      return (
+        name.includes("male") ||
+        name.includes("hombre") ||
+        name.includes("alvaro") ||
+        name.includes("jorge") ||
+        name.includes("pablo") ||
+        name.includes("miguel") ||
+        name.includes("diego") ||
+        name.includes("carlos") ||
+        name.includes("felipe") ||
+        name.includes("standard-b") || // Estándar masculino de Google Cloud
+        name.includes("natural-b") ||
+        name.includes("es-us-x-sfb")
+      );
+    });
     if (maleVoice) return maleVoice;
 
-    // 3. Mejor voz latina disponible
-    const latinVoice = voices.find((v) => 
-      v.lang === "es-PE" || v.lang === "es-MX" || v.lang === "es-CO" || v.lang === "es-US" || v.lang === "es-ES"
-    );
-    if (latinVoice) return latinVoice;
+    // 2. Si no hay una explícitamente masculina, evitamos las que digan "female" o nombres femeninos obvios
+    const neutralOrMale = spanishVoices.find((v) => {
+      const name = v.name.toLowerCase();
+      return (
+        !name.includes("female") &&
+        !name.includes("mujer") &&
+        !name.includes("helena") &&
+        !name.includes("monica") &&
+        !name.includes("soledad") &&
+        !name.includes("paula") &&
+        !name.includes("lucia")
+      );
+    });
+    if (neutralOrMale) return neutralOrMale;
 
-    // 4. Último recurso: cualquier voz en español
-    return voices.find((v) => v.lang.startsWith("es")) || null;
+    // 3. Último recurso: la primera voz en español que devuelva el sistema
+    return spanishVoices[0];
+  };
+
+  const toggleSpeech = (text: string, id: string) => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    
+    // Si ya está hablando este mensaje, lo callamos
+    if (speakingMsgId === id) {
+      window.speechSynthesis.cancel();
+      setSpeakingMsgId(null);
+      return;
+    }
+    
+    // Cortamos cualquier audio anterior
+    window.speechSynthesis.cancel();
+
+    // ── ASEGURAR CARGA DE VOCES EN NAVEGADORES MÓVILES Y PC ──
+    const speakAction = () => {
+      const utterance = new SpeechSynthesisUtterance(text);
+      const bestVoice = getBestSpanishVoice();
+      
+      if (bestVoice) {
+        utterance.voice = bestVoice;
+      } else {
+        utterance.lang = "es-PE";
+      }
+      
+      utterance.rate = 0.90;  // 10% más pausado para dar tono sereno y clerical
+      utterance.pitch = 0.88; // Tono más grave (ayuda a mantener la voz masculina constante)
+
+      utterance.onend = () => setSpeakingMsgId(null);
+      utterance.onerror = () => setSpeakingMsgId(null);
+      
+      window.speechSynthesis.speak(utterance);
+      setSpeakingMsgId(id);
+    };
+
+    // Forzamos la recarga de eventos de voces si el navegador las entrega tarde
+    const voices = window.speechSynthesis.getVoices();
+    if (voices.length === 0) {
+      window.speechSynthesis.onvoiceschanged = () => {
+        speakAction();
+        window.speechSynthesis.onvoiceschanged = null; // Limpiamos el evento
+      };
+    } else {
+      speakAction();
+    }
   };
 
   const toggleSpeech = (text: string, id: string) => {

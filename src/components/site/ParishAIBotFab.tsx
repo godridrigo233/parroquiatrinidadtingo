@@ -435,36 +435,6 @@ function ParishAIBotFabWidget() {
     }
   };
 
-  const toggleSpeech = (text: string, id: string) => {
-    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
-    
-    // Si ya está hablando este mensaje, lo callamos
-    if (speakingMsgId === id) {
-      window.speechSynthesis.cancel();
-      setSpeakingMsgId(null);
-      return;
-    }
-    
-    // Cortamos cualquier audio anterior
-    window.speechSynthesis.cancel();
-    
-    const utterance = new SpeechSynthesisUtterance(text);
-    const bestVoice = getBestSpanishVoice();
-    if (bestVoice) {
-      utterance.voice = bestVoice;
-    } else {
-      utterance.lang = "es-PE";
-    }
-    utterance.rate = 0.92;  // Un 8% más lento de lo normal
-    utterance.pitch = 0.95; // Un tono ligeramente más grave
-
-    utterance.onend = () => setSpeakingMsgId(null);
-    utterance.onerror = () => setSpeakingMsgId(null);
-    
-    window.speechSynthesis.speak(utterance);
-    setSpeakingMsgId(id);
-  };
-
   // ── GATILLO DE LECTURA AUTOMÁTICA CONTINUA ──
   useEffect(() => {
     if (!autoRead || isLoading || messages.length === 0) return;

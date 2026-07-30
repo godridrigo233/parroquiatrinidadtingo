@@ -157,7 +157,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
 
     // Devuelve el stream directo al cliente de React
-    return result.pipeDataStreamToResponse(res);
+    return result.pipeTextStreamToResponse(res);
   } catch (err: any) {
     console.error("Chat backend error:", err);
     return res.status(500).json({ error: err.message || "Internal server error" });

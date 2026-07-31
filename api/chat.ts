@@ -83,7 +83,7 @@ export default async function handler(req: Request) {
     });
 
     // 🔥 Este es el método oficial que el hook useChat de React está esperando recibir
-    return result.toTextStreamResponse();
+    return result.toDataStreamResponse();
     
   } catch (err: any) {
     console.error("Chat error:", err);

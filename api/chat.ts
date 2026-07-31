@@ -1,8 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { createGroq } from "@ai-sdk/groq";
-import { streamText, StreamingTextResponse } from "ai";
-// 🚀 Le decimos a Vercel que use el entorno Edge (Web Standard API)
-// Esto evita todos los errores de TypeScript de Node y es más rápido.
+import { streamText } from "ai";
+
 export const config = {
   runtime: "edge",
 };
@@ -17,10 +16,7 @@ Email: pstrinidadtingo@gmail.com
 
 export default async function handler(req: Request) {
   if (req.method !== "POST") {
-    return new Response(JSON.stringify({ error: "Method Not Allowed" }), {
-      status: 405,
-      headers: { "Content-Type": "application/json" },
-    });
+    return new Response(JSON.stringify({ error: "Method Not Allowed" }), { status: 405 });
   }
 
   const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
@@ -32,20 +28,17 @@ export default async function handler(req: Request) {
       throw new Error("Falta GROQ_API_KEY en Vercel.");
     }
 
-    // 1. Extraemos los mensajes usando la API estándar (req.json)
     const { messages } = await req.json();
 
     if (!Array.isArray(messages) || messages.length === 0) {
       return new Response(JSON.stringify({ error: "Formato inválido" }), { status: 400 });
     }
 
-    // 2. Limpieza básica de mensajes
     const safeMessages = messages.slice(-10).map((m: any) => ({
       role: m.role,
       content: m.content || (Array.isArray(m.parts) ? m.parts[0]?.text : ""),
     })).filter((m: any) => m.content);
 
-    // 3. Conexión rápida a Supabase para contexto dinámico (Eventos)
     let dynamicContext = "";
     try {
       if (supabaseUrl && supabaseKey) {
@@ -67,28 +60,23 @@ export default async function handler(req: Request) {
         }
       }
     } catch (dbErr) {
-      console.warn("No se pudo cargar el contexto dinámico:", dbErr);
+      console.warn("Error leyendo eventos:", dbErr);
     }
 
-    // 4. Inicializamos Groq
     const groq = createGroq({ apiKey: groqApiKey });
     
-    // 5. Llamada al modelo con soporte de Streaming
     const result = streamText({
       model: groq("llama-3.3-70b-versatile"),
-      system: `Eres el Hermano Elías, el asistente oficial de la Parroquia Santísima Trinidad de Tingo en Arequipa... \n\n ${PARISH_STATIC_DATA} \n ${dynamicContext}`,
+      system: `Eres el Hermano Elías, el asistente de la Parroquia Santísima Trinidad. Responde amablemente en base a esta información: \n\n ${PARISH_STATIC_DATA} \n ${dynamicContext}`,
       messages: safeMessages,
       maxOutputTokens: 350,
     });
 
-    // 🔥 Este es el método oficial que el hook useChat de React está esperando recibir
-    return new StreamingTextResponse(result.textStream);
+    // 🚀 Este es el método nativo exacto que la versión actual de 'ai' requiere
+    return result.toDataStreamResponse();
     
   } catch (err: any) {
     console.error("Chat error:", err);
-    return new Response(JSON.stringify({ error: err.message }), { 
-      status: 500,
-      headers: { "Content-Type": "application/json" }
-    });
+    return new Response(JSON.stringify({ error: err.message }), { status: 500 });
   }
-}
+}a

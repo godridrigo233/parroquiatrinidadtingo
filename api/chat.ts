@@ -79,4 +79,4 @@ export default async function handler(req: Request) {
     console.error("Chat error:", err);
     return new Response(JSON.stringify({ error: err.message }), { status: 500 });
   }
-}a
+}

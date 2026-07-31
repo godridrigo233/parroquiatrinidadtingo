@@ -603,7 +603,13 @@ function ParishAIBotFabWidget() {
                         : "bg-white text-[#1A2940] border border-[#CBD5E1]/50 rounded-tl-sm"
                     }`}
                   >
-                    {msg.role === "assistant" ? renderRichText(msg.content, msg.id) : msg.content}
+                    {msg.role === "assistant" && msg.content === "" ? (
+                        <TypingDots />
+                      ) : msg.role === "assistant" ? (
+                        renderRichText(msg.content, msg.id)
+                      ) : (
+                        msg.content
+                      )}
 
                     {/* Botón de Voz */}
                     {msg.role === "assistant" && msg.content && (
@@ -651,21 +657,6 @@ function ParishAIBotFabWidget() {
                   {q.label}
                 </button>
               ))}
-            </div>
-          )}
-
-          {isLoading && (
-            <div className="flex gap-2.5 max-w-[85%] mr-auto">
-              <div className="shrink-0 h-8 w-8 rounded-full bg-white border border-[#CBD5E1]/50 flex items-center justify-center mt-1 shadow-sm overflow-hidden">
-                <img
-                  src={AVATAR_IMAGE_PATH}
-                  alt="Avatar del Hermano Elías"
-                  className="w-full h-full object-cover animate-pulse"
-                />
-              </div>
-              <div className="px-3.5 py-3 rounded-2xl bg-white border border-[#CBD5E1]/50 rounded-tl-sm shadow-sm">
-                <TypingDots />
-              </div>
             </div>
           )}
 

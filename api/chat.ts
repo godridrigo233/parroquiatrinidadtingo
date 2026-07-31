@@ -72,8 +72,33 @@ export default async function handler(req: Request) {
       maxOutputTokens: 350,
     });
 
-    // 🚀 Este es el método nativo exacto que la versión actual de 'ai' requiere
-    return result.toDataStreamResponse();
+    // 🚀 Stream nativo estándar blindado contra cualquier error de caché o versión
+    const reader = result.textStream.getReader();
+    const encoder = new TextEncoder();
+
+    const customStream = new ReadableStream({
+      async start(controller) {
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            // Enviamos cada fragmento de texto plano directamente
+            controller.enqueue(encoder.encode(value));
+          }
+        } catch (e) {
+          console.error("Stream reading error:", e);
+        } finally {
+          controller.close();
+        }
+      },
+    });
+
+    return new Response(customStream, {
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "no-cache",
+      },
+    });
     
   } catch (err: any) {
     console.error("Chat error:", err);

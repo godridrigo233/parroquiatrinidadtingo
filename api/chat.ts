@@ -1,7 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { createGroq } from "@ai-sdk/groq";
-import { streamText } from "ai";
-
+import { streamText, StreamingTextResponse } from "ai";
 // 🚀 Le decimos a Vercel que use el entorno Edge (Web Standard API)
 // Esto evita todos los errores de TypeScript de Node y es más rápido.
 export const config = {
@@ -83,7 +82,7 @@ export default async function handler(req: Request) {
     });
 
     // 🔥 Este es el método oficial que el hook useChat de React está esperando recibir
-    return result.toAIStreamResponse();
+    return new StreamingTextResponse(result.textStream);
     
   } catch (err: any) {
     console.error("Chat error:", err);

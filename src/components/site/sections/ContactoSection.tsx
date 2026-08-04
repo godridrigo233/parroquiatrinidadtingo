@@ -1,4 +1,4 @@
-import { Clock, MapPin, Phone, Mail } from "lucide-react";
+import { Clock, MapPin, Phone, Facebook, Instagram, Mail } from "lucide-react";
 import { Reveal } from "@/components/site/Reveal";
 import { ComoLlegarCard } from "@/components/site/ComoLlegarCard";
 import { Footer } from "@/components/site/Footer";

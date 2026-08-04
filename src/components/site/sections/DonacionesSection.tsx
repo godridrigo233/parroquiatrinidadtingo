@@ -17,7 +17,6 @@ export function DonacionesSection({ items }: { items: DonationRow[] }) {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  // Función para guardar el QR en el celular del usuario
   const downloadQR = (url: string, bankName: string) => {
     const a = document.createElement("a");
     a.href = getSupabaseImageUrl(url, { quality: 100 });
@@ -52,8 +51,8 @@ export function DonacionesSection({ items }: { items: DonationRow[] }) {
           </p>
         </Reveal>
 
-        {/* Uso de CSS Grid para alinear tarjetas perfectamente */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
+        {/* 🚀 AGREGADO 'justify-center' AQUÍ PARA CENTRAR LAS TARJETAS 🚀 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center justify-center">
           {items.map((item) => {
             const badgeStyle = bankColor[item.bank_name] || "bg-secondary text-primary border-border";
 
@@ -77,10 +76,11 @@ export function DonacionesSection({ items }: { items: DonationRow[] }) {
                       <div className="flex flex-col items-center mt-2 mb-2 w-full">
                         {item.account_number && (
                           <button 
+                            type="button"
                             onClick={() => copyToClipboard(item.account_number!, item.id + 'num')}
-                            className="flex items-center justify-center gap-2 mb-4 p-2 rounded-xl hover:bg-secondary transition-colors w-full group"
+                            className="flex items-center justify-center gap-2 mb-4 p-2 rounded-xl hover:bg-secondary transition-colors w-full group bg-transparent border-0 cursor-pointer"
                           >
-                            <p className="text-sm text-primary font-medium">Cel: <span className="font-mono text-base">{item.account_number}</span></p>
+                            <p className="text-sm text-primary font-medium">Número: <span className="font-mono text-base">{item.account_number}</span></p>
                             {copiedId === item.id + 'num' 
                               ? <span className="flex items-center gap-1 text-[10px] font-bold text-green-600 uppercase"><Check size={14}/> Copiado</span>
                               : <Copy size={14} className="text-muted-foreground group-hover:text-gold" />
@@ -88,7 +88,7 @@ export function DonacionesSection({ items }: { items: DonationRow[] }) {
                           </button>
                         )}
                         
-                        <div className="w-48 h-48 sm:w-52 sm:h-52 bg-white p-3 rounded-[2rem] border-2 border-secondary mb-3 flex items-center justify-center shadow-sm relative group">
+                        <div className="w-48 h-48 sm:w-52 sm:h-52 bg-white p-3 rounded-[2rem] border-2 border-secondary mb-5 flex items-center justify-center shadow-sm relative group">
                           <img 
                             src={getSupabaseImageUrl(item.qr_image_url, { width: 400, quality: 90 })} 
                             alt={`QR de ${item.bank_name}`} 
@@ -99,8 +99,9 @@ export function DonacionesSection({ items }: { items: DonationRow[] }) {
 
                         {/* Botón Guardar QR */}
                         <button
+                          type="button"
                           onClick={() => downloadQR(item.qr_image_url!, item.bank_name)}
-                          className="flex items-center gap-2 px-4 py-2 bg-secondary/50 hover:bg-secondary text-primary rounded-full text-xs font-semibold transition-colors border border-border"
+                          className="flex items-center gap-2 px-4 py-2 bg-secondary/50 hover:bg-secondary text-primary rounded-full text-xs font-semibold transition-colors border border-border cursor-pointer"
                         >
                           <Download size={14} className="text-gold" /> Guardar QR
                         </button>
@@ -109,13 +110,14 @@ export function DonacionesSection({ items }: { items: DonationRow[] }) {
                       /* Tarjeta de Cuenta Bancaria */
                       <div className="w-full flex-1 flex flex-col justify-center space-y-3 mt-4">
                         {item.account_number && (
-                          <div className="bg-secondary/40 p-4 rounded-2xl border border-border transition-colors hover:border-gold/30">
+                          <div className="bg-secondary/40 p-4 rounded-2xl border border-border transition-colors hover:border-gold/30 relative">
                             <p className="text-[10px] text-muted-foreground uppercase font-bold text-left mb-1">Número de Cuenta</p>
                             <div className="flex items-center justify-between gap-2">
                               <span className="font-mono text-[13px] text-primary break-all font-medium text-left">{item.account_number}</span>
                               <button 
+                                type="button"
                                 onClick={() => copyToClipboard(item.account_number!, item.id + 'acc')} 
-                                className="flex-shrink-0 p-2 text-muted-foreground hover:text-gold hover:bg-white rounded-lg transition-all"
+                                className="flex-shrink-0 p-2 text-muted-foreground hover:text-gold hover:bg-white rounded-lg transition-all bg-transparent border-0 cursor-pointer"
                                 aria-label="Copiar cuenta"
                               >
                                 {copiedId === item.id + 'acc' ? <Check size={16} className="text-green-600" /> : <Copy size={16} />}
@@ -124,13 +126,14 @@ export function DonacionesSection({ items }: { items: DonationRow[] }) {
                           </div>
                         )}
                         {item.cci && (
-                          <div className="bg-secondary/40 p-4 rounded-2xl border border-border transition-colors hover:border-gold/30">
+                          <div className="bg-secondary/40 p-4 rounded-2xl border border-border transition-colors hover:border-gold/30 relative">
                             <p className="text-[10px] text-muted-foreground uppercase font-bold text-left mb-1">CCI (Interbancario)</p>
                             <div className="flex items-center justify-between gap-2">
                               <span className="font-mono text-[13px] text-primary break-all font-medium text-left">{item.cci}</span>
                               <button 
+                                type="button"
                                 onClick={() => copyToClipboard(item.cci!, item.id + 'cci')} 
-                                className="flex-shrink-0 p-2 text-muted-foreground hover:text-gold hover:bg-white rounded-lg transition-all"
+                                className="flex-shrink-0 p-2 text-muted-foreground hover:text-gold hover:bg-white rounded-lg transition-all bg-transparent border-0 cursor-pointer"
                                 aria-label="Copiar CCI"
                               >
                                 {copiedId === item.id + 'cci' ? <Check size={16} className="text-green-600" /> : <Copy size={16} />}
@@ -144,7 +147,7 @@ export function DonacionesSection({ items }: { items: DonationRow[] }) {
                     {item.description && <p className="text-sm text-muted-foreground mt-4">{item.description}</p>}
                   </div>
                   
-                  {/* Pie de la tarjeta con escudo de confianza */}
+                  {/* Pie de la tarjeta */}
                   <div className="p-4 bg-secondary/30 border-t border-border flex items-center justify-center gap-1.5 text-[11px] font-medium text-muted-foreground">
                     <ShieldCheck size={14} className="text-green-600" />
                     Verifica el titular al transferir

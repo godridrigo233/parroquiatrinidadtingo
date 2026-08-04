@@ -402,6 +402,33 @@ ${PARISH_STATIC_DATA}${dynamicContext}
       // ── Envío de notificaciones push masivas ──
       if (url.pathname === "/api/enviar-push-masivo" && request.method === "POST") {
         try {
+          // Verificar autenticación de admin
+          const authHeader = request.headers.get("authorization") || "";
+          const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+
+          if (!token) {
+            return new Response(JSON.stringify({ error: "No autorizado." }), {
+              status: 403, headers: { "content-type": "application/json" },
+            });
+          }
+
+          const sbAuth = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_PUBLISHABLE_KEY!);
+          const { data: { user }, error: authErr } = await sbAuth.auth.getUser(token);
+
+          if (authErr || !user) {
+            return new Response(JSON.stringify({ error: "Token inválido." }), {
+              status: 403, headers: { "content-type": "application/json" },
+            });
+          }
+
+          const { data: roles } = await sbAuth.from("user_roles").select("role").eq("user_id", user.id);
+          const isAdmin = roles?.some((r: any) => r.role === "admin" || r.role === "secretaria");
+          if (!isAdmin) {
+            return new Response(JSON.stringify({ error: "Sin permisos." }), {
+              status: 403, headers: { "content-type": "application/json" },
+            });
+          }
+
           const { title, body, url: pushUrl } = await request.json();
 
           if (!body) {

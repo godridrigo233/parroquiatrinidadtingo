@@ -51,7 +51,7 @@ function EvangelioDropdown({ bg }: { bg: boolean }) {
         onClick={() => setOpen((v) => !v)}
         aria-label="Evangelio del día"
         title="Evangelio del día"
-        className={`flex items-center justify-center w-9 h-9 rounded-full border transition-all select-none outline-none focus:outline-none focus:ring-0 shadow-sm ${
+        className={`flex items-center justify-center w-9 h-9 rounded-full border transition-all select-none outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 shadow-sm ${
           open
             ? "border-gold text-gold bg-gold/10"
             : bg
@@ -72,7 +72,7 @@ function EvangelioDropdown({ bg }: { bg: boolean }) {
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => setOpen(false)}
-            className="flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-secondary transition-colors select-none outline-none focus:outline-none"
+            className="flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-secondary transition-colors select-none outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
           >
             <BookOpen size={15} className="text-gold shrink-0" />
             Leer en Vatican News
@@ -80,7 +80,7 @@ function EvangelioDropdown({ bg }: { bg: boolean }) {
           <button
             type="button"
             onClick={compartirWhatsApp}
-            className="w-full flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-secondary transition-colors border-t border-border/50 select-none outline-none focus:outline-none bg-transparent text-left"
+            className="w-full flex items-center gap-3 px-4 py-3 text-sm text-foreground hover:bg-secondary transition-colors border-t border-border/50 select-none outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 bg-transparent text-left"
           >
             <MessageCircle size={15} className="text-green-500 shrink-0" />
             Compartir por WhatsApp
@@ -211,7 +211,7 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
           <button
             type="button"
             onClick={onLogoClick}
-            className="flex items-center gap-3 select-none outline-none focus:outline-none focus:ring-0 bg-transparent border-0 p-0"
+            className="flex items-center gap-3 select-none outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 bg-transparent border-0 p-0"
             aria-label="Logo parroquia"
           >
             <img src="/assets/logo.webp" alt="" className="h-10 w-10 rounded-full overflow-hidden object-cover pointer-events-none" />
@@ -232,7 +232,7 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
                 <Link
                   key={l.href}
                   to={"/sacramentos" as any}
-                  className={`text-sm font-medium transition-colors select-none outline-none focus:outline-none focus:ring-0 hover:text-gold ${
+                  className={`text-sm font-medium transition-colors select-none outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 hover:text-gold ${
                     bg ? "text-foreground/80" : "text-white/90"
                   }`}
                   activeProps={{ className: "text-gold" }}
@@ -244,7 +244,7 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
                   key={l.href}
                   type="button"
                   onClick={() => handleNavClick(l.href)}
-                  className={`text-sm font-medium transition-colors select-none outline-none focus:outline-none focus:ring-0 hover:text-gold cursor-pointer bg-transparent border-0 p-0 ${
+                  className={`text-sm font-medium transition-colors select-none outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 hover:text-gold cursor-pointer bg-transparent border-0 p-0 ${
                     bg ? "text-foreground/80" : "text-white/90"
                   }`}
                 >
@@ -260,7 +260,7 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
               <button
                 type="button"
                 onClick={() => handleNavClick("contacto")}
-                className="px-4 py-2 rounded-full bg-gradient-gold text-primary-foreground text-sm font-semibold shadow-card hover:shadow-elegant transition-shadow cursor-pointer select-none outline-none focus:outline-none focus:ring-0 border-0"
+                className="px-4 py-2 rounded-full bg-gradient-gold text-primary-foreground text-sm font-semibold shadow-card hover:shadow-elegant transition-shadow cursor-pointer select-none outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 border-0"
               >
                 Visítanos
               </button>
@@ -275,7 +275,7 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
             <button
               type="button"
               onClick={() => setDrawerOpen(true)}
-              className={`p-2 rounded-xl border transition-all select-none outline-none focus:outline-none focus:ring-0 shadow-sm ${
+              className={`p-2 rounded-xl border transition-all select-none outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 shadow-sm ${
                 bg
                   ? "bg-secondary/80 border-border text-foreground hover:bg-secondary"
                   : "bg-black/30 backdrop-blur-md border-white/20 text-white hover:bg-black/50"
@@ -314,7 +314,7 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
           <button
             type="button"
             onClick={() => setDrawerOpen(false)}
-            className="p-2 rounded-lg bg-secondary/80 text-foreground hover:bg-secondary transition-colors outline-none focus:outline-none"
+            className="p-2 rounded-lg bg-secondary/80 text-foreground hover:bg-secondary transition-colors outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
             aria-label="Cerrar menú"
           >
             <X size={20} />
@@ -331,7 +331,7 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
                   key={l.href}
                   to={"/sacramentos" as any}
                   onClick={() => setDrawerOpen(false)}
-                  className="flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium text-foreground/85 hover:bg-secondary/60 transition-colors select-none outline-none focus:outline-none focus:ring-0"
+                  className="flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium text-foreground/85 hover:bg-secondary/60 transition-colors select-none outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
                 >
                   <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gold/10">
                     <Icon size={16} className="text-gold" />
@@ -345,7 +345,7 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
                 key={l.href}
                 type="button"
                 onClick={() => handleNavClick(l.href)}
-                className="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium text-foreground/85 hover:bg-secondary/60 transition-colors cursor-pointer select-none outline-none focus:outline-none focus:ring-0 bg-transparent border-0 text-left"
+                className="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium text-foreground/85 hover:bg-secondary/60 transition-colors cursor-pointer select-none outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 bg-transparent border-0 text-left"
               >
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gold/10">
                   <Icon size={16} className="text-gold" />
@@ -361,7 +361,7 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => setDrawerOpen(false)}
-              className="flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium text-foreground/85 hover:bg-secondary/60 transition-colors select-none outline-none focus:outline-none focus:ring-0"
+              className="flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium text-foreground/85 hover:bg-secondary/60 transition-colors select-none outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2"
             >
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gold/10">
                 <BookOpen size={16} className="text-gold" />
@@ -375,11 +375,11 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
         <div className="px-5 py-4 border-t border-border/60 space-y-3 bg-secondary/20 select-none">
           {isMobileDevice && <InstallPWA />}
           {isMobileDevice && <PushNotificationToggle />} {/* 👈 2. AQUÍ SE AGREGA EN MÓVILES */}
-          <a href="tel:+51915049850" className="flex items-center gap-2.5 text-xs text-muted-foreground outline-none focus:outline-none">
+          <a href="tel:+51915049850" className="flex items-center gap-2.5 text-xs text-muted-foreground outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2">
             <Phone size={13} className="text-gold" />
             +51 915 049 850
           </a>
-          <a href="mailto:pstrinidadtingo@gmail.com" className="flex items-center gap-2.5 text-xs text-muted-foreground outline-none focus:outline-none">
+          <a href="mailto:pstrinidadtingo@gmail.com" className="flex items-center gap-2.5 text-xs text-muted-foreground outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2">
             <Mail size={13} className="text-gold" />
             pstrinidadtingo@gmail.com
           </a>

@@ -16,11 +16,10 @@ import {
   Users,
   FileText,
   ChevronRight,
-  Facebook, Instagram,
-  Mail,
 } from "lucide-react";
 import { Navbar } from "@/components/site/Navbar";
 import { Reveal } from "@/components/site/Reveal";
+import { Footer } from "@/components/site/Footer";
 
 const SITE_URL = "https://parroquiatrinidadtingo.vercel.app";
 
@@ -700,90 +699,7 @@ function SacramentosPage() {
       </section>
 
       {/* ════════════════ FOOTER ════════════════ */}
-      <footer className="bg-[#0F1B2D] text-white/80 py-12 px-5 lg:px-8">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 mb-10">
-            {/* Columna 1: Logo & misión */}
-            <div>
-              <div className="flex items-center gap-3 mb-4">
-                <img
-                  src="/assets/logo.webp"
-                  alt=""
-                  loading="lazy"
-                  className="h-10 w-10 rounded-full overflow-hidden object-cover"
-                />
-                <div>
-                  <p className="font-display text-sm text-white font-semibold">
-                    Parroquia Santísima
-                  </p>
-                  <p className="font-display text-sm text-white font-semibold">
-                    Trinidad de Tingo
-                  </p>
-                </div>
-              </div>
-              <p className="text-xs text-white/50 leading-relaxed">
-                Amar a Dios, servir a los demás y anunciar el Evangelio.
-              </p>
-            </div>
-                {/* Columna 3: Contáctanos */}
-            <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-[#C8A45C] font-semibold mb-4">
-                Contáctanos
-              </p>
-              <ul className="space-y-3 text-sm">
-                <li className="flex items-start gap-2 text-white/60">
-                  <MapPin size={14} className="mt-0.5 shrink-0 text-[#C8A45C]" />
-                  {/* PLACEHOLDER: Reemplazar con dirección real si es diferente */}
-                  <span>Calle Ferrocarril 200, Av. Alfonso Ugarte Tingo - Cercado</span>
-                </li>
-                <li className="flex items-center gap-2 text-white/60">
-                  <Phone size={14} className="shrink-0 text-[#C8A45C]" />
-                  <span>+51 915 049 850</span>
-                </li>
-                <li className="flex items-center gap-2 text-white/60">
-                  <Mail size={14} className="shrink-0 text-[#C8A45C]" />
-                  <span>pstrinidadtingo@gmail.com</span>
-                </li>
-              </ul>
-            </div>
-
-            {/* Columna 4: Síguenos */}
-            <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-[#C8A45C] font-semibold mb-4">
-                Síguenos
-              </p>
-              <li className="flex items-start gap-4">
-                <span className="h-11 w-11 rounded-xl bg-white/10 flex items-center justify-center text-gold shrink-0"><Facebook size={20} /></span>
-                <div>
-                  <p className="font-semibold text-white">Facebook</p>
-                  <a href="https://www.facebook.com/parroquiasantisimatrinidadtingo/" target="_blank" rel="noopener noreferrer" className="text-white/75 text-sm hover:text-gold">@parroquiasantisimatrinidadtingo</a>
-                </div>
-              </li>
-              <li className="flex items-start gap-4">
-                <span className="h-11 w-11 rounded-xl bg-white/10 flex items-center justify-center text-gold shrink-0"><Instagram size={20} /></span>
-                <div>
-                  <p className="font-semibold text-white">Instagram</p>
-                  <a href="https://www.instagram.com/stma_trinidad_tingo/" target="_blank" rel="noopener noreferrer" className="text-white/75 text-sm hover:text-gold">@stma_trinidad_tingo</a>
-                </div>
-              </li>
-              <li className="flex items-start gap-4">
-                <span className="h-11 w-11 rounded-xl bg-white/10 flex items-center justify-center text-gold shrink-0"><Mail size={20} /></span>
-                <div>
-                  <p className="font-semibold text-white">Correo</p>
-                  <p className="text-white/75 text-sm">pstrinidadtingo@gmail.com</p>
-                </div>
-              </li>
-            </div>
-          </div>
-
-          <div className="border-t border-white/10 pt-6 text-center">
-            <p className="text-xs text-white/40">
-              © {new Date().getFullYear()} Parroquia Santísima Trinidad de
-              Tingo — Todos los derechos reservados.
-            </p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

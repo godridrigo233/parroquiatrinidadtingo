@@ -43,15 +43,29 @@ export function AdminPushSender() {
     setLastResult(null);
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        alert("Sesión expirada. Vuelve a iniciar sesión.");
+        return;
+      }
+
       const res = await fetch("/api/enviar-push-masivo", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
         body: JSON.stringify({
           title: title.trim(),
           body: body.trim(),
           url: url.trim() || "/",
         }),
       });
+
+      if (res.status === 403) {
+        alert("No tienes permiso para enviar avisos.");
+        return;
+      }
 
       const data = await res.json();
 
@@ -121,7 +135,7 @@ export function AdminPushSender() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Ej. 🔔 Aviso Parroquial — Tingo"
-            className="w-full p-3 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:border-gold transition-colors"
+            className="w-full p-3 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-gold transition-colors"
           />
         </div>
 
@@ -136,7 +150,7 @@ export function AdminPushSender() {
             value={body}
             onChange={(e) => setBody(e.target.value)}
             placeholder="Escribe aquí lo que leerán los feligreses en su pantalla de bloqueo..."
-            className="w-full p-3.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:border-gold transition-colors resize-none"
+            className="w-full p-3.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-gold transition-colors resize-none"
           />
           <span className="text-[11px] text-muted-foreground block text-right">
             {body.length} caracteres (se recomiendan menos de 120)
@@ -151,7 +165,7 @@ export function AdminPushSender() {
           <select
             value={url}
             onChange={(e) => setUrl(e.target.value)}
-            className="w-full p-2.5 rounded-xl border border-border bg-background text-foreground text-xs focus:outline-none focus:border-gold"
+            className="w-full p-2.5 rounded-xl border border-border bg-background text-foreground text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-gold"
           >
             <option value="/#noticias">Noticias y Eventos (#noticias)</option>
             <option value="/#horarios">Horarios de Misa (#horarios)</option>

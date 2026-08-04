@@ -268,7 +268,7 @@ export default function EventosSection({
                             <MapPin size={14} className="text-gold/70" /> {e.location}
                           </p>
                         )}
-                        {e.description && <p className="text-sm text-primary-foreground/60 mt-2 leading-relaxed">{e.description}</p>}
+                        {e.description && <p className="text-sm text-primary-foreground/80 mt-2 leading-relaxed">{e.description}</p>}
                         <AddToCalendar event={e} />
                       </div>
                     );

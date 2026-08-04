@@ -34,8 +34,9 @@ const defaultGalleryImgs: ProcessedImage[] = [
 export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }) {
   const [selectedCategory, setSelectedCategory] = useState<string>("Todos");
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [visibleCount, setVisibleCount] = useState<number>(8);
 
-  // Normalización de datos entre Supabase y fallback local
+  // Normalización de datos
   const allItems: ProcessedImage[] = gallery && gallery.length > 0
     ? gallery.map((g, i) => ({
         id: g.id || String(i),
@@ -45,7 +46,7 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
       }))
     : defaultGalleryImgs;
 
-  // Extracción dinámica de categorías disponibles
+  // Extracción dinámica de categorías
   const categories = ["Todos", ...Array.from(new Set(allItems.map((item) => item.category)))];
 
   // Filtrado de imágenes
@@ -53,18 +54,21 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
     ? allItems
     : allItems.filter((item) => item.category.toLowerCase() === selectedCategory.toLowerCase());
 
+  // Limitar imágenes mostradas para evitar scroll infinito
+  const itemsToDisplay = filteredItems.slice(0, visibleCount);
+
   // Navegación en Lightbox
   const handlePrev = useCallback(() => {
     if (lightboxIndex === null) return;
-    setLightboxIndex((prev) => (prev === null ? null : (prev - 1 + filteredItems.length) % filteredItems.length));
-  }, [lightboxIndex, filteredItems.length]);
+    setLightboxIndex((prev) => (prev === null ? null : (prev - 1 + itemsToDisplay.length) % itemsToDisplay.length));
+  }, [lightboxIndex, itemsToDisplay.length]);
 
   const handleNext = useCallback(() => {
     if (lightboxIndex === null) return;
-    setLightboxIndex((prev) => (prev === null ? null : (prev + 1) % filteredItems.length));
-  }, [lightboxIndex, filteredItems.length]);
+    setLightboxIndex((prev) => (prev === null ? null : (prev + 1) % itemsToDisplay.length));
+  }, [lightboxIndex, itemsToDisplay.length]);
 
-  // Soporte para teclas (Flecha Izquierda, Flecha Derecha)
+  // Soporte para teclado en Lightbox
   useEffect(() => {
     if (lightboxIndex === null) return;
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -91,7 +95,7 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
     document.body.removeChild(a);
   };
 
-  const activeItem = lightboxIndex !== null ? filteredItems[lightboxIndex] : null;
+  const activeItem = lightboxIndex !== null ? itemsToDisplay[lightboxIndex] : null;
 
   return (
     <section id="galeria" className="py-24 px-5 lg:px-8 bg-secondary/40">
@@ -108,7 +112,7 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
           </p>
         </Reveal>
 
-        {/* ── 2. FILTROS POR CATEGORÍA ── */}
+        {/* FILTROS POR CATEGORÍA */}
         <Reveal className="mt-8">
           <div className="flex flex-wrap items-center justify-center gap-2">
             <span className="hidden sm:inline-flex items-center gap-1 text-xs text-muted-foreground mr-2 font-medium">
@@ -123,6 +127,7 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
                   onClick={() => {
                     setSelectedCategory(cat);
                     setLightboxIndex(null);
+                    setVisibleCount(8); // Resetear a 8 fotos al cambiar de categoría
                   }}
                   className={`px-4 py-2 rounded-full text-xs font-medium transition-all select-none border cursor-pointer ${
                     isActive
@@ -137,11 +142,11 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
           </div>
         </Reveal>
 
-        {/* ── 1. MASONRY GRID CON CSS COLUMNS & 4. LAZY LOADING ── */}
+        {/* MASONRY GRID */}
         <Reveal className="mt-10">
-          {filteredItems.length > 0 ? (
+          {itemsToDisplay.length > 0 ? (
             <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
-              {filteredItems.map((item, index) => (
+              {itemsToDisplay.map((item, index) => (
                 <div
                   key={item.id}
                   className="break-inside-avoid group relative overflow-hidden rounded-2xl bg-card border border-border/60 shadow-card hover:shadow-elegant transition-all duration-300"
@@ -175,37 +180,46 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
             </div>
           )}
         </Reveal>
+
+        {/* BOTÓN "VER MÁS" */}
+        {filteredItems.length > visibleCount && (
+          <Reveal className="mt-12 text-center">
+            <button
+              type="button"
+              onClick={() => setVisibleCount((prev) => prev + 12)}
+              className="px-6 py-3 rounded-full bg-gold text-primary-foreground text-sm font-semibold shadow-md hover:shadow-elegant hover:scale-105 transition-all cursor-pointer border-0"
+            >
+              Ver más recuerdos
+            </button>
+          </Reveal>
+        )}
       </div>
 
-      {/* ── 3. LIGHTBOX MEJORADO (VISOR DE PANTALLA COMPLETA CON NAVEGACIÓN Y ACCIONES) ── */}
+      {/* LIGHTBOX */}
       <Dialog open={lightboxIndex !== null} onOpenChange={(o) => !o && setLightboxIndex(null)}>
         <DialogContent className="max-w-4xl p-0 bg-black/95 border-white/10 shadow-2xl backdrop-blur-md overflow-hidden sm:rounded-3xl">
           <DialogTitle className="sr-only">Visor de fotografía parroquial</DialogTitle>
           
           {activeItem && (
             <div className="relative flex flex-col items-center justify-center min-h-[60vh] max-h-[85vh] p-4 sm:p-6 select-none">
-              
-              {/* Botón Cerrar */}
               <button
                 onClick={() => setLightboxIndex(null)}
-                className="absolute top-4 right-4 z-50 p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
+                className="absolute top-4 right-4 z-50 p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors cursor-pointer"
                 aria-label="Cerrar visor"
               >
                 <X size={20} />
               </button>
 
-              {/* Botón Flecha Izquierda */}
-              {filteredItems.length > 1 && (
+              {itemsToDisplay.length > 1 && (
                 <button
                   onClick={handlePrev}
-                  className="absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 z-40 p-2.5 rounded-full bg-black/50 text-white hover:bg-gold hover:text-black border border-white/20 transition-all shadow-lg"
+                  className="absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 z-40 p-2.5 rounded-full bg-black/50 text-white hover:bg-gold hover:text-black border border-white/20 transition-all shadow-lg cursor-pointer"
                   aria-label="Fotografía anterior"
                 >
                   <ChevronLeft size={24} />
                 </button>
               )}
 
-              {/* Imagen central */}
               <div className="relative w-full h-full flex items-center justify-center max-h-[68vh] overflow-hidden">
                 <OptimizedImage
                   src={activeItem.src}
@@ -214,34 +228,31 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
                 />
               </div>
 
-              {/* Botón Flecha Derecha */}
-              {filteredItems.length > 1 && (
+              {itemsToDisplay.length > 1 && (
                 <button
                   onClick={handleNext}
-                  className="absolute right-3 sm:right-5 top-1/2 -translate-y-1/2 z-40 p-2.5 rounded-full bg-black/50 text-white hover:bg-gold hover:text-black border border-white/20 transition-all shadow-lg"
+                  className="absolute right-3 sm:right-5 top-1/2 -translate-y-1/2 z-40 p-2.5 rounded-full bg-black/50 text-white hover:bg-gold hover:text-black border border-white/20 transition-all shadow-lg cursor-pointer"
                   aria-label="Siguiente fotografía"
                 >
                   <ChevronRight size={24} />
                 </button>
               )}
 
-              {/* Pie de foto con información, contador y botones de acción */}
               <div className="w-full mt-4 flex flex-col sm:flex-row items-center justify-between gap-3 px-2 border-t border-white/10 pt-3">
                 <div className="text-center sm:text-left">
                   <p className="text-white font-display text-lg font-medium leading-none">
                     {activeItem.label}
                   </p>
                   <p className="text-xs text-gold mt-1">
-                    {activeItem.category} • <span className="text-white/60">{lightboxIndex! + 1} de {filteredItems.length}</span>
+                    {activeItem.category} • <span className="text-white/60">{lightboxIndex! + 1} de {itemsToDisplay.length}</span>
                   </p>
                 </div>
 
-                {/* Acciones: Compartir y Descargar */}
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
                     onClick={() => shareWhatsApp(activeItem)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-green-600 hover:bg-green-500 text-white text-xs font-semibold transition-all shadow-sm cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-green-600 hover:bg-green-500 text-white text-xs font-semibold transition-all shadow-sm cursor-pointer border-0"
                   >
                     <Share2 size={13} />
                     <span>Compartir</span>

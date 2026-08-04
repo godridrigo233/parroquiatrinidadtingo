@@ -344,6 +344,7 @@ function ParishAIBotFabWidget() {
     const spanishVoices = voices.filter((v) => v.lang.startsWith("es"));
     if (spanishVoices.length === 0) return null;
 
+    // 1. Preferir voces con nombre masculino explícito o "male"
     const maleVoice = spanishVoices.find((v) => {
       const name = v.name.toLowerCase();
       return (
@@ -356,23 +357,21 @@ function ParishAIBotFabWidget() {
         name.includes("diego") ||
         name.includes("carlos") ||
         name.includes("felipe") ||
+        name.includes("juan") ||
+        name.includes("pedro") ||
+        name.includes("luis") ||
+        name.includes("alex") ||
+        name.includes("jose") ||
         name.includes("standard-b") ||
         name.includes("natural-b")
       );
     });
     if (maleVoice) return maleVoice;
 
-    const neutralOrMale = spanishVoices.find((v) => {
-      const name = v.name.toLowerCase();
-      return (
-        !name.includes("female") &&
-        !name.includes("mujer") &&
-        !name.includes("helena") &&
-        !name.includes("monica") &&
-        !name.includes("lucia")
-      );
-    });
-    return neutralOrMale || spanishVoices[0];
+    // 2. Filtrar: excluir voces FEMENINAS conocidas, elegir la primera neutra/masculina
+    const FEMALE = /paulina|sabina|laura|mar[ií]a|sara|mónica|monica|helena|in[eé]s|carmen|luc[ií]a|elena|rosa|valentina|camila|andrea|fernanda|gabriela|ximena|female|mujer/i;
+    const notFemale = spanishVoices.find((v) => !FEMALE.test(v.name));
+    return notFemale || null;
   };
 
   const toggleSpeech = (text: string, id: string) => {
@@ -387,15 +386,12 @@ function ParishAIBotFabWidget() {
     window.speechSynthesis.cancel();
 
     const speakAction = () => {
-      const utterance = new SpeechSynthesisUtterance(text);
       const bestVoice = getBestSpanishVoice();
-      
-      if (bestVoice) {
-        utterance.voice = bestVoice;
-      } else {
-        utterance.lang = "es-PE";
-      }
-      
+      // Si no hay voz masculina disponible, no hablamos (nunca voz femenina)
+      if (!bestVoice) return;
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.voice = bestVoice;
       utterance.rate = 0.90;
       utterance.pitch = 0.88;
 

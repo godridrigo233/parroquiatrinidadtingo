@@ -110,7 +110,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "Parroquia católica Santísima Trinidad de Tingo, Arequipa. Horarios de misa, sacramentos y comunidad parroquial.",
       },
       { name: "theme-color", content: "#1e2a5e" },
-      // 👇 AÑADE ESTAS DOS LÍNEAS PARA SOPORTE EN IOS (APPLE):
+      { name: "mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "default" },
       { property: "og:site_name", content: "Parroquia Santísima Trinidad de Tingo" },
@@ -122,10 +122,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "stylesheet", href: appCss },
       { rel: "manifest", href: "/manifest.webmanifest" },
       { rel: "apple-touch-icon", href: "/pwa-192x192.png" },
-      // Preload LCP candidates (mobile = logo in Preloader, desktop = hero)
       { rel: "preload", as: "image", href: "/assets/logo.webp", fetchPriority: "high" } as any,
       { rel: "preload", as: "image", href: "/assets/hero-church.webp", fetchPriority: "high" } as any,
-      // Fonts: preconnect + non-blocking stylesheet (media=print swap trick)
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
@@ -137,7 +135,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600;700&display=swap",
         media: "print",
-        onLoad: "this.media='all'",
+        onLoad: (e: any) => { e.currentTarget.media = 'all'; },
       } as any,
     ],
 

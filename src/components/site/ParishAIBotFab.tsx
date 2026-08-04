@@ -1,7 +1,5 @@
 "use client";
-import { useRef, useEffect, useState, useCallback } from "react";
-import { useChat } from "@ai-sdk/react";
-import type { UIMessage } from "ai";
+import React, { useRef, useEffect, useState, useCallback } from "react";
 import { 
   MessageSquareText, 
   X, 
@@ -10,77 +8,25 @@ import {
   Volume2, 
   VolumeX, 
   PhoneCall, 
-  MessageCircle, 
   Sparkles 
 } from "lucide-react";
 
-export function SchedulesSection() {
-  // TanStack Query nos entrega todo mágico y gestionado
-  const { data: schedules, isLoading, isError } = useSchedules();
-
-  if (isLoading) {
-    return (
-      <div className="p-8 text-center text-[#1A2940] animate-pulse">
-        Cargando horarios de misa y atención...
-      </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <div className="p-4 bg-red-50 text-red-700 rounded-xl flex items-center gap-2">
-        <AlertCircle size={20} />
-        <span>No se pudieron cargar los horarios en este momento. Intenta de nuevo más tarde.</span>
-      </div>
-    );
-  }
-
-  return (
-    <div className="grid gap-4 md:grid-cols-2">
-      {schedules?.map((item, index) => (
-        <div key={index} className="p-4 bg-white border border-[#CBD5E1] rounded-2xl shadow-sm hover:border-[#C8A45C] transition-colors">
-          <div className="flex items-center gap-2 text-[#C8A45C] font-semibold text-xs uppercase mb-1">
-            <Clock size={14} />
-            <span>{item.category}</span>
-          </div>
-          <h4 className="font-bold text-[#0F1B2D] text-base">{item.day_label}</h4>
-          <p className="text-sm text-[#1A2940] font-medium mt-0.5">{item.time_label}</p>
-          {item.notes && (
-            <p className="text-xs text-slate-500 mt-2 bg-slate-100 p-1.5 rounded-lg inline-block">
-              ℹ️ {item.notes}
-            </p>
-          )}
-        </div>
-      ))}
-    </div>
-  );
-}
-export function ParishAIBotFab() {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-  if (!mounted) return null;
-  return <ParishAIBotFabWidget />;
+// ── ESTRUCTURA DE MENSAJES LIMPIA ──
+export interface ChatMessage {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
 }
 
-function getMessageText(msg: UIMessage): string {
-  return msg.parts
-    .filter((p): p is { type: "text"; text: string } => p.type === "text")
-    .map((p) => p.text)
-    .join("");
-}
-
-const WELCOME_MESSAGE: UIMessage = {
+const WELCOME_MESSAGE: ChatMessage = {
   id: "welcome",
   role: "assistant",
-  parts: [
-    {
-      type: "text",
-      text: "¡Paz y bien! Soy el Hermano Elías, tu asistente virtual. ¿En qué te puedo ayudar hoy sobre horarios, sacramentos o eventos? 🙏",
-    },
-  ],
+  content: "¡Paz y bien! Soy el Hermano Elías, tu asistente virtual. ¿En qué te puedo ayudar hoy sobre horarios, sacramentos o eventos? 🙏",
 };
+
+const AVATAR_IMAGE_PATH = "/assets/hermano-elias-avatar.webp";
+const STORAGE_KEY_MSGS = "parish_bot_messages_v4";
+const STORAGE_KEY_DATE = "parish_bot_date_v4";
 
 // ── 1. SUGERENCIAS RÁPIDAS DINÁMICAS SEGÚN DÍA Y HORA ──
 function getDynamicQuickReplies() {
@@ -117,7 +63,7 @@ function getDynamicQuickReplies() {
   ];
 }
 
-// ── 2. ZERO-LATENCY FALLBACK (RESPUESTAS INSTANTÁNEAS SIN IA) ──
+// ── 2. ZERO-LATENCY FALLBACK (RESPUESTAS INSTANTÁNEAS SIN SERVIDOR) ──
 function checkInstantAnswer(text: string): string | null {
   const clean = text.toLowerCase();
   if (/direcci[oó]n|d[oó]nde est[aá]n|ubicaci[oó]n|c[oó]mo llegar/i.test(clean)) {
@@ -132,7 +78,7 @@ function checkInstantAnswer(text: string): string | null {
   return null;
 }
 
-// Detects URLs, emails and phone numbers inside a bot reply and turns them into tappable links.
+// Renderiza enlaces, correos y teléfonos como enlaces clickeables
 const RICH_TEXT_REGEX = /(https?:\/\/[^\s]+)|([\w.+-]+@[\w-]+\.[\w.-]+)|(\+?\d[\d\s-]{6,}\d)/g;
 
 function renderRichText(text: string, keyPrefix: string) {
@@ -169,9 +115,14 @@ function TypingDots() {
   );
 }
 
-const AVATAR_IMAGE_PATH = "/assets/hermano-elias-avatar.webp";
-const STORAGE_KEY_MSGS = "parish_bot_messages_v3";
-const STORAGE_KEY_DATE = "parish_bot_date_v3";
+export function ParishAIBotFab() {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  if (!mounted) return null;
+  return <ParishAIBotFabWidget />;
+}
 
 function ParishAIBotFabWidget() {
   const [isOpen, setIsOpen] = useState(false);
@@ -181,13 +132,15 @@ function ParishAIBotFabWidget() {
   const [showTeaser, setShowTeaser] = useState(false);
   const [teaserDismissed, setTeaserDismissed] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
-  
-  // ── ESTADOS DE LAS NUEVAS MEJORAS ──
+
+  // Estados de interfaz y voz
+  const [messages, setMessages] = useState<ChatMessage[]>([WELCOME_MESSAGE]);
+  const [isLoading, setIsLoading] = useState(false);
   const [fontSize, setFontSize] = useState<"sm" | "base" | "lg">("sm");
   const [speakingMsgId, setSpeakingMsgId] = useState<string | null>(null);
   const [quickReplies, setQuickReplies] = useState(getDynamicQuickReplies());
   
-  // ── ESTADOS PARA MODO VOZ CONTINUA AUTOMÁTICA ──
+  // Modo voz continua
   const [autoRead, setAutoRead] = useState(false);
   const lastAutoReadIdRef = useRef<string | null>(null);
 
@@ -195,13 +148,7 @@ function ParishAIBotFabWidget() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const prevMessageCountRef = useRef(1);
 
-  const { messages, setMessages, sendMessage, status } = useChat({
-    messages: [WELCOME_MESSAGE],
-  });
-
-  const isLoading = status === "streaming" || status === "submitted";
-
-  // ── 3. MEMORIA DE SESIÓN (EXPIRA AL ACABAR EL DÍA) ──
+  // ── MEMORIA DE SESIÓN EN LOCALSTORAGE ──
   useEffect(() => {
     try {
       const storedDate = localStorage.getItem(STORAGE_KEY_DATE);
@@ -215,14 +162,13 @@ function ParishAIBotFabWidget() {
           }
         }
       } else {
-        // Al día siguiente se limpia la memoria automáticamente
         localStorage.removeItem(STORAGE_KEY_MSGS);
         localStorage.setItem(STORAGE_KEY_DATE, today);
       }
     } catch (e) {
       console.error("Error cargando memoria del bot:", e);
     }
-  }, [setMessages]);
+  }, []);
 
   useEffect(() => {
     if (messages.length > 1) {
@@ -236,7 +182,6 @@ function ParishAIBotFabWidget() {
     }
   }, [messages]);
 
-  // Actualizar sugerencias dinámicas y accesibilidad en el OS
   useEffect(() => {
     setQuickReplies(getDynamicQuickReplies());
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -246,7 +191,6 @@ function ParishAIBotFabWidget() {
     return () => mq.removeEventListener("change", handler);
   }, [isOpen]);
 
-  // Burbuja de invitación
   useEffect(() => {
     if (hasOpenedOnce || teaserDismissed) return;
     const showTimer = setTimeout(() => setShowTeaser(true), 3500);
@@ -257,7 +201,6 @@ function ParishAIBotFabWidget() {
     };
   }, [hasOpenedOnce, teaserDismissed]);
 
-  // Indicador de no leídos
   useEffect(() => {
     if (messages.length > prevMessageCountRef.current) {
       const last = messages[messages.length - 1];
@@ -310,22 +253,75 @@ function ParishAIBotFabWidget() {
     }
   };
 
-  // ── ENVÍO DE MENSAJES CON INTERCEPTOR DE CERO LATENCIA ──
-  const handleSend = (textToSend: string) => {
+  // ── ENVÍO CON READABLESTREAM DIRECTO Y ROBUSTO ──
+  const handleSend = async (textToSend: string) => {
     const text = textToSend.trim();
     if (!text || isLoading) return;
 
-    // Verificar si se puede responder gratis y en 5 milisegundos
+    // 1. Respuesta instantánea si aplica
     const instantReply = checkInstantAnswer(text);
     if (instantReply) {
-      const userMsg: UIMessage = { id: Date.now().toString(), role: "user", parts: [{ type: "text", text }] };
-      const botMsg: UIMessage = { id: (Date.now() + 1).toString(), role: "assistant", parts: [{ type: "text", text: instantReply }] };
-      setMessages((prev) => [...prev, userMsg, botMsg]);
+      setMessages((prev) => [
+        ...prev,
+        { id: Date.now().toString(), role: "user", content: text },
+        { id: (Date.now() + 1).toString(), role: "assistant", content: instantReply },
+      ]);
       return;
     }
 
-    // Si requiere razonamiento sacramental o complejo, llamamos a la API
-    sendMessage({ text });
+    // 2. Agregamos el mensaje del usuario y activamos el estado de carga
+    const userMsg: ChatMessage = { id: Date.now().toString(), role: "user", content: text };
+    const updatedMessages = [...messages, userMsg];
+    setMessages(updatedMessages);
+    setIsLoading(true);
+
+    const botMsgId = (Date.now() + 1).toString();
+    
+    // Agregamos la burbuja inicial del bot
+    setMessages((prev) => [...prev, { id: botMsgId, role: "assistant", content: "" }]);
+
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: updatedMessages.map((m) => ({ role: m.role, content: m.content })),
+        }),
+      });
+
+      if (!response.ok) throw new Error("Error en el servidor");
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let accumulatedText = "";
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          accumulatedText += decoder.decode(value, { stream: true });
+
+          setMessages((prev) =>
+            prev.map((msg) => (msg.id === botMsgId ? { ...msg, content: accumulatedText } : msg))
+          );
+        }
+      }
+    } catch (err) {
+      console.error("Error al comunicarse con el Hermano Elías:", err);
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === botMsgId
+            ? {
+                ...msg,
+                content:
+                  "Disculpa, hermano(a), tuve un pequeño problema de conexión en este momento. Por favor, intenta de nuevo o comunícate a secretaría (+51 915 049 850).",
+              }
+            : msg
+        )
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleFormSubmit = (e: React.FormEvent) => {
@@ -339,97 +335,106 @@ function ParishAIBotFabWidget() {
     handleSend(message);
   };
 
-  // ── 4. LECTURA EN VOZ ALTA / SOLO VOCES MASCULINAS ──
+  // ── SÍNTESIS DE VOZ MASCULINA ──
   const getBestSpanishVoice = (): SpeechSynthesisVoice | null => {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) return null;
-    
     const voices = window.speechSynthesis.getVoices();
+    if (!voices || voices.length === 0) return null;
 
-    // Nombres de voces FEMENINAS — las descartamos
-    const FEMALE_NAMES = /Paulina|Sabina|Laura|Mar[ií]a|Sara|Mónica|Monica|Helena|In[eé]s|Carmen|Luc[ií]a|Elena|Rosa|Valentina|Camila|Andrea|Fernanda|Gabriela|Ximena/i;
+    const spanishVoices = voices.filter((v) => v.lang.startsWith("es"));
+    if (spanishVoices.length === 0) return null;
 
-    // Solo voces español masculinas
-    const maleVoices = voices.filter((v) =>
-      v.lang.startsWith("es") && !FEMALE_NAMES.test(v.name)
-    );
+    const maleVoice = spanishVoices.find((v) => {
+      const name = v.name.toLowerCase();
+      return (
+        name.includes("male") ||
+        name.includes("hombre") ||
+        name.includes("alvaro") ||
+        name.includes("jorge") ||
+        name.includes("pablo") ||
+        name.includes("miguel") ||
+        name.includes("diego") ||
+        name.includes("carlos") ||
+        name.includes("felipe") ||
+        name.includes("standard-b") ||
+        name.includes("natural-b")
+      );
+    });
+    if (maleVoice) return maleVoice;
 
-    if (maleVoices.length === 0) return null;
-
-    // 1. Preferir nombres masculinos explícitos (más natural)
-    const knownMale = maleVoices.find((v) =>
-      /Alvaro|Jorge|Alex|Pablo|Miguel|Diego|Juan|Pedro|Carlos|Luis|José|Jose|Alberto/i.test(v.name)
-    );
-    if (knownMale) return knownMale;
-
-    // 2. Preferir neural/natural/Google (Chrome)
-    const neural = maleVoices.find((v) =>
-      v.name.includes("Natural") || v.name.includes("Neural") || v.name.includes("Google")
-    );
-    if (neural) return neural;
-
-    // 3. Preferir español latino
-    const latin = maleVoices.find((v) =>
-      v.lang === "es-PE" || v.lang === "es-MX" || v.lang === "es-CO" || v.lang === "es-US"
-    );
-    if (latin) return latin;
-
-    // 4. Primera disponible
-    return maleVoices[0];
+    const neutralOrMale = spanishVoices.find((v) => {
+      const name = v.name.toLowerCase();
+      return (
+        !name.includes("female") &&
+        !name.includes("mujer") &&
+        !name.includes("helena") &&
+        !name.includes("monica") &&
+        !name.includes("lucia")
+      );
+    });
+    return neutralOrMale || spanishVoices[0];
   };
 
   const toggleSpeech = (text: string, id: string) => {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
     
-    // Si ya está hablando este mensaje, lo callamos
     if (speakingMsgId === id) {
       window.speechSynthesis.cancel();
       setSpeakingMsgId(null);
       return;
     }
     
-    // Cortamos cualquier audio anterior
     window.speechSynthesis.cancel();
-    
-    const utterance = new SpeechSynthesisUtterance(text);
-    const bestVoice = getBestSpanishVoice();
-    if (bestVoice) {
-      utterance.voice = bestVoice;
-    } else {
-      utterance.lang = "es-PE";
-    }
-    utterance.rate = 0.92;  // Un 8% más lento de lo normal
-    utterance.pitch = 0.95; // Un tono ligeramente más grave
 
-    utterance.onend = () => setSpeakingMsgId(null);
-    utterance.onerror = () => setSpeakingMsgId(null);
-    
-    window.speechSynthesis.speak(utterance);
-    setSpeakingMsgId(id);
+    const speakAction = () => {
+      const utterance = new SpeechSynthesisUtterance(text);
+      const bestVoice = getBestSpanishVoice();
+      
+      if (bestVoice) {
+        utterance.voice = bestVoice;
+      } else {
+        utterance.lang = "es-PE";
+      }
+      
+      utterance.rate = 0.90;
+      utterance.pitch = 0.88;
+
+      utterance.onend = () => setSpeakingMsgId(null);
+      utterance.onerror = () => setSpeakingMsgId(null);
+      
+      window.speechSynthesis.speak(utterance);
+      setSpeakingMsgId(id);
+    };
+
+    const voices = window.speechSynthesis.getVoices();
+    if (voices.length === 0) {
+      window.speechSynthesis.onvoiceschanged = () => {
+        speakAction();
+        window.speechSynthesis.onvoiceschanged = null;
+      };
+    } else {
+      speakAction();
+    }
   };
 
-  // ── GATILLO DE LECTURA AUTOMÁTICA CONTINUA ──
   useEffect(() => {
     if (!autoRead || isLoading || messages.length === 0) return;
     const lastMsg = messages[messages.length - 1];
     
-    // Solo leemos si es un mensaje del asistente y no se ha leído antes
     if (lastMsg.role === "assistant" && lastAutoReadIdRef.current !== lastMsg.id) {
       lastAutoReadIdRef.current = lastMsg.id;
-      const text = getMessageText(lastMsg);
-      if (text) {
+      if (lastMsg.content) {
         setTimeout(() => {
-          toggleSpeech(text, lastMsg.id);
+          toggleSpeech(lastMsg.content, lastMsg.id);
         }, 300);
       }
     }
   }, [messages, isLoading, autoRead]);
 
-  // ── 5. DETECCIÓN PARA BOTONES DE ACCIÓN DIRECTA HACIA SECRETARÍA ──
   const shouldShowSecretariatButtons = (text: string): boolean => {
     return /915\s*049\s*850|secretar[ií]a|llamar|contacta directamente|matrimonio|bautismo|unc[ií][oó]n|partida/i.test(text);
   };
 
-  // Mapeo de tamaño de letra de Tailwind
   const fontSizes = {
     sm: "text-sm",
     base: "text-base",
@@ -443,7 +448,7 @@ function ParishAIBotFabWidget() {
       className="fixed bottom-24 right-5 md:bottom-28 md:right-8 z-50 flex flex-col items-end"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
-      {/* ─── BURBUJA DE INVITACIÓN ─── */}
+      {/* BURBUJA DE INVITACIÓN */}
       {showTeaser && !isOpen && (
         <div className="mb-3 mr-1 max-w-[230px] bg-white rounded-2xl rounded-br-sm shadow-lg border border-[#CBD5E1] p-3 flex items-start gap-2">
           <p className="text-xs text-[#1A2940] leading-snug flex-1">
@@ -462,7 +467,7 @@ function ParishAIBotFabWidget() {
         </div>
       )}
 
-      {/* ─── VENTANA DEL CHAT ─── */}
+      {/* VENTANA DEL CHAT */}
       <div
         role="dialog"
         aria-label="Asistente parroquial"
@@ -472,10 +477,9 @@ function ParishAIBotFabWidget() {
             : `${reducedMotion ? "scale-100" : "scale-95"} opacity-0 translate-y-4 pointer-events-none absolute`
         }`}
       >
-        {/* Cabecera con Avatar, Voz: ON/OFF y Control de Tamaño de Letra */}
+        {/* Cabecera */}
         <div className="bg-[#0F1B2D] p-3.5 sm:p-4 flex items-center justify-between border-b border-[#C8A45C]/30">
           <div className="flex items-center gap-3">
-            {/* ── 6. ANIMACIÓN DE "PENSANDO" EN EL AVATAR ── */}
             <div className={`h-10 w-10 sm:h-11 sm:w-11 rounded-full border-2 border-white/80 flex items-center justify-center shadow-inner overflow-hidden shrink-0 transition-all ${
               isLoading ? "ring-4 ring-[#C8A45C] animate-pulse shadow-[0_0_15px_rgba(200,164,92,0.7)]" : ""
             }`}>
@@ -503,7 +507,7 @@ function ParishAIBotFabWidget() {
           </div>
 
           <div className="flex items-center gap-1.5">
-            {/* ── BOTÓN MODO VOZ AUTOMÁTICA CONTINUA ── */}
+            {/* Control Modo Voz */}
             <button
               onClick={() => {
                 const nextState = !autoRead;
@@ -511,7 +515,7 @@ function ParishAIBotFabWidget() {
                 if (nextState && messages.length > 0) {
                   const lastMsg = messages[messages.length - 1];
                   if (lastMsg.role === "assistant") {
-                    toggleSpeech(getMessageText(lastMsg), lastMsg.id);
+                    toggleSpeech(lastMsg.content, lastMsg.id);
                     lastAutoReadIdRef.current = lastMsg.id;
                   }
                 } else if (!nextState && typeof window !== "undefined" && "speechSynthesis" in window) {
@@ -530,7 +534,7 @@ function ParishAIBotFabWidget() {
               <span>{autoRead ? "Voz: ON" : "Voz: OFF"}</span>
             </button>
 
-            {/* ── 7. BOTONES DE ACCESIBILIDAD A- / A+ PARA ADULTOS MAYORES ── */}
+            {/* Accesibilidad A- / A+ */}
             <div className="flex items-center bg-white/10 rounded-full p-0.5 border border-white/15">
               <button
                 onClick={() => setFontSize((f) => (f === "lg" ? "base" : "sm"))}
@@ -568,8 +572,7 @@ function ParishAIBotFabWidget() {
           aria-live="polite"
         >
           {messages.map((msg) => {
-            const rawText = getMessageText(msg);
-            const showActionButtons = msg.role === "assistant" && shouldShowSecretariatButtons(rawText);
+            const showActionButtons = msg.role === "assistant" && shouldShowSecretariatButtons(msg.content);
 
             return (
               <div
@@ -600,12 +603,18 @@ function ParishAIBotFabWidget() {
                         : "bg-white text-[#1A2940] border border-[#CBD5E1]/50 rounded-tl-sm"
                     }`}
                   >
-                    {msg.role === "assistant" ? renderRichText(rawText, msg.id) : rawText}
+                    {msg.role === "assistant" && msg.content === "" ? (
+                        <TypingDots />
+                      ) : msg.role === "assistant" ? (
+                        renderRichText(msg.content, msg.id)
+                      ) : (
+                        msg.content
+                      )}
 
-                    {/* Botón de Lectura en Voz Alta (Visible en celular, hover en PC) */}
-                    {msg.role === "assistant" && (
+                    {/* Botón de Voz */}
+                    {msg.role === "assistant" && msg.content && (
                       <button
-                        onClick={() => toggleSpeech(rawText, msg.id)}
+                        onClick={() => toggleSpeech(msg.content, msg.id)}
                         className={`absolute -right-1.5 -bottom-2 h-7 w-7 rounded-full bg-white border border-[#CBD5E1] shadow-md flex items-center justify-center text-[#0F1B2D] hover:bg-[#C8A45C] hover:text-white hover:border-[#C8A45C] transition-all ${
                           speakingMsgId === msg.id 
                             ? "bg-[#C8A45C] !text-white animate-bounce opacity-100 scale-110" 
@@ -619,7 +628,7 @@ function ParishAIBotFabWidget() {
                     )}
                   </div>
 
-                  {/* ── BOTONES DE ACCIÓN DIRECTA HACIA SECRETARÍA ── */}
+                  {/* Botones de acción directa */}
                   {showActionButtons && (
                     <div className="flex flex-wrap gap-2 mt-0.5 animate-in fade-in duration-300">
                       <a
@@ -629,17 +638,6 @@ function ParishAIBotFabWidget() {
                         <PhoneCall size={13} className="text-[#C8A45C]" />
                         <span>Llamar a Secretaría</span>
                       </a>
-                      {/*
-                      <a
-                        href="https://wa.me/51915049850?text=Hola,%20vengo%20del%20asistente%20virtual%20de%20la%20web%20y%20quisiera%20hacer%20una%20consulta%20parroquial..."
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#25D366] text-white text-xs font-semibold shadow-sm hover:bg-[#20ba59] transition-all hover:scale-[1.02]"
-                      >
-                        <MessageCircle size={14} className="fill-white" />
-                        <span>WhatsApp Secretaría</span>
-                      </a>
-                      */}
                     </div>
                   )}
                 </div>
@@ -647,7 +645,7 @@ function ParishAIBotFabWidget() {
             );
           })}
 
-          {/* Sugerencias rápidas dinámicas: solo mientras no haya conversación */}
+          {/* Sugerencias rápidas */}
           {messages.length === 1 && !isLoading && (
             <div className="flex flex-wrap gap-2 ml-[42px] pt-1">
               {quickReplies.map((q) => (
@@ -659,21 +657,6 @@ function ParishAIBotFabWidget() {
                   {q.label}
                 </button>
               ))}
-            </div>
-          )}
-
-          {isLoading && (
-            <div className="flex gap-2.5 max-w-[85%] mr-auto">
-              <div className="shrink-0 h-8 w-8 rounded-full bg-white border border-[#CBD5E1]/50 flex items-center justify-center mt-1 shadow-sm overflow-hidden">
-                <img
-                  src={AVATAR_IMAGE_PATH}
-                  alt="Avatar del Hermano Elías"
-                  className="w-full h-full object-cover animate-pulse"
-                />
-              </div>
-              <div className="px-3.5 py-3 rounded-2xl bg-white border border-[#CBD5E1]/50 rounded-tl-sm shadow-sm">
-                <TypingDots />
-              </div>
             </div>
           )}
 
@@ -707,7 +690,7 @@ function ParishAIBotFabWidget() {
         </form>
       </div>
 
-      {/* ─── FAB ─── */}
+      {/* BOTÓN FLOTANTE (FAB) */}
       <div className="relative">
         {!isOpen && unread > 0 && (
           <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-white z-10 animate-bounce">
@@ -716,9 +699,7 @@ function ParishAIBotFabWidget() {
         )}
         <button
           onClick={handleToggle}
-          aria-label={
-            isOpen ? "Cerrar asistente parroquial" : "Abrir asistente parroquial"
-          }
+          aria-label={isOpen ? "Cerrar asistente parroquial" : "Abrir asistente parroquial"}
           className={`h-14 w-14 rounded-full flex items-center justify-center shadow-[0_8px_25px_rgba(15,27,45,0.35)] hover:scale-105 active:scale-95 border-2 border-[#C8A45C]/40 ${motionClass} ${
             isOpen
               ? "bg-[#0F1B2D] text-white rotate-90"

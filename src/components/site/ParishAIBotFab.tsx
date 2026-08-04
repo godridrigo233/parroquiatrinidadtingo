@@ -339,34 +339,42 @@ function ParishAIBotFabWidget() {
     handleSend(message);
   };
 
-  // ── 4. LECTURA EN VOZ ALTA (TEXT TO SPEECH OPTIMIZADO Y GRATUITO) ──
+  // ── 4. LECTURA EN VOZ ALTA / SOLO VOCES MASCULINAS ──
   const getBestSpanishVoice = (): SpeechSynthesisVoice | null => {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) return null;
     
     const voices = window.speechSynthesis.getVoices();
-    
-    // 1. Buscamos primero voces "Neuronales" o "Naturales"
-    const neuralVoice = voices.find((v) => 
-      v.lang.startsWith("es") && 
-      (v.name.includes("Natural") || v.name.includes("Neural") || v.name.includes("Google"))
-    );
-    if (neuralVoice) return neuralVoice;
 
-    // 2. Buscamos voces humanas masculinas populares
-    const maleVoice = voices.find((v) => 
-      v.lang.startsWith("es") && 
-      (/Alvaro|Jorge|Alex|Pablo|Miguel|Diego/i.test(v.name))
-    );
-    if (maleVoice) return maleVoice;
+    // Nombres de voces FEMENINAS — las descartamos
+    const FEMALE_NAMES = /Paulina|Sabina|Laura|Mar[ií]a|Sara|Mónica|Monica|Helena|In[eé]s|Carmen|Luc[ií]a|Elena|Rosa|Valentina|Camila|Andrea|Fernanda|Gabriela|Ximena/i;
 
-    // 3. Mejor voz latina disponible
-    const latinVoice = voices.find((v) => 
-      v.lang === "es-PE" || v.lang === "es-MX" || v.lang === "es-CO" || v.lang === "es-US" || v.lang === "es-ES"
+    // Solo voces español masculinas
+    const maleVoices = voices.filter((v) =>
+      v.lang.startsWith("es") && !FEMALE_NAMES.test(v.name)
     );
-    if (latinVoice) return latinVoice;
 
-    // 4. Último recurso: cualquier voz en español
-    return voices.find((v) => v.lang.startsWith("es")) || null;
+    if (maleVoices.length === 0) return null;
+
+    // 1. Preferir nombres masculinos explícitos (más natural)
+    const knownMale = maleVoices.find((v) =>
+      /Alvaro|Jorge|Alex|Pablo|Miguel|Diego|Juan|Pedro|Carlos|Luis|José|Jose|Alberto/i.test(v.name)
+    );
+    if (knownMale) return knownMale;
+
+    // 2. Preferir neural/natural/Google (Chrome)
+    const neural = maleVoices.find((v) =>
+      v.name.includes("Natural") || v.name.includes("Neural") || v.name.includes("Google")
+    );
+    if (neural) return neural;
+
+    // 3. Preferir español latino
+    const latin = maleVoices.find((v) =>
+      v.lang === "es-PE" || v.lang === "es-MX" || v.lang === "es-CO" || v.lang === "es-US"
+    );
+    if (latin) return latin;
+
+    // 4. Primera disponible
+    return maleVoices[0];
   };
 
   const toggleSpeech = (text: string, id: string) => {

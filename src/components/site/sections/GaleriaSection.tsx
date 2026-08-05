@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Reveal } from "@/components/site/Reveal";
 import { OptimizedImage } from "@/components/site/OptimizedImage";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { ChevronLeft, ChevronRight, Share2, Download, X, Filter } from "lucide-react";
+import { ChevronLeft, ChevronRight, Share2, Download, X } from "lucide-react";
 
 export type GalleryImage = {
   id: string;
@@ -31,12 +31,44 @@ const defaultGalleryImgs: ProcessedImage[] = [
   { id: "9", src: "/assets/gallery-hermandad-dolores.jpg", label: "Hermandad Virgen de los Dolores", category: "Ministerios" },
 ];
 
-export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }) {
-  const [selectedCategory, setSelectedCategory] = useState<string>("Todos");
-  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-  const [visibleCount, setVisibleCount] = useState<number>(8);
+// Patron de spans para el mosaico editorial (se repite cíclicamente)
+// "wide" = ocupa 2 columnas, "tall" = ocupa 2 filas, "normal" = 1x1
+type SpanType = "wide" | "tall" | "normal" | "featured";
+const SPAN_PATTERN: SpanType[] = [
+  "featured", // 1: 2col × 2row
+  "normal",
+  "tall",     // 3: 1col × 2row
+  "normal",
+  "normal",
+  "wide",     // 6: 2col × 1row
+  "normal",
+  "normal",
+  "normal",
+];
 
-  // Normalización de datos
+function getSpanClass(type: SpanType): string {
+  switch (type) {
+    case "featured": return "col-span-2 row-span-2";
+    case "wide":     return "col-span-2 row-span-1";
+    case "tall":     return "col-span-1 row-span-2";
+    default:         return "col-span-1 row-span-1";
+  }
+}
+
+function getImgHeight(type: SpanType): string {
+  switch (type) {
+    case "featured": return "h-[420px] sm:h-[480px]";
+    case "wide":     return "h-[220px]";
+    case "tall":     return "h-[420px] sm:h-[460px]";
+    default:         return "h-[200px] sm:h-[220px]";
+  }
+}
+
+export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }) {
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [visibleCount, setVisibleCount] = useState<number>(9);
+  const [filmstripStart, setFilmstripStart] = useState(0);
+
   const allItems: ProcessedImage[] = gallery && gallery.length > 0
     ? gallery.map((g, i) => ({
         id: g.id || String(i),
@@ -46,46 +78,47 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
       }))
     : defaultGalleryImgs;
 
-  // Extracción dinámica de categorías
-  const categories = ["Todos", ...Array.from(new Set(allItems.map((item) => item.category)))];
+  const itemsToDisplay = allItems.slice(0, visibleCount);
 
-  // Filtrado de imágenes
-  const filteredItems = selectedCategory === "Todos"
-    ? allItems
-    : allItems.filter((item) => item.category.toLowerCase() === selectedCategory.toLowerCase());
-
-  // Limitar imágenes mostradas para evitar scroll infinito
-  const itemsToDisplay = filteredItems.slice(0, visibleCount);
-
-  // Navegación en Lightbox
+  // Navegación lightbox
   const handlePrev = useCallback(() => {
-    if (lightboxIndex === null) return;
-    setLightboxIndex((prev) => (prev === null ? null : (prev - 1 + itemsToDisplay.length) % itemsToDisplay.length));
-  }, [lightboxIndex, itemsToDisplay.length]);
+    setLightboxIndex((prev) =>
+      prev === null ? null : (prev - 1 + itemsToDisplay.length) % itemsToDisplay.length
+    );
+  }, [itemsToDisplay.length]);
 
   const handleNext = useCallback(() => {
+    setLightboxIndex((prev) =>
+      prev === null ? null : (prev + 1) % itemsToDisplay.length
+    );
+  }, [itemsToDisplay.length]);
+
+  // Filmstrip: centrar alrededor del índice activo
+  const FILMSTRIP_VISIBLE = 5;
+  useEffect(() => {
     if (lightboxIndex === null) return;
-    setLightboxIndex((prev) => (prev === null ? null : (prev + 1) % itemsToDisplay.length));
+    const half = Math.floor(FILMSTRIP_VISIBLE / 2);
+    const maxStart = Math.max(0, itemsToDisplay.length - FILMSTRIP_VISIBLE);
+    const ideal = lightboxIndex - half;
+    setFilmstripStart(Math.min(Math.max(0, ideal), maxStart));
   }, [lightboxIndex, itemsToDisplay.length]);
 
-  // Soporte para teclado en Lightbox
   useEffect(() => {
     if (lightboxIndex === null) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "ArrowLeft") handlePrev();
       if (e.key === "ArrowRight") handleNext();
+      if (e.key === "Escape") setLightboxIndex(null);
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [lightboxIndex, handlePrev, handleNext]);
 
-  // Compartir en WhatsApp
   const shareWhatsApp = (item: ProcessedImage) => {
     const text = `✝️ Mira esta fotografía de la Parroquia Santísima Trinidad de Tingo: "${item.label}"\n${window.location.origin}${item.src}`;
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank");
   };
 
-  // Descarga directa
   const downloadImage = (src: string, label: string) => {
     const a = document.createElement("a");
     a.href = src;
@@ -96,171 +129,237 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
   };
 
   const activeItem = lightboxIndex !== null ? itemsToDisplay[lightboxIndex] : null;
+  const filmstripItems = itemsToDisplay.slice(filmstripStart, filmstripStart + FILMSTRIP_VISIBLE);
 
   return (
-    <section id="galeria" className="py-24 px-5 lg:px-8 bg-secondary/40">
+    <section id="galeria" className="py-24 px-5 lg:px-8 bg-secondary/40 overflow-hidden">
       <div className="max-w-7xl mx-auto">
+
+        {/* ENCABEZADO con decoración de líneas */}
         <Reveal className="text-center max-w-2xl mx-auto">
-          <p className="text-gold uppercase tracking-[0.25em] text-xs font-semibold flex items-center justify-center gap-1.5">
-            Comunidad en imágenes
-          </p>
-          <h2 className="mt-3 font-display text-4xl md:text-5xl font-medium text-foreground">
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <span className="h-px w-12 bg-gold/40 block" />
+            <p className="text-gold uppercase tracking-[0.3em] text-[11px] font-bold">
+              Comunidad en imágenes
+            </p>
+            <span className="h-px w-12 bg-gold/40 block" />
+          </div>
+          <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-medium text-foreground tracking-tight">
             Galería Parroquial
           </h2>
-          <p className="mt-2 text-muted-foreground text-sm">
-            Recuerdos y momentos de fe compartidos en la Parroquia Santísima Trinidad de Tingo.
+          <p className="mt-3 text-muted-foreground text-sm max-w-md mx-auto leading-relaxed">
+            Momentos de fe, comunidad y esperanza vividos en la Parroquia Santísima Trinidad de Tingo.
           </p>
         </Reveal>
 
-        {/* FILTROS POR CATEGORÍA - ESTILO ISLA MODERNA */}
-        <Reveal className="mt-10 flex justify-center w-full px-2">
-          <div className="relative max-w-full">
-            {/* Gradientes laterales sutiles para indicar scroll en móviles */}
-            <div className="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-secondary/80 to-transparent pointer-events-none sm:hidden z-10 rounded-l-[2rem]" />
-            <div className="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-secondary/80 to-transparent pointer-events-none sm:hidden z-10 rounded-r-[2rem]" />
+        {/* CONTADOR VIVO */}
+        <Reveal className="mt-6 text-center">
+          <span className="inline-flex items-center gap-2 text-xs text-muted-foreground bg-card/60 border border-border/50 rounded-full px-4 py-1.5 backdrop-blur-sm">
+            <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse inline-block" />
+            {allItems.length} fotografías en la colección
+          </span>
+        </Reveal>
 
-            {/* Contenedor principal de la isla (Oculta la barra de scroll con Tailwind puro) */}
-            <div className="flex items-center p-1.5 bg-black/5 backdrop-blur-md rounded-[2rem] overflow-x-auto snap-x snap-mandatory shadow-inner border border-black/5 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-              {categories.map((cat) => {
-                const isActive = selectedCategory === cat;
+        {/* MOSAICO EDITORIAL */}
+        <Reveal className="mt-12">
+          {itemsToDisplay.length > 0 ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 auto-rows-auto gap-3 sm:gap-4">
+              {itemsToDisplay.map((item, index) => {
+                const spanType = SPAN_PATTERN[index % SPAN_PATTERN.length];
+                const spanClass = getSpanClass(spanType);
+                const heightClass = getImgHeight(spanType);
+
                 return (
-                  <button
-                    key={cat}
-                    type="button"
-                    onClick={() => {
-                      setSelectedCategory(cat);
-                      setLightboxIndex(null);
-                      setVisibleCount(8);
-                    }}
-                    className={`relative snap-center px-6 py-2.5 rounded-full text-[13px] md:text-sm font-semibold transition-colors duration-300 whitespace-nowrap outline-none z-20 cursor-pointer select-none ${
-                      isActive
-                        ? "text-gold"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
+                  <div
+                    key={item.id}
+                    className={`${spanClass} group relative overflow-hidden rounded-2xl bg-card border border-border/40 shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition-all duration-500 cursor-pointer`}
+                    onClick={() => setLightboxIndex(index)}
                   >
-                    {/* Fondo blanco iluminado solo para el elemento activo */}
-                    {isActive && (
-                      <span className="absolute inset-0 rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.08)] border border-gold/10 -z-10 animate-in zoom-in-95 fade-in duration-200" />
-                    )}
-                    <span className="relative z-10">{cat}</span>
-                  </button>
+                    {/* Imagen */}
+                    <div className={`${heightClass} w-full overflow-hidden`}>
+                      <OptimizedImage
+                        src={`${item.src}?v=1`}
+                        alt={item.label}
+                        loading="lazy"
+                        className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                      />
+                    </div>
+
+                    {/* Overlay: siempre visible en featured, hover en el resto */}
+                    <div
+                      className={`absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent transition-opacity duration-400 flex flex-col justify-end p-4 sm:p-5 ${
+                        spanType === "featured" ? "opacity-80 group-hover:opacity-100" : "opacity-0 group-hover:opacity-100"
+                      }`}
+                    >
+                      {/* Badge de categoría */}
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-gold mb-1.5 w-fit">
+                        <span className="w-1 h-1 rounded-full bg-gold inline-block" />
+                        {item.category}
+                      </span>
+                      <p className={`text-white font-display font-medium leading-snug ${
+                        spanType === "featured" ? "text-xl sm:text-2xl" : "text-sm sm:text-base"
+                      }`}>
+                        {item.label}
+                      </p>
+
+                      {/* Indicador de "click para abrir" solo en featured */}
+                      {spanType === "featured" && (
+                        <p className="text-white/50 text-[11px] mt-2 flex items-center gap-1">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                          Ampliar fotografía
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Número de índice flotante (decorativo, top-right) */}
+                    <span className="absolute top-3 right-3 text-[10px] font-mono text-white/30 tabular-nums leading-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 select-none">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                  </div>
                 );
               })}
             </div>
-          </div>
-        </Reveal>
-
-        {/* MASONRY GRID */}
-        <Reveal className="mt-10">
-          {itemsToDisplay.length > 0 ? (
-            <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
-              {itemsToDisplay.map((item, index) => (
-                <div
-                  key={item.id}
-                  className="break-inside-avoid group relative overflow-hidden rounded-2xl bg-card border border-border/60 shadow-card hover:shadow-elegant transition-all duration-300"
-                >
-                  <button
-                    type="button"
-                    onClick={() => setLightboxIndex(index)}
-                    className="w-full text-left cursor-pointer focus:outline-none focus:ring-2 focus:ring-gold rounded-2xl block overflow-hidden"
-                  >
-                    <OptimizedImage
-                      src={`${item.src}?v=1`}
-                      alt={item.label}
-                      loading="lazy"
-                      className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-4 flex flex-col justify-end">
-                      <span className="text-[10px] font-semibold text-gold uppercase tracking-wider">
-                        {item.category}
-                      </span>
-                      <p className="text-white font-display text-base font-medium leading-snug">
-                        {item.label}
-                      </p>
-                    </div>
-                  </button>
-                </div>
-              ))}
-            </div>
           ) : (
-            <div className="text-center py-16 bg-card rounded-2xl border border-dashed border-border text-muted-foreground text-sm">
-              No hay fotografías disponibles en esta categoría por el momento.
+            <div className="text-center py-20 bg-card rounded-3xl border border-dashed border-border text-muted-foreground text-sm">
+              No hay fotografías disponibles por el momento.
             </div>
           )}
         </Reveal>
 
-        {/* BOTÓN "VER MÁS" */}
-        {filteredItems.length > visibleCount && (
-          <Reveal className="mt-12 text-center">
+        {/* VER MÁS */}
+        {allItems.length > visibleCount && (
+          <Reveal className="mt-14 text-center">
             <button
               type="button"
-              onClick={() => setVisibleCount((prev) => prev + 12)}
-              className="px-6 py-3 rounded-full bg-gold text-primary-foreground text-sm font-semibold shadow-md hover:shadow-elegant hover:scale-105 transition-all cursor-pointer border-0"
+              onClick={() => setVisibleCount((prev) => prev + 9)}
+              className="group inline-flex items-center gap-2.5 px-7 py-3.5 rounded-full bg-foreground text-background text-sm font-semibold hover:bg-gold hover:text-foreground transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 cursor-pointer border-0"
             >
-              Ver más recuerdos
+              <span>Ver más recuerdos</span>
+              <span className="w-5 h-5 rounded-full bg-background/10 flex items-center justify-center group-hover:bg-foreground/10 transition-colors">
+                <ChevronRight size={13} />
+              </span>
             </button>
           </Reveal>
         )}
       </div>
 
-      {/* LIGHTBOX */}
+      {/* ── LIGHTBOX ── */}
       <Dialog open={lightboxIndex !== null} onOpenChange={(o) => !o && setLightboxIndex(null)}>
-        <DialogContent className="max-w-4xl p-0 bg-black/95 border-white/10 shadow-2xl backdrop-blur-md overflow-hidden sm:rounded-3xl">
+        <DialogContent className="max-w-5xl p-0 bg-black/98 border-white/10 shadow-2xl backdrop-blur-xl overflow-hidden sm:rounded-3xl">
           <DialogTitle className="sr-only">Visor de fotografía parroquial</DialogTitle>
-          
+
           {activeItem && (
-            <div className="relative flex flex-col items-center justify-center min-h-[60vh] max-h-[85vh] p-4 sm:p-6 select-none">
-              <button
-                onClick={() => setLightboxIndex(null)}
-                className="absolute top-4 right-4 z-50 p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors cursor-pointer"
-                aria-label="Cerrar visor"
-              >
-                <X size={20} />
-              </button>
+            <div className="flex flex-col h-full">
 
-              {itemsToDisplay.length > 1 && (
-                <button
-                  onClick={handlePrev}
-                  className="absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 z-40 p-2.5 rounded-full bg-black/50 text-white hover:bg-gold hover:text-black border border-white/20 transition-all shadow-lg cursor-pointer"
-                  aria-label="Fotografía anterior"
-                >
-                  <ChevronLeft size={24} />
-                </button>
-              )}
-
-              <div className="relative w-full h-full flex items-center justify-center max-h-[68vh] overflow-hidden">
-                <OptimizedImage
-                  src={activeItem.src}
-                  alt={activeItem.label}
-                  className="max-h-[68vh] w-auto max-w-full object-contain rounded-lg shadow-2xl animate-in fade-in zoom-in-95 duration-200"
-                />
+              {/* Barra superior */}
+              <div className="flex items-center justify-between px-5 py-3 border-b border-white/10">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
+                  <span className="text-xs font-bold uppercase tracking-widest text-gold">
+                    {activeItem.category}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-white/40 tabular-nums">
+                    {String(lightboxIndex! + 1).padStart(2, "0")} / {String(itemsToDisplay.length).padStart(2, "0")}
+                  </span>
+                  <button
+                    onClick={() => setLightboxIndex(null)}
+                    className="ml-2 p-1.5 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors cursor-pointer"
+                    aria-label="Cerrar"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
               </div>
 
-              {itemsToDisplay.length > 1 && (
-                <button
-                  onClick={handleNext}
-                  className="absolute right-3 sm:right-5 top-1/2 -translate-y-1/2 z-40 p-2.5 rounded-full bg-black/50 text-white hover:bg-gold hover:text-black border border-white/20 transition-all shadow-lg cursor-pointer"
-                  aria-label="Siguiente fotografía"
-                >
-                  <ChevronRight size={24} />
-                </button>
-              )}
+              {/* Imagen principal con flechas */}
+              <div className="relative flex-1 flex items-center justify-center p-4 sm:p-6 min-h-[45vh] max-h-[60vh]">
+                {itemsToDisplay.length > 1 && (
+                  <button
+                    onClick={handlePrev}
+                    className="absolute left-3 sm:left-4 z-40 p-2.5 rounded-full bg-white/8 text-white/70 hover:bg-gold hover:text-black border border-white/15 hover:border-gold transition-all shadow-lg cursor-pointer"
+                    aria-label="Anterior"
+                  >
+                    <ChevronLeft size={22} />
+                  </button>
+                )}
 
-              <div className="w-full mt-4 flex flex-col sm:flex-row items-center justify-between gap-3 px-2 border-t border-white/10 pt-3">
-                <div className="text-center sm:text-left">
-                  <p className="text-white font-display text-lg font-medium leading-none">
-                    {activeItem.label}
-                  </p>
-                  <p className="text-xs text-gold mt-1">
-                    {activeItem.category} • <span className="text-white/60">{lightboxIndex! + 1} de {itemsToDisplay.length}</span>
-                  </p>
+                <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
+                  <OptimizedImage
+                    key={activeItem.id}
+                    src={activeItem.src}
+                    alt={activeItem.label}
+                    className="max-h-[58vh] w-auto max-w-full object-contain rounded-xl shadow-2xl animate-in fade-in zoom-in-95 duration-250"
+                  />
                 </div>
 
-                <div className="flex items-center gap-2">
+                {itemsToDisplay.length > 1 && (
+                  <button
+                    onClick={handleNext}
+                    className="absolute right-3 sm:right-4 z-40 p-2.5 rounded-full bg-white/8 text-white/70 hover:bg-gold hover:text-black border border-white/15 hover:border-gold transition-all shadow-lg cursor-pointer"
+                    aria-label="Siguiente"
+                  >
+                    <ChevronRight size={22} />
+                  </button>
+                )}
+              </div>
+
+              {/* FILMSTRIP — tira de miniaturas */}
+              {itemsToDisplay.length > 1 && (
+                <div className="px-5 pt-3 pb-2 border-t border-white/8">
+                  <div className="flex items-center justify-center gap-2">
+                    {filmstripItems.map((thumb, fi) => {
+                      const realIndex = filmstripStart + fi;
+                      const isActive = realIndex === lightboxIndex;
+                      return (
+                        <button
+                          key={thumb.id}
+                          type="button"
+                          onClick={() => setLightboxIndex(realIndex)}
+                          className={`relative flex-shrink-0 rounded-lg overflow-hidden transition-all duration-300 cursor-pointer border-2 ${
+                            isActive
+                              ? "border-gold shadow-[0_0_0_2px_rgba(var(--gold-rgb),0.3)] scale-105"
+                              : "border-transparent opacity-40 hover:opacity-70 hover:scale-102"
+                          }`}
+                          style={{ width: 56, height: 40 }}
+                          aria-label={`Ver ${thumb.label}`}
+                        >
+                          <OptimizedImage
+                            src={`${thumb.src}?v=1`}
+                            alt={thumb.label}
+                            className="w-full h-full object-cover"
+                          />
+                        </button>
+                      );
+                    })}
+                    {/* Indicador de más imágenes */}
+                    {itemsToDisplay.length > filmstripStart + FILMSTRIP_VISIBLE && (
+                      <button
+                        type="button"
+                        onClick={() => setFilmstripStart((s) => Math.min(s + FILMSTRIP_VISIBLE, itemsToDisplay.length - FILMSTRIP_VISIBLE))}
+                        className="w-14 h-10 rounded-lg border border-white/20 text-white/40 hover:text-white/70 hover:border-white/40 transition-all text-xs flex items-center justify-center cursor-pointer bg-white/5"
+                      >
+                        <ChevronRight size={16} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Pie: título + acciones */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-5 py-4 border-t border-white/10">
+                <div>
+                  <p className="text-white font-display text-lg font-medium leading-tight">
+                    {activeItem.label}
+                  </p>
+                  <p className="text-white/40 text-xs mt-0.5">{activeItem.category}</p>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
                   <button
                     type="button"
                     onClick={() => shareWhatsApp(activeItem)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-green-600 hover:bg-green-500 text-white text-xs font-semibold transition-all shadow-sm cursor-pointer border-0"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-[#25D366]/20 hover:bg-[#25D366]/30 text-[#25D366] text-xs font-semibold transition-all border border-[#25D366]/30 cursor-pointer"
                   >
                     <Share2 size={13} />
                     <span>Compartir</span>
@@ -268,13 +367,14 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
                   <button
                     type="button"
                     onClick={() => downloadImage(activeItem.src, activeItem.label)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition-all border border-white/15 cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-white/8 hover:bg-white/15 text-white/70 hover:text-white text-xs font-semibold transition-all border border-white/15 cursor-pointer"
                   >
                     <Download size={13} />
                     <span>Guardar</span>
                   </button>
                 </div>
               </div>
+
             </div>
           )}
         </DialogContent>

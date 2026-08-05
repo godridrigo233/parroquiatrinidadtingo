@@ -112,34 +112,43 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
           </p>
         </Reveal>
 
-        {/* FILTROS POR CATEGORÍA */}
-        <Reveal className="mt-8">
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            <span className="hidden sm:inline-flex items-center gap-1 text-xs text-muted-foreground mr-2 font-medium">
-              <Filter size={13} /> Filtrar:
-            </span>
-            {categories.map((cat) => {
-              const isActive = selectedCategory === cat;
-              return (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => {
-                    setSelectedCategory(cat);
-                    setLightboxIndex(null);
-                    setVisibleCount(8); // Resetear a 8 fotos al cambiar de categoría
-                  }}
-                  className={`px-4 py-2 rounded-full text-xs font-medium transition-all select-none border cursor-pointer ${
-                    isActive
-                      ? "bg-gold text-primary-foreground border-gold shadow-md scale-105"
-                      : "bg-card border-border/70 text-muted-foreground hover:text-foreground hover:bg-secondary"
-                  }`}
-                >
-                  {cat}
-                </button>
-              );
-            })}
+        {/* FILTROS POR CATEGORÍA - ESTILO ISLA MODERNA */}
+        <Reveal className="mt-10 flex justify-center w-full px-2">
+          <div className="relative max-w-full">
+            {/* Gradientes laterales sutiles para indicar scroll en móviles */}
+            <div className="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-secondary/80 to-transparent pointer-events-none sm:hidden z-10 rounded-l-[2rem]" />
+            <div className="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-secondary/80 to-transparent pointer-events-none sm:hidden z-10 rounded-r-[2rem]" />
+
+            {/* Contenedor principal de la isla (Oculta la barra de scroll con Tailwind puro) */}
+            <div className="flex items-center p-1.5 bg-black/5 backdrop-blur-md rounded-[2rem] overflow-x-auto snap-x snap-mandatory shadow-inner border border-black/5 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+              {categories.map((cat) => {
+                const isActive = selectedCategory === cat;
+                return (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => {
+                      setSelectedCategory(cat);
+                      setLightboxIndex(null);
+                      setVisibleCount(8);
+                    }}
+                    className={`relative snap-center px-6 py-2.5 rounded-full text-[13px] md:text-sm font-semibold transition-colors duration-300 whitespace-nowrap outline-none z-20 cursor-pointer select-none ${
+                      isActive
+                        ? "text-gold"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {/* Fondo blanco iluminado solo para el elemento activo */}
+                    {isActive && (
+                      <span className="absolute inset-0 rounded-full bg-white shadow-[0_2px_8px_rgba(0,0,0,0.08)] border border-gold/10 -z-10 animate-in zoom-in-95 fade-in duration-200" />
+                    )}
+                    <span className="relative z-10">{cat}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
+        </Reveal>
         </Reveal>
 
         {/* MASONRY GRID */}

@@ -149,7 +149,6 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
             </div>
           </div>
         </Reveal>
-        </Reveal>
 
         {/* MASONRY GRID */}
         <Reveal className="mt-10">

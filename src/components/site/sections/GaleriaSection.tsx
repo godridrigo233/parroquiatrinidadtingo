@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Reveal } from "@/components/site/Reveal";
 import { OptimizedImage } from "@/components/site/OptimizedImage";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -31,16 +31,14 @@ const defaultGalleryImgs: ProcessedImage[] = [
   { id: "9", src: "/assets/gallery-hermandad-dolores.jpg", label: "Hermandad Virgen de los Dolores", category: "Ministerios" },
 ];
 
-// Patron de spans para el mosaico editorial (se repite cíclicamente)
-// "wide" = ocupa 2 columnas, "tall" = ocupa 2 filas, "normal" = 1x1
 type SpanType = "wide" | "tall" | "normal" | "featured";
 const SPAN_PATTERN: SpanType[] = [
-  "featured", // 1: 2col × 2row
+  "featured",
   "normal",
-  "tall",     // 3: 1col × 2row
+  "tall",
   "normal",
   "normal",
-  "wide",     // 6: 2col × 1row
+  "wide",
   "normal",
   "normal",
   "normal",
@@ -64,21 +62,31 @@ function getImgHeight(type: SpanType): string {
   }
 }
 
+// Configuración de paginación
+const IMAGES_PER_PAGE = 12; // Carga más imágenes por lote
+const MAX_IMAGES = 48; // Límite máximo para evitar sobrecarga
+
 export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-  const [visibleCount, setVisibleCount] = useState<number>(9);
+  const [visibleCount, setVisibleCount] = useState<number>(IMAGES_PER_PAGE);
   const [filmstripStart, setFilmstripStart] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
 
   const allItems: ProcessedImage[] = gallery && gallery.length > 0
-    ? gallery.map((g, i) => ({
-        id: g.id || String(i),
-        src: g.image_url,
-        label: g.title || "Fotografía Parroquial",
-        category: g.category || "Vida Parroquial",
-      }))
+    ? gallery
+        .slice(0, MAX_IMAGES) // Limitar cantidad máxima
+        .map((g, i) => ({
+          id: g.id || String(i),
+          src: g.image_url,
+          label: g.title || "Fotografía Parroquial",
+          category: g.category || "Vida Parroquial",
+        }))
     : defaultGalleryImgs;
 
   const itemsToDisplay = allItems.slice(0, visibleCount);
+  const hasMoreImages = allItems.length > visibleCount && visibleCount < MAX_IMAGES;
+  const totalImages = Math.min(allItems.length, MAX_IMAGES);
 
   // Navegación lightbox
   const handlePrev = useCallback(() => {
@@ -93,7 +101,39 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
     );
   }, [itemsToDisplay.length]);
 
-  // Filmstrip: centrar alrededor del índice activo
+  // Cargar más imágenes
+  const loadMoreImages = useCallback(() => {
+    if (isLoading || !hasMoreImages) return;
+    
+    setIsLoading(true);
+    // Simular carga asíncrona para mejor UX
+    setTimeout(() => {
+      setVisibleCount((prev) => Math.min(prev + IMAGES_PER_PAGE, MAX_IMAGES));
+      setIsLoading(false);
+    }, 300);
+  }, [hasMoreImages, isLoading]);
+
+  // Intersection Observer para carga automática al hacer scroll
+  useEffect(() => {
+    if (!loadMoreRef.current || !hasMoreImages) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !isLoading) {
+          loadMoreImages();
+        }
+      },
+      { 
+        rootMargin: '100px',
+        threshold: 0.1
+      }
+    );
+
+    observer.observe(loadMoreRef.current);
+    return () => observer.disconnect();
+  }, [hasMoreImages, isLoading, loadMoreImages]);
+
+  // Filmstrip
   const FILMSTRIP_VISIBLE = 5;
   useEffect(() => {
     if (lightboxIndex === null) return;
@@ -135,7 +175,7 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
     <section id="galeria" className="py-24 px-5 lg:px-8 bg-secondary/40 overflow-hidden">
       <div className="max-w-7xl mx-auto">
 
-        {/* ENCABEZADO con decoración de líneas */}
+        {/* ENCABEZADO */}
         <Reveal className="text-center max-w-2xl mx-auto">
           <div className="flex items-center justify-center gap-4 mb-4">
             <span className="h-px w-12 bg-gold/40 block" />
@@ -152,106 +192,125 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
           </p>
         </Reveal>
 
-        {/* CONTADOR VIVO */}
+        {/* CONTADOR */}
         <Reveal className="mt-6 text-center">
           <span className="inline-flex items-center gap-2 text-xs text-muted-foreground bg-card/60 border border-border/50 rounded-full px-4 py-1.5 backdrop-blur-sm">
             <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse inline-block" />
-            {allItems.length} fotografías en la colección
+            {totalImages} fotografías en la colección
+            {totalImages < (gallery?.length || 0) && (
+              <span className="text-gold text-[10px]">(mostrando {totalImages})</span>
+            )}
           </span>
         </Reveal>
 
-        {/* MOSAICO EDITORIAL */}
+        {/* MOSAICO */}
         <Reveal className="mt-12">
           {itemsToDisplay.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 auto-rows-auto gap-3 sm:gap-4">
-              {itemsToDisplay.map((item, index) => {
-                const spanType = SPAN_PATTERN[index % SPAN_PATTERN.length];
-                const spanClass = getSpanClass(spanType);
-                const heightClass = getImgHeight(spanType);
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 auto-rows-auto gap-3 sm:gap-4">
+                {itemsToDisplay.map((item, index) => {
+                  const spanType = SPAN_PATTERN[index % SPAN_PATTERN.length];
+                  const spanClass = getSpanClass(spanType);
+                  const heightClass = getImgHeight(spanType);
 
-                return (
-                  <div
-                    key={item.id}
-                    className={`${spanClass} group relative overflow-hidden rounded-2xl bg-card border border-border/40 shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition-all duration-500 cursor-pointer`}
-                    onClick={() => setLightboxIndex(index)}
-                  >
-                    {/* Imagen */}
-                    <div className={`${heightClass} w-full overflow-hidden`}>
-                      <OptimizedImage
-                        src={`${item.src}?v=1`}
-                        alt={item.label}
-                        loading="lazy"
-                        className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
-                      />
-                    </div>
-
-                    {/* Overlay: siempre visible en featured, hover en el resto */}
+                  return (
                     <div
-                      className={`absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent transition-opacity duration-400 flex flex-col justify-end p-4 sm:p-5 ${
-                        spanType === "featured" ? "opacity-80 group-hover:opacity-100" : "opacity-0 group-hover:opacity-100"
-                      }`}
+                      key={item.id}
+                      className={`${spanClass} group relative overflow-hidden rounded-2xl bg-card border border-border/40 shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition-all duration-500 cursor-pointer`}
+                      onClick={() => setLightboxIndex(index)}
                     >
-                      {/* Badge de categoría */}
-                      <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-gold mb-1.5 w-fit">
-                        <span className="w-1 h-1 rounded-full bg-gold inline-block" />
-                        {item.category}
-                      </span>
-                      <p className={`text-white font-display font-medium leading-snug ${
-                        spanType === "featured" ? "text-xl sm:text-2xl" : "text-sm sm:text-base"
-                      }`}>
-                        {item.label}
-                      </p>
+                      <div className={`${heightClass} w-full overflow-hidden`}>
+                        <OptimizedImage
+                          src={`${item.src}?v=1`}
+                          alt={item.label}
+                          loading="lazy"
+                          className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                        />
+                      </div>
 
-                      {/* Indicador de "click para abrir" solo en featured */}
-                      {spanType === "featured" && (
-                        <p className="text-white/50 text-[11px] mt-2 flex items-center gap-1">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
-                          Ampliar fotografía
+                      <div
+                        className={`absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent transition-opacity duration-400 flex flex-col justify-end p-4 sm:p-5 ${
+                          spanType === "featured" ? "opacity-80 group-hover:opacity-100" : "opacity-0 group-hover:opacity-100"
+                        }`}
+                      >
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-gold mb-1.5 w-fit">
+                          <span className="w-1 h-1 rounded-full bg-gold inline-block" />
+                          {item.category}
+                        </span>
+                        <p className={`text-white font-display font-medium leading-snug ${
+                          spanType === "featured" ? "text-xl sm:text-2xl" : "text-sm sm:text-base"
+                        }`}>
+                          {item.label}
                         </p>
-                      )}
-                    </div>
+                        {spanType === "featured" && (
+                          <p className="text-white/50 text-[11px] mt-2 flex items-center gap-1">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                            Ampliar fotografía
+                          </p>
+                        )}
+                      </div>
 
-                    {/* Número de índice flotante (decorativo, top-right) */}
-                    <span className="absolute top-3 right-3 text-[10px] font-mono text-white/30 tabular-nums leading-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 select-none">
-                      {String(index + 1).padStart(2, "0")}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
+                      <span className="absolute top-3 right-3 text-[10px] font-mono text-white/30 tabular-nums leading-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 select-none">
+                        {String(index + 1).padStart(2, "0")}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Punto de control para scroll infinito */}
+              {hasMoreImages && (
+                <div ref={loadMoreRef} className="mt-8 text-center">
+                  {isLoading ? (
+                    <div className="flex items-center justify-center gap-3 py-4">
+                      <div className="w-5 h-5 border-2 border-gold border-t-transparent rounded-full animate-spin" />
+                      <span className="text-sm text-muted-foreground">Cargando más imágenes...</span>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={loadMoreImages}
+                      className="group inline-flex items-center gap-2.5 px-7 py-3.5 rounded-full bg-foreground text-background text-sm font-semibold hover:bg-gold hover:text-foreground transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 cursor-pointer border-0"
+                    >
+                      <span>Ver más recuerdos</span>
+                      <span className="w-5 h-5 rounded-full bg-background/10 flex items-center justify-center group-hover:bg-foreground/10 transition-colors">
+                        <ChevronRight size={13} />
+                      </span>
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* Mensaje de colección completa */}
+              {!hasMoreImages && allItems.length > 0 && (
+                <div className="mt-10 text-center">
+                  <p className="text-xs text-muted-foreground/60 border-t border-border/30 pt-6">
+                    ✝️ Has visto toda la colección · {allItems.length} fotografías
+                  </p>
+                </div>
+              )}
+
+              {allItems.length === 0 && (
+                <div className="text-center py-20 bg-card rounded-3xl border border-dashed border-border text-muted-foreground text-sm">
+                  No hay fotografías disponibles por el momento.
+                </div>
+              )}
+            </>
           ) : (
             <div className="text-center py-20 bg-card rounded-3xl border border-dashed border-border text-muted-foreground text-sm">
               No hay fotografías disponibles por el momento.
             </div>
           )}
         </Reveal>
-
-        {/* VER MÁS */}
-        {allItems.length > visibleCount && (
-          <Reveal className="mt-14 text-center">
-            <button
-              type="button"
-              onClick={() => setVisibleCount((prev) => prev + 9)}
-              className="group inline-flex items-center gap-2.5 px-7 py-3.5 rounded-full bg-foreground text-background text-sm font-semibold hover:bg-gold hover:text-foreground transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 cursor-pointer border-0"
-            >
-              <span>Ver más recuerdos</span>
-              <span className="w-5 h-5 rounded-full bg-background/10 flex items-center justify-center group-hover:bg-foreground/10 transition-colors">
-                <ChevronRight size={13} />
-              </span>
-            </button>
-          </Reveal>
-        )}
       </div>
 
-      {/* ── LIGHTBOX ── */}
+      {/* LIGHTBOX - mismo código que antes */}
       <Dialog open={lightboxIndex !== null} onOpenChange={(o) => !o && setLightboxIndex(null)}>
         <DialogContent className="max-w-5xl p-0 bg-black/98 border-white/10 shadow-2xl backdrop-blur-xl overflow-hidden sm:rounded-3xl">
           <DialogTitle className="sr-only">Visor de fotografía parroquial</DialogTitle>
 
           {activeItem && (
             <div className="flex flex-col h-full">
-
-              {/* Barra superior */}
               <div className="flex items-center justify-between px-5 py-3 border-b border-white/10">
                 <div className="flex items-center gap-2.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
@@ -273,7 +332,6 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
                 </div>
               </div>
 
-              {/* Imagen principal con flechas */}
               <div className="relative flex-1 flex items-center justify-center p-4 sm:p-6 min-h-[45vh] max-h-[60vh]">
                 {itemsToDisplay.length > 1 && (
                   <button
@@ -305,7 +363,6 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
                 )}
               </div>
 
-              {/* FILMSTRIP — tira de miniaturas */}
               {itemsToDisplay.length > 1 && (
                 <div className="px-5 pt-3 pb-2 border-t border-white/8">
                   <div className="flex items-center justify-center gap-2">
@@ -333,7 +390,6 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
                         </button>
                       );
                     })}
-                    {/* Indicador de más imágenes */}
                     {itemsToDisplay.length > filmstripStart + FILMSTRIP_VISIBLE && (
                       <button
                         type="button"
@@ -347,7 +403,6 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
                 </div>
               )}
 
-              {/* Pie: título + acciones */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-5 py-4 border-t border-white/10">
                 <div>
                   <p className="text-white font-display text-lg font-medium leading-tight">
@@ -374,7 +429,6 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
                   </button>
                 </div>
               </div>
-
             </div>
           )}
         </DialogContent>

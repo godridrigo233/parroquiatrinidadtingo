@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { createGroq } from "@ai-sdk/groq";
-import { streamText } from "ai";
+import { generateText } from "ai";
 
 export const config = {
   runtime: "edge",
@@ -9,6 +9,7 @@ export const config = {
 const PARISH_STATIC_DATA = `
 == IDENTIDAD ==
 Nombre: Parroquia Santísima Trinidad de Tingo
+Congregación: Carmelitas de María Inmaculada (CMI)
 Dirección: Calle Ferrocarril 200, Av. Alfonso Ugarte Tingo - Cercado, Arequipa, Perú
 Teléfono (solo llamadas): +51 915 049 850
 Email: pstrinidadtingo@gmail.com
@@ -25,7 +26,7 @@ export default async function handler(req: Request) {
 
   try {
     if (!groqApiKey) {
-      throw new Error("Falta GROQ_API_KEY en Vercel.");
+      throw new Error("Falta GROQ_API_KEY en las variables de entorno.");
     }
 
     const { messages } = await req.json();
@@ -39,65 +40,50 @@ export default async function handler(req: Request) {
       content: m.content || (Array.isArray(m.parts) ? m.parts[0]?.text : ""),
     })).filter((m: any) => m.content);
 
+    // Contexto dinámico completo desde Supabase
     let dynamicContext = "";
-    try {
-      if (supabaseUrl && supabaseKey) {
+    if (supabaseUrl && supabaseKey) {
+      try {
         const sb = createClient(supabaseUrl, supabaseKey, { auth: { persistSession: false } });
         const today = new Date().toISOString().split("T")[0];
-        const { data: events } = await sb
-          .from("events")
-          .select("title, event_date, location")
-          .gte("event_date", today)
-          .order("event_date")
-          .limit(3);
 
+        // Consultar Horarios
+        const { data: schedules } = await sb.from("schedules").select("category, day_label, time_label, notes").order("sort_order");
+        if (schedules && schedules.length > 0) {
+          dynamicContext += "\n\n== HORARIOS PARROQUIALES ==\n";
+          schedules.forEach(s => {
+            dynamicContext += `- [${s.category}] ${s.day_label}: ${s.time_label} ${s.notes ? `(${s.notes})` : ""}\n`;
+          });
+        }
+
+        // Consultar Eventos
+        const { data: events } = await sb.from("events").select("title, description, event_date, location").gte("event_date", today).order("event_date").limit(5);
         if (events && events.length > 0) {
           dynamicContext += "\n\n== PRÓXIMOS EVENTOS ==\n";
           events.forEach(e => {
             const fecha = new Date(e.event_date).toLocaleDateString("es-PE");
-            dynamicContext += `- ${e.title} | ${fecha} | Lugar: ${e.location}\n`;
+            dynamicContext += `- ${e.title} | Fecha: ${fecha} | Lugar: ${e.location || "Parroquia"}\n`;
           });
         }
+      } catch (dbErr) {
+        console.warn("Error obteniendo datos dinámicos en el chat:", dbErr);
       }
-    } catch (dbErr) {
-      console.warn("Error leyendo eventos:", dbErr);
     }
 
     const groq = createGroq({ apiKey: groqApiKey });
     
-    const result = streamText({
+    // 🚀 CAMBIO AQUÍ: Usamos generateText y esperamos la respuesta completa
+    const result = await generateText({
       model: groq("llama-3.3-70b-versatile"),
-      system: `Eres el Hermano Elías, el asistente de la Parroquia Santísima Trinidad. Responde amablemente en base a esta información: \n\n ${PARISH_STATIC_DATA} \n ${dynamicContext}`,
+      system: `Eres el Hermano Elías, el asistente virtual de la Parroquia Santísima Trinidad de Tingo (Arequipa). Responde siempre con amabilidad, espíritu cristiano, cercanía y precisión basándote estrictamente en la siguiente información oficial:\n\n${PARISH_STATIC_DATA}\n${dynamicContext}`,
       messages: safeMessages,
-      maxOutputTokens: 350,
+      maxOutputTokens: 400,
     });
 
-    // 🚀 Stream nativo estándar blindado contra cualquier error de caché o versión
-    const reader = result.textStream.getReader();
-    const encoder = new TextEncoder();
-
-    const customStream = new ReadableStream({
-      async start(controller) {
-        try {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            // Enviamos cada fragmento de texto plano directamente
-            controller.enqueue(encoder.encode(value));
-          }
-        } catch (e) {
-          console.error("Stream reading error:", e);
-        } finally {
-          controller.close();
-        }
-      },
-    });
-
-    return new Response(customStream, {
-      headers: {
-        "Content-Type": "text/plain; charset=utf-8",
-        "Cache-Control": "no-cache",
-      },
+    // 🚀 CAMBIO AQUÍ: Devolvemos un JSON simple en lugar del stream complejo
+    return new Response(JSON.stringify({ text: result.text }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
     });
     
   } catch (err: any) {

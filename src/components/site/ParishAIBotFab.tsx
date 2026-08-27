@@ -252,8 +252,7 @@ function ParishAIBotFabWidget() {
       setInputValue("");
     }
   };
-
-  // ── ENVÍO CON READABLESTREAM DIRECTO Y ROBUSTO ──
+// ── ENVÍO SEGURO SIN STREAM (TRADICIONAL) ──
   const handleSend = async (textToSend: string) => {
     const text = textToSend.trim();
     if (!text || isLoading) return;
@@ -277,7 +276,7 @@ function ParishAIBotFabWidget() {
 
     const botMsgId = (Date.now() + 1).toString();
     
-    // Agregamos la burbuja inicial del bot
+    // Agregamos la burbuja inicial del bot (con los puntitos)
     setMessages((prev) => [...prev, { id: botMsgId, role: "assistant", content: "" }]);
 
     try {
@@ -289,32 +288,28 @@ function ParishAIBotFabWidget() {
         }),
       });
 
-      if (!response.ok) throw new Error("Error en el servidor");
+      // 🚀 CAMBIO AQUÍ: Leemos la respuesta como JSON
+      const data = await response.json();
 
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
-      let accumulatedText = "";
-
-      if (reader) {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          accumulatedText += decoder.decode(value, { stream: true });
-
-          setMessages((prev) =>
-            prev.map((msg) => (msg.id === botMsgId ? { ...msg, content: accumulatedText } : msg))
-          );
-        }
+      if (!response.ok || !data.text) {
+        throw new Error(data.error || "Error en el servidor");
       }
+
+      // 🚀 CAMBIO AQUÍ: Actualizamos la burbuja con el texto completo
+      setMessages((prev) =>
+        prev.map((msg) => (msg.id === botMsgId ? { ...msg, content: data.text } : msg))
+      );
+      
     } catch (err) {
       console.error("Error al comunicarse con el Hermano Elías:", err);
+      // Si falla por límite de Groq, mostramos este mensaje amigable
       setMessages((prev) =>
         prev.map((msg) =>
           msg.id === botMsgId
             ? {
                 ...msg,
                 content:
-                  "Disculpa, hermano(a), tuve un pequeño problema de conexión en este momento. Por favor, intenta de nuevo o comunícate a secretaría (+51 915 049 850).",
+                  "Disculpa, hermano(a). Hay mucha congestión en el sistema ahora mismo. Por favor, intenta de nuevo en unos minutos o comunícate a secretaría (+51 915 049 850).",
               }
             : msg
         )

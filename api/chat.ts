@@ -74,7 +74,7 @@ export default async function handler(req: Request) {
     
     // 🚀 CAMBIO AQUÍ: Usamos generateText y esperamos la respuesta completa
     const result = await generateText({
-      model: groq("llama-3.3-70b-versatile"),
+      model: groq("llama-3.1-70b-versatile"),
       system: `Eres el Hermano Elías, el asistente virtual de la Parroquia Santísima Trinidad de Tingo (Arequipa). Responde siempre con amabilidad, espíritu cristiano, cercanía y precisión basándote estrictamente en la siguiente información oficial:\n\n${PARISH_STATIC_DATA}\n${dynamicContext}`,
       messages: safeMessages,
       maxOutputTokens: 400,

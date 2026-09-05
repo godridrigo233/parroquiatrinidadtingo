@@ -32,6 +32,8 @@ type FacebookPost = {
 };
 
 
+import { supabase } from "@/integrations/supabase/client";
+
 // 🛡️ SUBCOMPONENTE DE IMAGEN CON FALLBACK AUTOMÁTICO
 function FacebookImage({ src }: { src: string }) {
   const [imgSrc, setImgSrc] = useState<string>(src);
@@ -46,7 +48,6 @@ function FacebookImage({ src }: { src: string }) {
       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
       onError={() => {
         if (!hasError) {
-          // Si wsrv.nl falló, intenta cargar la URL original limpia antes de usar la foto por defecto
           if (imgSrc.includes("wsrv.nl") && src.includes("url=")) {
             const rawUrl = decodeURIComponent(src.split("url=")[1].split("&")[0]);
             setImgSrc(rawUrl);
@@ -83,56 +84,73 @@ const DEFAULT_FALLBACK_POSTS: FacebookPost[] = [
 function FacebookPostsGrid() {
   const [posts, setPosts] = useState<FacebookPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<"cards" | "live">("cards");
 
   useEffect(() => {
     const fetchFacebookFeed = async () => {
       try {
+        // 1. Intentar consultar publicaciones guardadas en Supabase
+        const { data: dbPosts, error: dbError } = await supabase
+          .from("facebook_posts")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(6);
+
+        if (!dbError && dbPosts && dbPosts.length > 0) {
+          const formattedDbPosts = dbPosts.map((p) => ({
+            id: String(p.id),
+            post_url: p.post_url || "https://www.facebook.com/parroquiasantisimatrinidadtingo/",
+            description: p.description || "Publicación parroquial oficial de la Parroquia Santísima Trinidad de Tingo.",
+            image_url: p.image_url || "/assets/hero-church.webp",
+          }));
+          setPosts(formattedDbPosts);
+          setIsLoading(false);
+          return;
+        }
+
+        // 2. Si no hay en Supabase, intentar mediante el feed de RSS
         const rssUrl = "https://fetchrss.com/feed/1wk26cD118cU1wk26x4gR7gD.rss"; 
         const response = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`);
 
-        if (!response.ok) {
-          throw new Error(`Error HTTP: ${response.status}`);
-        }
-
-        const data = await response.json();
-
-        if (data.status === "ok" && data.items && data.items.length > 0) {
-          const formattedPosts = data.items
-            .map((item: any) => {
-              let rawImageUrl = item.enclosure?.link || item.thumbnail;
-              
-              if (!rawImageUrl && item.content) {
-                const imgMatch = item.content.match(/<img[^>]+src="([^">]+)"/);
-                if (imgMatch && imgMatch[1]) {
-                  rawImageUrl = imgMatch[1];
+        if (response.ok) {
+          const data = await response.json();
+          if (data.status === "ok" && data.items && data.items.length > 0) {
+            const formattedPosts = data.items
+              .map((item: any) => {
+                let rawImageUrl = item.enclosure?.link || item.thumbnail;
+                if (!rawImageUrl && item.content) {
+                  const imgMatch = item.content.match(/<img[^>]+src="([^">]+)"/);
+                  if (imgMatch && imgMatch[1]) {
+                    rawImageUrl = imgMatch[1];
+                  }
                 }
-              }
 
-              const cleanUrl = rawImageUrl ? rawImageUrl.replace(/&amp;/g, '&') : null;
-              const finalImageUrl = cleanUrl 
-                ? `https://wsrv.nl/?url=${encodeURIComponent(cleanUrl)}&w=600&output=webp` 
-                : "/assets/hero-church.webp";
+                const cleanUrl = rawImageUrl ? rawImageUrl.replace(/&amp;/g, '&') : null;
+                const finalImageUrl = cleanUrl || "/assets/hero-church.webp";
 
-              const cleanDescription = (item.content || item.description || "")
-                .replace(/<[^>]*>?/gm, '')
-                .replace(/\(Feed generated with FetchRSS\)/gi, '')
-                .trim() || "Mira nuestra última actividad o aviso parroquial en nuestra página oficial de Facebook.";
+                const cleanDescription = (item.content || item.description || "")
+                  .replace(/<[^>]*>?/gm, '')
+                  .replace(/\(Feed generated with FetchRSS\)/gi, '')
+                  .trim() || "Mira nuestra última actividad o aviso parroquial en nuestra página oficial de Facebook.";
 
-              return {
-                id: item.guid || item.link || Math.random().toString(),
-                post_url: item.link || "https://www.facebook.com/parroquiasantisimatrinidadtingo/",
-                description: cleanDescription,
-                image_url: finalImageUrl
-              };
-            })
-            .slice(0, 3);
-          
-          setPosts(formattedPosts.length > 0 ? formattedPosts : DEFAULT_FALLBACK_POSTS);
-        } else {
-          setPosts(DEFAULT_FALLBACK_POSTS);
+                return {
+                  id: item.guid || item.link || Math.random().toString(),
+                  post_url: item.link || "https://www.facebook.com/parroquiasantisimatrinidadtingo/",
+                  description: cleanDescription,
+                  image_url: finalImageUrl
+                };
+              })
+              .slice(0, 3);
+
+            setPosts(formattedPosts.length > 0 ? formattedPosts : DEFAULT_FALLBACK_POSTS);
+            setIsLoading(false);
+            return;
+          }
         }
+
+        setPosts(DEFAULT_FALLBACK_POSTS);
       } catch (error) {
-        console.warn("Feed de Facebook temporalmente no disponible, usando respaldo local:", error);
+        console.warn("Feed de Facebook temporalmente no disponible, usando respaldo:", error);
         setPosts(DEFAULT_FALLBACK_POSTS);
       } finally {
         setIsLoading(false);
@@ -176,38 +194,56 @@ function FacebookPostsGrid() {
         >
           <Facebook size={18} /> Visita nuestra página de Facebook
         </a>
-      </div>
-    );
-  }
-
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
-      {posts.map((post) => (
-        <a
-          key={post.id}
-          href={post.post_url ?? "https://www.facebook.com/parroquiasantisimatrinidadtingo/"}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="group flex flex-col h-full rounded-2xl bg-white border border-border/60 shadow-md hover:shadow-xl hover:-translate-y-1.5 transition-all duration-500 overflow-hidden"
+          className="inline-flex items-center gap-1.5 text-xs text-primary font-semibold hover:text-gold transition-colors"
         >
-          <div className="relative aspect-video overflow-hidden bg-muted">
-            <FacebookImage 
-              src={post.image_url!} 
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-          </div>
-
-          <div className="flex flex-col flex-1 p-6 md:p-7">
-            <p className="text-sm md:text-base text-foreground/80 leading-relaxed mb-6 line-clamp-4 flex-1">
-              {post.description}
-            </p>
-            <div className="mt-auto w-full py-3 px-4 rounded-xl bg-primary/5 group-hover:bg-primary text-primary group-hover:text-primary-foreground font-semibold flex items-center justify-center gap-2 transition-colors duration-300">
-              Ver publicación
-              <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-300" />
-            </div>
-          </div>
+          <Facebook size={14} /> Abrir Facebook oficial ↗
         </a>
-      ))}
+      </div>
+
+      {/* VISTA EN VIVO CON IFRAME OFICIAL DE FACEBOOK */}
+      {viewMode === "live" ? (
+        <div className="w-full flex justify-center py-4 bg-card rounded-2xl border border-border/50 shadow-sm overflow-hidden min-h-[520px]">
+          <iframe
+            src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Fparroquiasantisimatrinidadtingo&tabs=timeline&width=500&height=600&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true"
+            width="500"
+            height="600"
+            style={{ border: "none", overflow: "hidden", maxWidth: "100%", borderRadius: "16px" }}
+            scrolling="no"
+            frameBorder="0"
+            allowFullScreen={true}
+            allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+            title="Muro Oficial de la Parroquia Santísima Trinidad de Tingo en Facebook"
+          />
+        </div>
+      ) : (
+        /* VISTA DE TARJETAS DESTACADAS */
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
+          {posts.map((post) => (
+            <a
+              key={post.id}
+              href={post.post_url ?? "https://www.facebook.com/parroquiasantisimatrinidadtingo/"}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group flex flex-col h-full rounded-2xl bg-white border border-border/60 shadow-md hover:shadow-xl hover:-translate-y-1.5 transition-all duration-500 overflow-hidden"
+            >
+              <div className="relative aspect-video overflow-hidden bg-muted">
+                <FacebookImage src={post.image_url!} />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              </div>
+
+              <div className="flex flex-col flex-1 p-5">
+                <p className="text-xs text-muted-foreground line-clamp-3 leading-relaxed flex-1">
+                  {post.description}
+                </p>
+                <div className="mt-4 pt-3 border-t border-border/40 flex items-center justify-between text-xs text-primary font-medium group-hover:text-gold transition-colors">
+                  <span>Ver en Facebook</span>
+                  <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                </div>
+              </div>
+            </a>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

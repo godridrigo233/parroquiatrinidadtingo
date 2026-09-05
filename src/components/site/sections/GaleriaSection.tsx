@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { Reveal } from "@/components/site/Reveal";
 import { OptimizedImage } from "@/components/site/OptimizedImage";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { ChevronLeft, ChevronRight, Share2, Download, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Share2, Download, X, Layers, Filter } from "lucide-react";
 
 export type GalleryImage = {
   id: string;
@@ -44,51 +44,72 @@ const SPAN_PATTERN: SpanType[] = [
   "normal",
 ];
 
-function getSpanClass(type: SpanType): string {
+function getDesktopSpanClass(type: SpanType): string {
   switch (type) {
-    case "featured": return "col-span-2 row-span-2";
-    case "wide":     return "col-span-2 row-span-1";
-    case "tall":     return "col-span-1 row-span-2";
-    default:         return "col-span-1 row-span-1";
+    case "featured": return "md:col-span-2 md:row-span-2";
+    case "wide":     return "md:col-span-2 md:row-span-1";
+    case "tall":     return "md:col-span-1 md:row-span-2";
+    default:         return "md:col-span-1 md:row-span-1";
   }
 }
 
-function getImgHeight(type: SpanType): string {
+function getDesktopImgHeight(type: SpanType): string {
   switch (type) {
-    case "featured": return "h-[420px] sm:h-[480px]";
-    case "wide":     return "h-[220px]";
-    case "tall":     return "h-[420px] sm:h-[460px]";
-    default:         return "h-[200px] sm:h-[220px]";
+    case "featured": return "md:h-[460px]";
+    case "wide":     return "md:h-[220px]";
+    case "tall":     return "md:h-[460px]";
+    default:         return "md:h-[220px]";
   }
 }
 
-// Configuración de paginación
-const IMAGES_PER_PAGE = 12; // Carga más imágenes por lote
-const MAX_IMAGES = 48; // Límite máximo para evitar sobrecarga
+const INITIAL_BATCH = 8;
+const BATCH_STEP = 8;
+const MAX_IMAGES = 60;
 
 export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }) {
+  const [selectedCategory, setSelectedCategory] = useState<string>("Todas");
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-  const [visibleCount, setVisibleCount] = useState<number>(IMAGES_PER_PAGE);
+  const [visibleCount, setVisibleCount] = useState<number>(INITIAL_BATCH);
   const [filmstripStart, setFilmstripStart] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
-  const loadMoreRef = useRef<HTMLDivElement>(null);
 
-  const allItems: ProcessedImage[] = gallery && gallery.length > 0
-    ? gallery
-        .slice(0, MAX_IMAGES) // Limitar cantidad máxima
-        .map((g, i) => ({
+  const allItems: ProcessedImage[] = useMemo(() => {
+    return gallery && gallery.length > 0
+      ? gallery.slice(0, MAX_IMAGES).map((g, i) => ({
           id: g.id || String(i),
           src: g.image_url,
           label: g.title || "Fotografía Parroquial",
           category: g.category || "Vida Parroquial",
         }))
-    : defaultGalleryImgs;
+      : defaultGalleryImgs;
+  }, [gallery]);
 
-  const itemsToDisplay = allItems.slice(0, visibleCount);
-  const hasMoreImages = allItems.length > visibleCount && visibleCount < MAX_IMAGES;
-  const totalImages = Math.min(allItems.length, MAX_IMAGES);
+  // Extraer categorías únicas preservando orden
+  const categories = useMemo(() => {
+    const set = new Set<string>();
+    allItems.forEach((item) => {
+      if (item.category) set.add(item.category);
+    });
+    return ["Todas", ...Array.from(set)];
+  }, [allItems]);
 
-  // Navegación lightbox
+  // Filtrar elementos por categoría
+  const filteredItems = useMemo(() => {
+    if (selectedCategory === "Todas") return allItems;
+    return allItems.filter((item) => item.category === selectedCategory);
+  }, [allItems, selectedCategory]);
+
+  // Resetear paginación al cambiar categoría
+  const handleCategoryChange = (cat: string) => {
+    setSelectedCategory(cat);
+    setVisibleCount(INITIAL_BATCH);
+  };
+
+  const itemsToDisplay = filteredItems.slice(0, visibleCount);
+  const hasMoreImages = filteredItems.length > visibleCount;
+  const remainingCount = filteredItems.length - visibleCount;
+
+  // Lightbox navigation
   const handlePrev = useCallback(() => {
     setLightboxIndex((prev) =>
       prev === null ? null : (prev - 1 + itemsToDisplay.length) % itemsToDisplay.length
@@ -101,37 +122,14 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
     );
   }, [itemsToDisplay.length]);
 
-  // Cargar más imágenes
-  const loadMoreImages = useCallback(() => {
+  const loadMoreImages = () => {
     if (isLoading || !hasMoreImages) return;
-    
     setIsLoading(true);
-    // Simular carga asíncrona para mejor UX
     setTimeout(() => {
-      setVisibleCount((prev) => Math.min(prev + IMAGES_PER_PAGE, MAX_IMAGES));
+      setVisibleCount((prev) => prev + BATCH_STEP);
       setIsLoading(false);
-    }, 300);
-  }, [hasMoreImages, isLoading]);
-
-  // Intersection Observer para carga automática al hacer scroll
-  useEffect(() => {
-    if (!loadMoreRef.current || !hasMoreImages) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && !isLoading) {
-          loadMoreImages();
-        }
-      },
-      { 
-        rootMargin: '100px',
-        threshold: 0.1
-      }
-    );
-
-    observer.observe(loadMoreRef.current);
-    return () => observer.disconnect();
-  }, [hasMoreImages, isLoading, loadMoreImages]);
+    }, 200);
+  };
 
   // Filmstrip
   const FILMSTRIP_VISIBLE = 5;
@@ -172,85 +170,101 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
   const filmstripItems = itemsToDisplay.slice(filmstripStart, filmstripStart + FILMSTRIP_VISIBLE);
 
   return (
-    <section id="galeria" className="py-24 px-5 lg:px-8 bg-secondary/40 overflow-hidden">
+    <section id="galeria" className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-secondary/40 overflow-hidden">
       <div className="max-w-7xl mx-auto">
 
         {/* ENCABEZADO */}
         <Reveal className="text-center max-w-2xl mx-auto">
-          <div className="flex items-center justify-center gap-4 mb-4">
-            <span className="h-px w-12 bg-gold/40 block" />
-            <p className="text-gold uppercase tracking-[0.3em] text-[11px] font-bold">
+          <div className="flex items-center justify-center gap-3 mb-3">
+            <span className="h-px w-10 bg-gold/40 block" />
+            <p className="text-gold uppercase tracking-[0.25em] text-[10px] sm:text-[11px] font-bold">
               Comunidad en imágenes
             </p>
-            <span className="h-px w-12 bg-gold/40 block" />
+            <span className="h-px w-10 bg-gold/40 block" />
           </div>
-          <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-medium text-foreground tracking-tight">
+          <h2 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-medium text-foreground tracking-tight">
             Galería Parroquial
           </h2>
-          <p className="mt-3 text-muted-foreground text-sm max-w-md mx-auto leading-relaxed">
+          <p className="mt-2.5 text-muted-foreground text-xs sm:text-sm max-w-md mx-auto leading-relaxed">
             Momentos de fe, comunidad y esperanza vividos en la Parroquia Santísima Trinidad de Tingo.
           </p>
         </Reveal>
 
-        {/* CONTADOR */}
-        <Reveal className="mt-6 text-center">
-          <span className="inline-flex items-center gap-2 text-xs text-muted-foreground bg-card/60 border border-border/50 rounded-full px-4 py-1.5 backdrop-blur-sm">
-            <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse inline-block" />
-            {totalImages} fotografías en la colección
-            {totalImages < (gallery?.length || 0) && (
-              <span className="text-gold text-[10px]">(mostrando {totalImages})</span>
-            )}
-          </span>
+        {/* FILTROS POR CATEGORÍA (CHIPS MÓVILES) */}
+        <Reveal className="mt-8">
+          <div className="flex items-center gap-2 overflow-x-auto pb-3 pt-1 px-1 scrollbar-none justify-start md:justify-center">
+            {categories.map((cat) => {
+              const isActive = selectedCategory === cat;
+              const count = cat === "Todas" ? allItems.length : allItems.filter(i => i.category === cat).length;
+              return (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => handleCategoryChange(cat)}
+                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-300 cursor-pointer ${
+                    isActive
+                      ? "bg-gold text-black shadow-md shadow-gold/20 scale-105"
+                      : "bg-card hover:bg-card/80 text-muted-foreground hover:text-foreground border border-border/50"
+                  }`}
+                >
+                  <span>{cat}</span>
+                  <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none ${
+                    isActive ? "bg-black/15 text-black font-bold" : "bg-muted text-muted-foreground"
+                  }`}>
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </Reveal>
 
-        {/* MOSAICO */}
-        <Reveal className="mt-12">
+        {/* CONTADOR RESUMEN */}
+        <div className="mt-3 text-center">
+          <span className="text-[11px] text-muted-foreground/80">
+            Mostrando {itemsToDisplay.length} de {filteredItems.length} fotografías
+            {selectedCategory !== "Todas" && ` en ${selectedCategory}`}
+          </span>
+        </div>
+
+        {/* MOSAICO ADAPTATIVO (Grilla 2-col limpia en Móvil + Mosaico en Desktop) */}
+        <Reveal className="mt-8">
           {itemsToDisplay.length > 0 ? (
             <>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 auto-rows-auto gap-3 sm:gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 auto-rows-auto gap-2.5 sm:gap-4">
                 {itemsToDisplay.map((item, index) => {
                   const spanType = SPAN_PATTERN[index % SPAN_PATTERN.length];
-                  const spanClass = getSpanClass(spanType);
-                  const heightClass = getImgHeight(spanType);
+                  const desktopSpanClass = getDesktopSpanClass(spanType);
+                  const desktopHeightClass = getDesktopImgHeight(spanType);
 
                   return (
                     <div
                       key={item.id}
-                      className={`${spanClass} group relative overflow-hidden rounded-2xl bg-card border border-border/40 shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition-all duration-500 cursor-pointer`}
+                      className={`col-span-1 ${desktopSpanClass} group relative overflow-hidden rounded-xl sm:rounded-2xl bg-card border border-border/40 shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 cursor-pointer`}
                       onClick={() => setLightboxIndex(index)}
                     >
-                      <div className={`${heightClass} w-full overflow-hidden`}>
+                      {/* En móvil: aspect-[4/3] fijo. En desktop: altura según patrón */}
+                      <div className={`aspect-[4/3] ${desktopHeightClass} w-full overflow-hidden relative`}>
                         <OptimizedImage
                           src={`${item.src}?v=1`}
                           alt={item.label}
                           loading="lazy"
-                          className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+                          className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
                         />
                       </div>
 
-                      <div
-                        className={`absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent transition-opacity duration-400 flex flex-col justify-end p-4 sm:p-5 ${
-                          spanType === "featured" ? "opacity-80 group-hover:opacity-100" : "opacity-0 group-hover:opacity-100"
-                        }`}
-                      >
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-gold mb-1.5 w-fit">
+                      {/* Capa de información superpuesta */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent transition-opacity duration-300 flex flex-col justify-end p-3 sm:p-4 opacity-90 sm:opacity-0 group-hover:opacity-100">
+                        <span className="inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-gold mb-1 w-fit">
                           <span className="w-1 h-1 rounded-full bg-gold inline-block" />
                           {item.category}
                         </span>
-                        <p className={`text-white font-display font-medium leading-snug ${
-                          spanType === "featured" ? "text-xl sm:text-2xl" : "text-sm sm:text-base"
-                        }`}>
+                        <p className="text-white font-display font-medium text-xs sm:text-base leading-snug line-clamp-2">
                           {item.label}
                         </p>
-                        {spanType === "featured" && (
-                          <p className="text-white/50 text-[11px] mt-2 flex items-center gap-1">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
-                            Ampliar fotografía
-                          </p>
-                        )}
                       </div>
 
-                      <span className="absolute top-3 right-3 text-[10px] font-mono text-white/30 tabular-nums leading-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 select-none">
+                      <span className="absolute top-2 right-2 sm:top-3 sm:right-3 text-[9px] font-mono text-white/40 bg-black/40 px-1.5 py-0.5 rounded backdrop-blur-sm select-none">
                         {String(index + 1).padStart(2, "0")}
                       </span>
                     </div>
@@ -258,63 +272,60 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
                 })}
               </div>
 
-              {/* Punto de control para scroll infinito */}
+              {/* BOTÓN "VER MÁS RECUERDOS" */}
               {hasMoreImages && (
-                <div ref={loadMoreRef} className="mt-8 text-center">
-                  {isLoading ? (
-                    <div className="flex items-center justify-center gap-3 py-4">
-                      <div className="w-5 h-5 border-2 border-gold border-t-transparent rounded-full animate-spin" />
-                      <span className="text-sm text-muted-foreground">Cargando más imágenes...</span>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={loadMoreImages}
-                      className="group inline-flex items-center gap-2.5 px-7 py-3.5 rounded-full bg-foreground text-background text-sm font-semibold hover:bg-gold hover:text-foreground transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 cursor-pointer border-0"
-                    >
-                      <span>Ver más recuerdos</span>
-                      <span className="w-5 h-5 rounded-full bg-background/10 flex items-center justify-center group-hover:bg-foreground/10 transition-colors">
-                        <ChevronRight size={13} />
-                      </span>
-                    </button>
-                  )}
-                </div>
-              )}
-
-              {/* Mensaje de colección completa */}
-              {!hasMoreImages && allItems.length > 0 && (
                 <div className="mt-10 text-center">
-                  <p className="text-xs text-muted-foreground/60 border-t border-border/30 pt-6">
-                    ✝️ Has visto toda la colección · {allItems.length} fotografías
-                  </p>
+                  <button
+                    type="button"
+                    onClick={loadMoreImages}
+                    disabled={isLoading}
+                    className="group inline-flex items-center gap-2.5 px-6 py-3 rounded-full bg-foreground text-background text-xs sm:text-sm font-semibold hover:bg-gold hover:text-foreground transition-all duration-300 shadow-md hover:shadow-lg hover:scale-102 cursor-pointer border-0 disabled:opacity-50"
+                  >
+                    {isLoading ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                        <span>Cargando fotos...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Ver {remainingCount} fotografías más</span>
+                        <span className="w-5 h-5 rounded-full bg-background/10 flex items-center justify-center group-hover:bg-foreground/10 transition-colors">
+                          <ChevronRight size={13} />
+                        </span>
+                      </>
+                    )}
+                  </button>
                 </div>
               )}
 
-              {allItems.length === 0 && (
-                <div className="text-center py-20 bg-card rounded-3xl border border-dashed border-border text-muted-foreground text-sm">
-                  No hay fotografías disponibles por el momento.
+              {/* FIN DE COLECCIÓN */}
+              {!hasMoreImages && allItems.length > 0 && (
+                <div className="mt-8 text-center">
+                  <p className="text-xs text-muted-foreground/60 border-t border-border/30 pt-6">
+                    ✝️ Has explorado todas las {filteredItems.length} fotografías {selectedCategory !== "Todas" ? `en ${selectedCategory}` : ""}
+                  </p>
                 </div>
               )}
             </>
           ) : (
-            <div className="text-center py-20 bg-card rounded-3xl border border-dashed border-border text-muted-foreground text-sm">
-              No hay fotografías disponibles por el momento.
+            <div className="text-center py-16 bg-card rounded-3xl border border-dashed border-border text-muted-foreground text-sm">
+              No hay fotografías disponibles en esta categoría.
             </div>
           )}
         </Reveal>
       </div>
 
-      {/* LIGHTBOX - mismo código que antes */}
+      {/* VISOR LIGHTBOX OPTIMIZADO */}
       <Dialog open={lightboxIndex !== null} onOpenChange={(o) => !o && setLightboxIndex(null)}>
         <DialogContent className="max-w-5xl p-0 bg-black/98 border-white/10 shadow-2xl backdrop-blur-xl overflow-hidden sm:rounded-3xl">
           <DialogTitle className="sr-only">Visor de fotografía parroquial</DialogTitle>
 
           {activeItem && (
             <div className="flex flex-col h-full">
-              <div className="flex items-center justify-between px-5 py-3 border-b border-white/10">
-                <div className="flex items-center gap-2.5">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+                <div className="flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
-                  <span className="text-xs font-bold uppercase tracking-widest text-gold">
+                  <span className="text-[11px] font-bold uppercase tracking-widest text-gold">
                     {activeItem.category}
                   </span>
                 </div>
@@ -332,14 +343,14 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
                 </div>
               </div>
 
-              <div className="relative flex-1 flex items-center justify-center p-4 sm:p-6 min-h-[45vh] max-h-[60vh]">
+              <div className="relative flex-1 flex items-center justify-center p-3 sm:p-6 min-h-[45vh] max-h-[60vh]">
                 {itemsToDisplay.length > 1 && (
                   <button
                     onClick={handlePrev}
-                    className="absolute left-3 sm:left-4 z-40 p-2.5 rounded-full bg-white/8 text-white/70 hover:bg-gold hover:text-black border border-white/15 hover:border-gold transition-all shadow-lg cursor-pointer"
+                    className="absolute left-2 sm:left-4 z-40 p-2 sm:p-2.5 rounded-full bg-white/10 text-white/80 hover:bg-gold hover:text-black border border-white/15 transition-all shadow-lg cursor-pointer"
                     aria-label="Anterior"
                   >
-                    <ChevronLeft size={22} />
+                    <ChevronLeft size={20} />
                   </button>
                 )}
 
@@ -348,24 +359,24 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
                     key={activeItem.id}
                     src={activeItem.src}
                     alt={activeItem.label}
-                    className="max-h-[58vh] w-auto max-w-full object-contain rounded-xl shadow-2xl animate-in fade-in zoom-in-95 duration-250"
+                    className="max-h-[55vh] w-auto max-w-full object-contain rounded-lg shadow-2xl animate-in fade-in zoom-in-95 duration-200"
                   />
                 </div>
 
                 {itemsToDisplay.length > 1 && (
                   <button
                     onClick={handleNext}
-                    className="absolute right-3 sm:right-4 z-40 p-2.5 rounded-full bg-white/8 text-white/70 hover:bg-gold hover:text-black border border-white/15 hover:border-gold transition-all shadow-lg cursor-pointer"
+                    className="absolute right-2 sm:right-4 z-40 p-2 sm:p-2.5 rounded-full bg-white/10 text-white/80 hover:bg-gold hover:text-black border border-white/15 transition-all shadow-lg cursor-pointer"
                     aria-label="Siguiente"
                   >
-                    <ChevronRight size={22} />
+                    <ChevronRight size={20} />
                   </button>
                 )}
               </div>
 
               {itemsToDisplay.length > 1 && (
-                <div className="px-5 pt-3 pb-2 border-t border-white/8">
-                  <div className="flex items-center justify-center gap-2">
+                <div className="px-4 pt-2 pb-2 border-t border-white/8">
+                  <div className="flex items-center justify-center gap-1.5 overflow-x-auto py-1">
                     {filmstripItems.map((thumb, fi) => {
                       const realIndex = filmstripStart + fi;
                       const isActive = realIndex === lightboxIndex;
@@ -374,12 +385,12 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
                           key={thumb.id}
                           type="button"
                           onClick={() => setLightboxIndex(realIndex)}
-                          className={`relative flex-shrink-0 rounded-lg overflow-hidden transition-all duration-300 cursor-pointer border-2 ${
+                          className={`relative flex-shrink-0 rounded-md overflow-hidden transition-all duration-200 cursor-pointer border-2 ${
                             isActive
-                              ? "border-gold shadow-[0_0_0_2px_rgba(var(--gold-rgb),0.3)] scale-105"
-                              : "border-transparent opacity-40 hover:opacity-70 hover:scale-102"
+                              ? "border-gold scale-105 shadow-md"
+                              : "border-transparent opacity-40 hover:opacity-80"
                           }`}
-                          style={{ width: 56, height: 40 }}
+                          style={{ width: 50, height: 36 }}
                           aria-label={`Ver ${thumb.label}`}
                         >
                           <OptimizedImage
@@ -390,22 +401,13 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
                         </button>
                       );
                     })}
-                    {itemsToDisplay.length > filmstripStart + FILMSTRIP_VISIBLE && (
-                      <button
-                        type="button"
-                        onClick={() => setFilmstripStart((s) => Math.min(s + FILMSTRIP_VISIBLE, itemsToDisplay.length - FILMSTRIP_VISIBLE))}
-                        className="w-14 h-10 rounded-lg border border-white/20 text-white/40 hover:text-white/70 hover:border-white/40 transition-all text-xs flex items-center justify-center cursor-pointer bg-white/5"
-                      >
-                        <ChevronRight size={16} />
-                      </button>
-                    )}
                   </div>
                 </div>
               )}
 
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-5 py-4 border-t border-white/10">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-4 py-3.5 border-t border-white/10">
                 <div>
-                  <p className="text-white font-display text-lg font-medium leading-tight">
+                  <p className="text-white font-display text-base sm:text-lg font-medium leading-tight">
                     {activeItem.label}
                   </p>
                   <p className="text-white/40 text-xs mt-0.5">{activeItem.category}</p>
@@ -414,7 +416,7 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
                   <button
                     type="button"
                     onClick={() => shareWhatsApp(activeItem)}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-[#25D366]/20 hover:bg-[#25D366]/30 text-[#25D366] text-xs font-semibold transition-all border border-[#25D366]/30 cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#25D366]/20 hover:bg-[#25D366]/30 text-[#25D366] text-xs font-semibold transition-all border border-[#25D366]/30 cursor-pointer"
                   >
                     <Share2 size={13} />
                     <span>Compartir</span>
@@ -422,7 +424,7 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
                   <button
                     type="button"
                     onClick={() => downloadImage(activeItem.src, activeItem.label)}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-white/8 hover:bg-white/15 text-white/70 hover:text-white text-xs font-semibold transition-all border border-white/15 cursor-pointer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white/80 hover:text-white text-xs font-semibold transition-all border border-white/15 cursor-pointer"
                   >
                     <Download size={13} />
                     <span>Guardar</span>

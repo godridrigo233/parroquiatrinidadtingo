@@ -390,7 +390,63 @@ ${PARISH_STATIC_DATA}${dynamicContext}
             messages: modelMessages,
             maxOutputTokens: 350,
           });
-          return result.toUIMessageStreamResponse();
+          // ── NUEVO: Wrapper que asegura que la respuesta HTTP siempre termina ──
+            const stream = result.toUIMessageStreamResponse();
+            const { headersSent } = res;
+
+            // Agregamos un timeout de seguridad: si el stream tarda más de 60s, forzamos cierre
+            const timeoutId = setTimeout(() => {
+              if (!headersSent && !res.writableEnded) {
+                console.warn("[Chat] Stream timeout forzado tras 60s, cerrando respuesta");
+                res.statusCode = 500;
+                res.end(JSON.stringify({ error: "El asistente tardó demasiado en responder. Intenta de nuevo." }));
+              }
+            }, 60000);
+
+            stream.on("end", () => {
+              clearTimeout(timeoutId);
+            });
+
+            stream.on("error", (err) => {
+              clearTimeout(timeoutId);
+              if (!headersSent && !res.writableEnded) {
+                console.error("[Chat] Error en stream:", err);
+                res.statusCode = 500;
+                res.end(JSON.stringify({ error: "Error en el asistente. Intenta de nuevo." }));
+              }
+            });
+
+            // Pipe the stream, pero aseguramos que siempre haya un final
+            stream.pipeUIMessageStreamToResponse(res, {
+              onError: (err) => {
+                clearTimeout(timeoutId);
+                console.error("[Chat dev] error en pipe:", err);
+                if (!headersSent) {
+                  res.statusCode = 500;
+                  res.end(JSON.stringify({ error: "Error en el proceso de respuesta." }));
+                }
+              },
+            });
+
+            // Retornamos explícitamente la respuesta asegurando el cierre
+            return new Promise((resolve) => {
+              stream.on("end", () => {
+                if (!res.writableEnded) {
+                  clearTimeout(timeoutId);
+                  resolve();
+                }
+              });
+              stream.on("error", () => {
+                clearTimeout(timeoutId);
+                resolve();
+              });
+            }).then(() => {
+              // Si la respuesta aún no terminó, forzar cierre
+              if (!res.writableEnded && !headersSent) {
+                res.statusCode = 500;
+                res.end(JSON.stringify({ error: "El asistente no generó respuesta a tiempo." }));
+              }
+            });
         } catch (err) {
           console.error("[Chat] Error en streamText:", err);
           return new Response(JSON.stringify({ error: String(err) }), {

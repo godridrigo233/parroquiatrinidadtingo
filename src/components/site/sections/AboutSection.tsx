@@ -139,7 +139,7 @@ export default function AboutSection({
               Una casa de oración<br />en el corazón de <span className="italic text-gold">Tingo</span>
             </h2>
             <p className="mt-6 text-muted-foreground leading-relaxed text-lg text-justify">
-              La Parroquia Santísima Trinidad es una comunidad católica acogedora ubicada en la entrada de Jacobo Hunter, animada pastoralmente por las <strong className="text-foreground">Carmelitas de María Inmaculada (CMI)</strong>. Aquí celebramos los sacramentos, formamos discípulos y servimos a la familia parroquial bajo la protección de Nuestra Señora de los Dolores.
+              La Parroquia Santísima Trinidad es una comunidad católica acogedora ubicada en la entrada de Jacobo Hunter, animada pastoralmente por los sacerdotes de la congregación religiosa <strong className="text-foreground">Carmelitas de María Inmaculada (CMI)</strong>. Aquí celebramos los sacramentos, formamos discípulos y servimos a la familia parroquial bajo la protección de Nuestra Señora de los Dolores.
             </p>
 
             <div className="mt-10 grid sm:grid-cols-3 gap-4">

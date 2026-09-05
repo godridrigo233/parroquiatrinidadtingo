@@ -32,21 +32,53 @@ type FacebookPost = {
 };
 
 
-// 🛡️ SUBCOMPONENTE DE IMAGEN QUE ELIMINA LA TARJETA SI LA FOTO FALLA
-function FacebookImage({ src, onFail }: { src: string; onFail: () => void }) {
+// 🛡️ SUBCOMPONENTE DE IMAGEN CON FALLBACK AUTOMÁTICO
+function FacebookImage({ src }: { src: string }) {
+  const [imgSrc, setImgSrc] = useState<string>(src);
+  const [hasError, setHasError] = useState(false);
+
   return (
     <img
-      src={src}
+      src={hasError ? "/assets/hero-church.webp" : imgSrc}
       loading="lazy"
       alt="Publicación parroquial de Facebook"
       referrerPolicy="no-referrer"
       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
       onError={() => {
-        onFail();
+        if (!hasError) {
+          // Si wsrv.nl falló, intenta cargar la URL original limpia antes de usar la foto por defecto
+          if (imgSrc.includes("wsrv.nl") && src.includes("url=")) {
+            const rawUrl = decodeURIComponent(src.split("url=")[1].split("&")[0]);
+            setImgSrc(rawUrl);
+          } else {
+            setHasError(true);
+          }
+        }
       }}
     />
   );
 }
+
+const DEFAULT_FALLBACK_POSTS: FacebookPost[] = [
+  {
+    id: "fb-1",
+    post_url: "https://www.facebook.com/parroquiasantisimatrinidadtingo/",
+    description: "🙏 Trabajos de mejora y mantenimiento en la Casa Parroquial. ¡Agradecemos su apoyo y colaboración comunitaria!",
+    image_url: "/assets/hero-church.webp"
+  },
+  {
+    id: "fb-2",
+    post_url: "https://www.facebook.com/parroquiasantisimatrinidadtingo/",
+    description: "✝️ Acompañanos en nuestros horarios semanales de Misa y oración comunitaria en el templo de Tingo.",
+    image_url: "/assets/gallery-comunidad-oracion.jpg"
+  },
+  {
+    id: "fb-3",
+    post_url: "https://www.facebook.com/parroquiasantisimatrinidadtingo/",
+    description: "🕊️ Infórmate sobre las inscripciones para bautismos, catequesis y servicios sacramentales.",
+    image_url: "/assets/gallery-primera-comunion-misa.jpg"
+  }
+];
 
 function FacebookPostsGrid() {
   const [posts, setPosts] = useState<FacebookPost[]>([]);
@@ -64,7 +96,7 @@ function FacebookPostsGrid() {
 
         const data = await response.json();
 
-        if (data.status === "ok" && data.items) {
+        if (data.status === "ok" && data.items && data.items.length > 0) {
           const formattedPosts = data.items
             .map((item: any) => {
               let rawImageUrl = item.enclosure?.link || item.thumbnail;
@@ -76,36 +108,32 @@ function FacebookPostsGrid() {
                 }
               }
 
-              // 1. Limpieza de entidades HTML en la URL
               const cleanUrl = rawImageUrl ? rawImageUrl.replace(/&amp;/g, '&') : null;
-
-              // 🔥 2. FILTRO ESTRICTO: SI NO HAY UNA IMAGEN REAL, RETORNAMOS NULL
-              if (!cleanUrl) return null;
-
-              // 3. Escudo WSRV para evitar bloqueos 403 de Facebook
-              const finalImageUrl = `https://wsrv.nl/?url=${encodeURIComponent(cleanUrl)}&w=600&output=webp`;
+              const finalImageUrl = cleanUrl 
+                ? `https://wsrv.nl/?url=${encodeURIComponent(cleanUrl)}&w=600&output=webp` 
+                : "/assets/hero-church.webp";
 
               const cleanDescription = (item.content || item.description || "")
                 .replace(/<[^>]*>?/gm, '')
                 .replace(/\(Feed generated with FetchRSS\)/gi, '')
-                .trim() || "Mira nuestra última actividad o aviso parroquial en nuestra página oficial.";
+                .trim() || "Mira nuestra última actividad o aviso parroquial en nuestra página oficial de Facebook.";
 
               return {
                 id: item.guid || item.link || Math.random().toString(),
-                post_url: item.link || "https://www.facebook.com/parroquiasantisimatrinidadtingo",
+                post_url: item.link || "https://www.facebook.com/parroquiasantisimatrinidadtingo/",
                 description: cleanDescription,
                 image_url: finalImageUrl
               };
             })
-            // 🔥 4. DESCARTAMOS TODOS LOS ESTADOS DE SOLO TEXTO (LOS QUE DIERON NULL)
-            .filter((post: any): post is FacebookPost => post !== null)
-            // 🔥 5. RECIÉN AQUÍ TOMAMOS LAS 3 PRIMERAS PUBLICACIONES QUE SÍ TIENEN FOTO
             .slice(0, 3);
           
-          setPosts(formattedPosts);
+          setPosts(formattedPosts.length > 0 ? formattedPosts : DEFAULT_FALLBACK_POSTS);
+        } else {
+          setPosts(DEFAULT_FALLBACK_POSTS);
         }
       } catch (error) {
-        console.warn("Feed de Facebook temporalmente no disponible:", error);
+        console.warn("Feed de Facebook temporalmente no disponible, usando respaldo local:", error);
+        setPosts(DEFAULT_FALLBACK_POSTS);
       } finally {
         setIsLoading(false);
       }
@@ -165,7 +193,6 @@ function FacebookPostsGrid() {
           <div className="relative aspect-video overflow-hidden bg-muted">
             <FacebookImage 
               src={post.image_url!} 
-              onFail={() => handleRemoveBrokenPost(post.id)} 
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           </div>

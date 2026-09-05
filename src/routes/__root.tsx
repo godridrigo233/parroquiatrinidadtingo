@@ -14,31 +14,112 @@ import { CookieBanner } from '../components/auth/CookieBanner';
 import { useAnalytics } from '../hooks/useAnalytics';
 const ORG_JSONLD = {
   "@context": "https://schema.org",
-  "@type": "CatholicChurch",
-  name: "Parroquia Santísima Trinidad de Tingo",
-  url: "https://parroquiatrinidadtingo.vercel.app",
-  telephone: "+51 915 049 850",
-  address: {
-    "@type": "PostalAddress",
-    streetAddress: "Américas 1820",
-    addressLocality: "Tingo, Jacobo Hunter",
-    addressRegion: "Arequipa",
-    postalCode: "04011",
-    addressCountry: "PE",
-  },
-  sameAs: [
-    "https://www.facebook.com/parroquiasantisimatrinidadtingo/",
-    "https://www.instagram.com/stma_trinidad_tingo/",
-  ],
-  openingHoursSpecification: [
+  "@graph": [
     {
-      "@type": "OpeningHoursSpecification",
-      dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
-      opens: "15:00",
-      closes: "18:00",
-      description: "Secretaría parroquial",
+      "@type": ["CatholicChurch", "PlaceOfWorship", "LocalBusiness"],
+      "@id": "https://parroquiatrinidadtingo.vercel.app/#church",
+      "name": "Parroquia Santísima Trinidad de Tingo",
+      "alternateName": [
+        "Parroquia de Tingo",
+        "Parroquia Trinidad Tingo",
+        "Iglesia Santísima Trinidad de Tingo",
+        "Santuario Parroquial de Tingo"
+      ],
+      "url": "https://parroquiatrinidadtingo.vercel.app",
+      "logo": "https://parroquiatrinidadtingo.vercel.app/assets/logo.webp",
+      "image": [
+        "https://parroquiatrinidadtingo.vercel.app/assets/hero-church.webp",
+        "https://parroquiatrinidadtingo.vercel.app/assets/logo.webp"
+      ],
+      "description": "Parroquia católica Santísima Trinidad de Tingo en Arequipa, dirigida por la congregación de los Padres Carmelitas de María Inmaculada (CMI). Horarios de misa, confesiones, sacramentos, secretaría parroquial y vida pastoral comunitaria.",
+      "telephone": "+51 915 049 850",
+      "email": "pstrinidadtingo@gmail.com",
+      "priceRange": "Gratuito / Ofrenda voluntaria",
+      "currenciesAccepted": "PEN",
+      "paymentAccepted": "Efectivo, Yape, Plin, Transferencia bancaria",
+      "publicAccess": true,
+      "isAccessibleForFree": true,
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Calle Ferrocarril 200, Av. Alfonso Ugarte (Frente al Parque Principal de Tingo)",
+        "addressLocality": "Tingo, Cercado",
+        "addressRegion": "Arequipa",
+        "postalCode": "04011",
+        "addressCountry": "PE"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": -16.4262,
+        "longitude": -71.5542
+      },
+      "hasMap": "https://www.google.com/maps/dir/?api=1&destination=Parroquia+Santísima+Trinidad+Tingo+Arequipa",
+      "openingHoursSpecification": [
+        {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday"
+          ],
+          "opens": "15:00",
+          "closes": "18:00",
+          "description": "Atención presencial y telefónica en Secretaría Parroquial"
+        },
+        {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": [
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday"
+          ],
+          "opens": "18:00",
+          "closes": "19:00",
+          "description": "Santa Misa vespertina comunitaria (martes a sábado)"
+        },
+        {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": "Sunday",
+          "opens": "07:00",
+          "closes": "19:30",
+          "description": "Celebraciones Eucarísticas Dominicales comunitarias"
+        }
+      ],
+      "sameAs": [
+        "https://www.facebook.com/parroquiasantisimatrinidadtingo/",
+        "https://www.instagram.com/stma_trinidad_tingo/"
+      ],
+      "contactPoint": [
+        {
+          "@type": "ContactPoint",
+          "telephone": "+51 915 049 850",
+          "contactType": "Secretaría Parroquial y Atención",
+          "availableLanguage": ["es"],
+          "areaServed": "PE"
+        }
+      ],
+      "parentOrganization": {
+        "@type": "Organization",
+        "name": "Arquidiócesis de Arequipa",
+        "url": "https://arzobispadodearequipa.org.pe"
+      }
     },
-  ],
+    {
+      "@type": "WebSite",
+      "@id": "https://parroquiatrinidadtingo.vercel.app/#website",
+      "url": "https://parroquiatrinidadtingo.vercel.app",
+      "name": "Parroquia Santísima Trinidad de Tingo",
+      "description": "Sitio web oficial de la Parroquia Santísima Trinidad de Tingo en Arequipa.",
+      "inLanguage": "es-PE",
+      "publisher": {
+        "@id": "https://parroquiatrinidadtingo.vercel.app/#church"
+      }
+    }
+  ]
 };
 
 function NotFoundComponent() {

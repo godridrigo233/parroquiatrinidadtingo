@@ -160,10 +160,6 @@ function FacebookPostsGrid() {
     fetchFacebookFeed();
   }, []);
 
-  const handleRemoveBrokenPost = (idToRemove: string) => {
-    setPosts((currentPosts) => currentPosts.filter((p) => p.id !== idToRemove));
-  };
-
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
@@ -182,18 +178,39 @@ function FacebookPostsGrid() {
     );
   }
 
-  if (posts.length === 0) {
-    return (
-      <div className="rounded-xl border border-dashed border-border bg-card/50 py-12 px-6 text-center">
-        <p className="text-muted-foreground mb-4">Aún no hay publicaciones recientes con fotografía.</p>
+  return (
+    <div className="space-y-6">
+      {/* Pestañas de Selección de Vista */}
+      <div className="flex items-center justify-between flex-wrap gap-4 border-b border-border/40 pb-3">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setViewMode("cards")}
+            className={`px-4 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+              viewMode === "cards"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "bg-secondary/60 text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            📰 Novedades Parroquiales
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode("live")}
+            className={`px-4 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+              viewMode === "live"
+                ? "bg-[#1877F2] text-white shadow-sm"
+                : "bg-secondary/60 text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            📱 Muro de Facebook en Vivo
+          </button>
+        </div>
+
         <a
           href="https://www.facebook.com/parroquiasantisimatrinidadtingo/"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 text-primary font-semibold hover:text-gold transition-colors"
-        >
-          <Facebook size={18} /> Visita nuestra página de Facebook
-        </a>
           className="inline-flex items-center gap-1.5 text-xs text-primary font-semibold hover:text-gold transition-colors"
         >
           <Facebook size={14} /> Abrir Facebook oficial ↗

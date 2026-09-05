@@ -107,21 +107,46 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "description",
         content:
-          "Parroquia católica Santísima Trinidad de Tingo, Arequipa. Horarios de misa, sacramentos y comunidad parroquial.",
+          "Portal digital de la Parroquia Santísima Trinidad de Tingo en Arequipa. Consulta horarios de Misa, sacramentos, intenciones y actividades comunitarias.",
       },
-      { name: "theme-color", content: "#1e2a5e" },
+      { name: "theme-color", content: "#0F1B2D" },
+      { name: "application-name", content: "Trinidad Tingo" },
       { name: "mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
-      { name: "apple-mobile-web-app-status-bar-style", content: "default" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
+      { name: "apple-mobile-web-app-title", content: "Trinidad Tingo" },
+      
+      // ── OpenGraph / Facebook / WhatsApp Preview ──
       { property: "og:site_name", content: "Parroquia Santísima Trinidad de Tingo" },
       { property: "og:type", content: "website" },
       { property: "og:locale", content: "es_PE" },
+      { property: "og:url", content: "https://parroquiatrinidadtingo.vercel.app/" },
+      { property: "og:title", content: "Parroquia Santísima Trinidad de Tingo · Arequipa" },
+      {
+        property: "og:description",
+        content:
+          "Portal digital oficial de la Parroquia Santísima Trinidad de Tingo. Horarios de Misa, sacramentos, intenciones y comunidad parroquial.",
+      },
+      { property: "og:image", content: "https://parroquiatrinidadtingo.vercel.app/assets/hero-church.webp" },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      { property: "og:image:alt", content: "Templo Parroquia Santísima Trinidad de Tingo" },
+
+      // ── Twitter / X Card ──
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Parroquia Santísima Trinidad de Tingo · Arequipa" },
+      {
+        name: "twitter:description",
+        content:
+          "Portal digital de la Parroquia Santísima Trinidad de Tingo en Arequipa. Horarios de Misa, sacramentos y comunidad.",
+      },
+      { name: "twitter:image", content: "https://parroquiatrinidadtingo.vercel.app/assets/hero-church.webp" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
       { rel: "manifest", href: "/manifest.webmanifest" },
-      { rel: "apple-touch-icon", href: "/pwa-192x192.png" },
+      { rel: "apple-touch-icon", sizes: "180x180", href: "/pwa-192x192.png" },
+      { rel: "icon", type: "image/png", sizes: "32x32", href: "/pwa-192x192.png" },
       { rel: "preload", as: "image", href: "/assets/logo.webp", fetchPriority: "high" } as any,
       { rel: "preload", as: "image", href: "/assets/hero-church.webp", fetchPriority: "high" } as any,
       { rel: "preconnect", href: "https://fonts.googleapis.com" },

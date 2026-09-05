@@ -84,7 +84,7 @@ const DEFAULT_FALLBACK_POSTS: FacebookPost[] = [
 function FacebookPostsGrid() {
   const [posts, setPosts] = useState<FacebookPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [viewMode, setViewMode] = useState<"cards" | "live">("cards");
+  const [viewMode, setViewMode] = useState<"live" | "cards">("live");
 
   useEffect(() => {
     const fetchFacebookFeed = async () => {
@@ -162,18 +162,8 @@ function FacebookPostsGrid() {
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-        {[0, 1, 2].map((i) => (
-          <div key={i} className="rounded-xl bg-white border border-border shadow-sm overflow-hidden animate-pulse">
-            <div className="aspect-video bg-gray-200" />
-            <div className="p-4 space-y-2">
-              <div className="h-3 bg-gray-200 rounded w-11/12" />
-              <div className="h-3 bg-gray-200 rounded w-10/12" />
-              <div className="h-3 bg-gray-200 rounded w-8/12" />
-              <div className="h-4 bg-gray-200 rounded w-1/3 mt-4" />
-            </div>
-          </div>
-        ))}
+      <div className="w-full flex justify-center py-8">
+        <div className="w-8 h-8 border-3 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -185,6 +175,17 @@ function FacebookPostsGrid() {
         <div className="flex items-center gap-2">
           <button
             type="button"
+            onClick={() => setViewMode("live")}
+            className={`px-4 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+              viewMode === "live"
+                ? "bg-[#1877F2] text-white shadow-md shadow-[#1877F2]/20 scale-105"
+                : "bg-secondary/60 text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            📱 Muro de Facebook en Vivo (Fotos y Noticias)
+          </button>
+          <button
+            type="button"
             onClick={() => setViewMode("cards")}
             className={`px-4 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer ${
               viewMode === "cards"
@@ -192,18 +193,7 @@ function FacebookPostsGrid() {
                 : "bg-secondary/60 text-muted-foreground hover:text-foreground"
             }`}
           >
-            📰 Novedades Parroquiales
-          </button>
-          <button
-            type="button"
-            onClick={() => setViewMode("live")}
-            className={`px-4 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer ${
-              viewMode === "live"
-                ? "bg-[#1877F2] text-white shadow-sm"
-                : "bg-secondary/60 text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            📱 Muro de Facebook en Vivo
+            📰 Resumen en Tarjetas
           </button>
         </div>
 
@@ -213,17 +203,17 @@ function FacebookPostsGrid() {
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1.5 text-xs text-primary font-semibold hover:text-gold transition-colors"
         >
-          <Facebook size={14} /> Abrir Facebook oficial ↗
+          <Facebook size={14} /> Abrir página oficial ↗
         </a>
       </div>
 
       {/* VISTA EN VIVO CON IFRAME OFICIAL DE FACEBOOK */}
       {viewMode === "live" ? (
-        <div className="w-full flex justify-center py-4 bg-card rounded-2xl border border-border/50 shadow-sm overflow-hidden min-h-[520px]">
+        <div className="w-full flex justify-center py-4 bg-card rounded-2xl border border-border/50 shadow-sm overflow-hidden min-h-[620px]">
           <iframe
-            src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Fparroquiasantisimatrinidadtingo&tabs=timeline&width=500&height=600&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true"
+            src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Fparroquiasantisimatrinidadtingo&tabs=timeline&width=500&height=700&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true"
             width="500"
-            height="600"
+            height="700"
             style={{ border: "none", overflow: "hidden", maxWidth: "100%", borderRadius: "16px" }}
             scrolling="no"
             frameBorder="0"

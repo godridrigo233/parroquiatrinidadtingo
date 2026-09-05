@@ -223,31 +223,25 @@ function FacebookPostsGrid() {
           />
         </div>
       ) : (
-        /* VISTA DE TARJETAS DESTACADAS */
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
+        /* VISTA DE TARJETAS INDIVIDUALES CON FOTOS REALES DE FACEBOOK */
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
           {posts.map((post) => (
-            <a
+            <div
               key={post.id}
-              href={post.post_url ?? "https://www.facebook.com/parroquiasantisimatrinidadtingo/"}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group flex flex-col h-full rounded-2xl bg-white border border-border/60 shadow-md hover:shadow-xl hover:-translate-y-1.5 transition-all duration-500 overflow-hidden"
+              className="rounded-2xl bg-white border border-border/60 shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col items-center p-2 min-h-[500px]"
             >
-              <div className="relative aspect-video overflow-hidden bg-muted">
-                <FacebookImage src={post.image_url!} />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              </div>
-
-              <div className="flex flex-col flex-1 p-5">
-                <p className="text-xs text-muted-foreground line-clamp-3 leading-relaxed flex-1">
-                  {post.description}
-                </p>
-                <div className="mt-4 pt-3 border-t border-border/40 flex items-center justify-between text-xs text-primary font-medium group-hover:text-gold transition-colors">
-                  <span>Ver en Facebook</span>
-                  <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-                </div>
-              </div>
-            </a>
+              <iframe
+                src={`https://www.facebook.com/plugins/post.php?href=${encodeURIComponent(post.post_url ?? "https://www.facebook.com/parroquiasantisimatrinidadtingo/")}&show_text=true&width=350`}
+                width="100%"
+                height="500"
+                style={{ border: "none", overflow: "hidden", minHeight: "500px", maxWidth: "360px" }}
+                scrolling="no"
+                frameBorder="0"
+                allowFullScreen={true}
+                allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+                title={post.description || "Publicación de Facebook"}
+              />
+            </div>
           ))}
         </div>
       )}

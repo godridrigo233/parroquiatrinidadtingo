@@ -66,15 +66,27 @@ function getDynamicQuickReplies() {
 // ── 2. ZERO-LATENCY FALLBACK (RESPUESTAS INSTANTÁNEAS SIN SERVIDOR) ──
 function checkInstantAnswer(text: string): string | null {
   const clean = text.toLowerCase();
+  
+  if (/evangelio|lectura(s)?\s*de(l)?\s*d[ií]a|palabra\s*de\s*dios|lecturas\s*de\s*hoy/i.test(clean)) {
+    return "📖 Puedes leer el **Evangelio y las lecturas de hoy** directamente en el enlace oficial de Vatican News:\n\n👉 https://www.vaticannews.va/es/evangelio-de-hoy.html\n\n«La Palabra de Dios ilumina nuestro camino y consuela nuestro corazón.» ¡Que tengas un día muy bendecido! 🙏";
+  }
+  
+  if (/facebook|fotos|publicacion(es)?|novedad(es)?|redes/i.test(clean)) {
+    return "📸 Puedes ver nuestras **fotografías, transmisiones y publicaciones del día a día** en nuestra página oficial de Facebook:\n\n👉 https://www.facebook.com/parroquiasantisimatrinidadtingo/\n\n¡Síguenos para mantenerte al tanto de toda la vida parroquial!";
+  }
+
   if (/direcci[oó]n|d[oó]nde est[aá]n|ubicaci[oó]n|c[oó]mo llegar/i.test(clean)) {
-    return "📍 Nuestra parroquia está ubicada en: Calle Ferrocarril 200, Av. Alfonso Ugarte Tingo - Cercado, Arequipa (Frente al parque principal de Tingo).\n\n🚌 ¿Cómo llegar? Puedes tomar el Bus Cuenca 10 (SIT) color granate/rojo con destino a Jacobo Hunter y bajar en el 'Cruce de Tingo'.";
+    return "📍 Nuestra parroquia está ubicada en: **Calle Ferrocarril 200, Av. Alfonso Ugarte Tingo - Cercado, Arequipa** (Frente al parque principal de Tingo).\n\n🚌 **¿Cómo llegar?** Puedes tomar el Bus Cuenca 10 (SIT) color granate/rojo con destino a Jacobo Hunter y bajar en el 'Cruce de Tingo'.";
   }
+
   if (/tel[eé]fono|celular|n[uú]mero.*secretar[ií]a|llamar/i.test(clean)) {
-    return "📞 El teléfono oficial de nuestra secretaría parroquial es: +51 915 049 850.\n\n🕒 Horario de atención (presencial y telefónica): Lunes a Sábado de 3:00 PM a 6:00 PM.";
+    return "📞 El teléfono oficial de nuestra secretaría parroquial es: **+51 915 049 850**.\n\n🕒 **Horario de atención**: Lunes a Sábado de 3:00 PM a 6:00 PM.";
   }
+
   if (/qui[eé]n eres|qui[eé]n es el hermano el[ií]as|c[oó]mo te llamas/i.test(clean)) {
-    return "¡Paz y bien! Soy el Hermano Elías, tu asistente parroquial virtual. Mi nombre rinde homenaje al Profeta Elías del Antiguo Testamento, padre espiritual y guía protector de toda la Orden del Carmelo (los Padres Carmelitas CMI que dirigen nuestra parroquia en Tingo). ¡Estoy aquí para servirte y guiarte en nuestra comunidad!";
+    return "¡Paz y bien! Soy el **Hermano Elías**, tu asistente parroquial virtual. Mi nombre rinde homenaje al Profeta Elías del Antiguo Testamento, padre espiritual y guía protector de toda la Orden del Carmelo (los Padres Carmelitas CMI que dirigen nuestra parroquia en Tingo). ¡Estoy aquí para servirte y guiarte en nuestra comunidad!";
   }
+
   return null;
 }
 

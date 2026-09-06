@@ -78,31 +78,104 @@ function checkInstantAnswer(text: string): string | null {
   return null;
 }
 
-// Renderiza enlaces, correos y teléfonos como enlaces clickeables
-const RICH_TEXT_REGEX = /(https?:\/\/[^\s]+)|([\w.+-]+@[\w-]+\.[\w.-]+)|(\+?\d[\d\s-]{6,}\d)/g;
+// Renderiza enlaces, correos, teléfonos y formato markdown (negritas, viñetas) limpiamente
+const INLINE_FORMAT_REGEX = /(\*\*[^*]+\*\*)|(https?:\/\/[^\s]+)|([\w.+-]+@[\w-]+\.[\w.-]+)|(\+?\d[\d\s-]{6,}\d)/g;
 
 function renderRichText(text: string, keyPrefix: string) {
-  const nodes: React.ReactNode[] = [];
-  let lastIndex = 0;
-  let match: RegExpExecArray | null;
-  let i = 0;
-  RICH_TEXT_REGEX.lastIndex = 0;
-  while ((match = RICH_TEXT_REGEX.exec(text)) !== null) {
-    if (match.index > lastIndex) nodes.push(text.slice(lastIndex, match.index));
-    const value = match[0];
-    const linkClass = "underline underline-offset-2 decoration-[#C8A45C] hover:text-[#C8A45C] break-words font-medium";
-    if (match[1]) {
-      nodes.push(<a key={`${keyPrefix}-${i}`} href={value} target="_blank" rel="noopener noreferrer" className={linkClass}>{value}</a>);
-    } else if (match[2]) {
-      nodes.push(<a key={`${keyPrefix}-${i}`} href={`mailto:${value}`} className={linkClass}>{value}</a>);
-    } else if (match[3]) {
-      nodes.push(<a key={`${keyPrefix}-${i}`} href={`tel:${value.replace(/[\s-]/g, "")}`} className={linkClass}>{value}</a>);
+  if (!text) return null;
+  const lines = text.split("\n");
+
+  return lines.map((line, lineIdx) => {
+    const trimmed = line.trim();
+    if (!trimmed) {
+      return <div key={`${keyPrefix}-nl-${lineIdx}`} className="h-1.5" />;
     }
-    lastIndex = match.index + value.length;
-    i++;
-  }
-  if (lastIndex < text.length) nodes.push(text.slice(lastIndex));
-  return nodes;
+
+    // Identificar viñetas (- o * o •)
+    const isBullet = /^[-*•]\s+/.test(trimmed);
+    const content = isBullet ? trimmed.replace(/^[-*•]\s+/, "") : line;
+
+    const nodes: React.ReactNode[] = [];
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+    let i = 0;
+    INLINE_FORMAT_REGEX.lastIndex = 0;
+
+    while ((match = INLINE_FORMAT_REGEX.exec(content)) !== null) {
+      if (match.index > lastIndex) {
+        nodes.push(content.slice(lastIndex, match.index));
+      }
+      const token = match[0];
+      const linkClass = "underline underline-offset-2 decoration-[#C8A45C] hover:text-[#C8A45C] break-words font-medium";
+
+      if (match[1]) {
+        // Negrita: **texto** -> <strong>texto</strong>
+        const boldText = token.slice(2, -2);
+        nodes.push(
+          <strong key={`${keyPrefix}-b-${lineIdx}-${i}`} className="font-semibold text-[#0F1B2D]">
+            {boldText}
+          </strong>
+        );
+      } else if (match[2]) {
+        // Enlace Web
+        nodes.push(
+          <a
+            key={`${keyPrefix}-l-${lineIdx}-${i}`}
+            href={token}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={linkClass}
+          >
+            {token}
+          </a>
+        );
+      } else if (match[3]) {
+        // Correo
+        nodes.push(
+          <a
+            key={`${keyPrefix}-m-${lineIdx}-${i}`}
+            href={`mailto:${token}`}
+            className={linkClass}
+          >
+            {token}
+          </a>
+        );
+      } else if (match[4]) {
+        // Teléfono
+        nodes.push(
+          <a
+            key={`${keyPrefix}-p-${lineIdx}-${i}`}
+            href={`tel:${token.replace(/[\s-]/g, "")}`}
+            className={linkClass}
+          >
+            {token}
+          </a>
+        );
+      }
+
+      lastIndex = match.index + token.length;
+      i++;
+    }
+
+    if (lastIndex < content.length) {
+      nodes.push(content.slice(lastIndex));
+    }
+
+    if (isBullet) {
+      return (
+        <div key={`${keyPrefix}-li-${lineIdx}`} className="flex items-start gap-2 my-0.5 pl-0.5">
+          <span className="text-[#C8A45C] font-bold select-none shrink-0 leading-tight">•</span>
+          <div className="flex-1 leading-relaxed">{nodes}</div>
+        </div>
+      );
+    }
+
+    return (
+      <p key={`${keyPrefix}-p-${lineIdx}`} className="leading-relaxed">
+        {nodes}
+      </p>
+    );
+  });
 }
 
 function TypingDots() {
@@ -385,7 +458,12 @@ function ParishAIBotFabWidget() {
       // Si no hay voz masculina disponible, no hablamos (nunca voz femenina)
       if (!bestVoice) return;
 
-      const utterance = new SpeechSynthesisUtterance(text);
+      const cleanVoiceText = text
+        .replace(/\*\*/g, "")
+        .replace(/^[-*•]\s+/gm, "")
+        .replace(/https?:\/\/[^\s]+/g, "enlace web");
+
+      const utterance = new SpeechSynthesisUtterance(cleanVoiceText);
       utterance.voice = bestVoice;
       utterance.rate = 0.90;
       utterance.pitch = 0.88;

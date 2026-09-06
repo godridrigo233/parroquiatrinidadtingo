@@ -209,6 +209,20 @@ export function ParishAIBotFab() {
   return <ParishAIBotFabWidget />;
 }
 
+function cleanTextForSpeech(text: string): string {
+  if (!text) return "";
+  return text
+    .replace(/https?:\/\/[^\s]+/g, "enlace en la página web")
+    .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, "")
+    .replace(/\*\*/g, "")
+    .replace(/\*/g, "")
+    .replace(/_{1,2}/g, "")
+    .replace(/^#+\s+/gm, "")
+    .replace(/^[-*•]\s+/gm, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function ParishAIBotFabWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState("");
@@ -228,10 +242,32 @@ function ParishAIBotFabWidget() {
   // Modo voz continua
   const [autoRead, setAutoRead] = useState(false);
   const lastAutoReadIdRef = useRef<string | null>(null);
+  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const prevMessageCountRef = useRef(1);
+
+  // ── PRE-CARGA DE VOCES DEL SISTEMA ──
+  useEffect(() => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    
+    const loadVoices = () => {
+      const v = window.speechSynthesis.getVoices();
+      if (v && v.length > 0) {
+        setAvailableVoices(v);
+      }
+    };
+
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+
+    return () => {
+      if (typeof window !== "undefined" && "speechSynthesis" in window) {
+        window.speechSynthesis.onvoiceschanged = null;
+      }
+    };
+  }, []);
 
   // ── MEMORIA DE SESIÓN EN LOCALSTORAGE ──
   useEffect(() => {
@@ -337,7 +373,98 @@ function ParishAIBotFabWidget() {
       setInputValue("");
     }
   };
-// ── ENVÍO SEGURO SIN STREAM (TRADICIONAL) ──
+
+  // ── SÍNTESIS DE VOZ MASCULINA / SERENA ──
+  const getBestSpanishVoice = useCallback((): SpeechSynthesisVoice | null => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return null;
+    const voices = availableVoices.length > 0 ? availableVoices : window.speechSynthesis.getVoices();
+    if (!voices || voices.length === 0) return null;
+
+    const spanishVoices = voices.filter(
+      (v) => v.lang.toLowerCase().startsWith("es") || v.lang.toLowerCase().includes("spanish")
+    );
+    if (spanishVoices.length === 0) return voices[0] || null;
+
+    // 1. Preferir voces con nombre masculino explícito
+    const MALE_NAMES = /jorge|alvaro|álvaro|diego|pablo|miguel|carlos|felipe|juan|pedro|luis|alex|raul|raúl|enrique|manuel|male|hombre|standard-b|natural-b|wavenet-b|wavenet-d|neural2-b/i;
+    const maleVoice = spanishVoices.find((v) => MALE_NAMES.test(v.name));
+    if (maleVoice) return maleVoice;
+
+    // 2. Voces neutras (excluyendo nombres femeninos específicos)
+    const FEMALE_NAMES = /paulina|sabina|laura|mar[ií]a|sara|mónica|monica|helena|in[eé]s|carmen|luc[ií]a|lucia|elena|rosa|valentina|camila|andrea|fernanda|gabriela|ximena|female|mujer/i;
+    const notFemale = spanishVoices.find((v) => !FEMALE_NAMES.test(v.name));
+    if (notFemale) return notFemale;
+
+    // 3. Fallback a la primera voz en español disponible
+    return spanishVoices[0];
+  }, [availableVoices]);
+
+  const toggleSpeech = useCallback((text: string, id: string) => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    
+    // Si ya está reproduciendo este mensaje, detener
+    if (speakingMsgId === id) {
+      window.speechSynthesis.cancel();
+      setSpeakingMsgId(null);
+      return;
+    }
+    
+    // Detener cualquier audio anterior
+    window.speechSynthesis.cancel();
+    if (window.speechSynthesis.paused) {
+      window.speechSynthesis.resume();
+    }
+
+    const cleanVoiceText = cleanTextForSpeech(text);
+    if (!cleanVoiceText) return;
+
+    const utterance = new SpeechSynthesisUtterance(cleanVoiceText);
+    const bestVoice = getBestSpanishVoice();
+    if (bestVoice) {
+      utterance.voice = bestVoice;
+      utterance.lang = bestVoice.lang;
+    } else {
+      utterance.lang = "es-PE";
+    }
+
+    // Tono sereno, pastoral y masculino (pitch 0.85)
+    utterance.pitch = 0.85;
+    utterance.rate = 0.95;
+
+    utterance.onstart = () => {
+      setSpeakingMsgId(id);
+    };
+    utterance.onend = () => {
+      setSpeakingMsgId(null);
+    };
+    utterance.onerror = (err) => {
+      console.warn("SpeechSynthesis error:", err);
+      setSpeakingMsgId(null);
+    };
+
+    // Referencia global para evitar recolector de basura en Safari/Chrome
+    (window as any).__hermanoEliasUtterance = utterance;
+
+    window.speechSynthesis.speak(utterance);
+  }, [speakingMsgId, getBestSpanishVoice]);
+
+  // ── AUTO LECTURA DE RESPUESTAS NUEVAS ──
+  useEffect(() => {
+    if (!autoRead || isLoading || messages.length === 0) return;
+    const lastMsg = messages[messages.length - 1];
+    
+    if (lastMsg.role === "assistant" && lastMsg.content && lastMsg.content.trim().length > 0) {
+      if (lastAutoReadIdRef.current !== lastMsg.id) {
+        lastAutoReadIdRef.current = lastMsg.id;
+        const timer = setTimeout(() => {
+          toggleSpeech(lastMsg.content, lastMsg.id);
+        }, 250);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [messages, isLoading, autoRead, toggleSpeech]);
+
+  // ── ENVÍO SEGURO DE MENSAJE ──
   const handleSend = async (textToSend: string) => {
     const text = textToSend.trim();
     if (!text || isLoading) return;
@@ -345,10 +472,12 @@ function ParishAIBotFabWidget() {
     // 1. Respuesta instantánea si aplica
     const instantReply = checkInstantAnswer(text);
     if (instantReply) {
+      const uId = Date.now().toString();
+      const bId = (Date.now() + 1).toString();
       setMessages((prev) => [
         ...prev,
-        { id: Date.now().toString(), role: "user", content: text },
-        { id: (Date.now() + 1).toString(), role: "assistant", content: instantReply },
+        { id: uId, role: "user", content: text },
+        { id: bId, role: "assistant", content: instantReply },
       ]);
       return;
     }
@@ -360,8 +489,6 @@ function ParishAIBotFabWidget() {
     setIsLoading(true);
 
     const botMsgId = (Date.now() + 1).toString();
-    
-    // Agregamos la burbuja inicial del bot (con los puntitos)
     setMessages((prev) => [...prev, { id: botMsgId, role: "assistant", content: "" }]);
 
     try {
@@ -373,21 +500,18 @@ function ParishAIBotFabWidget() {
         }),
       });
 
-      // 🚀 CAMBIO AQUÍ: Leemos la respuesta como JSON
       const data = await response.json();
 
       if (!response.ok || !data.text) {
         throw new Error(data.error || "Error en el servidor");
       }
 
-      // 🚀 CAMBIO AQUÍ: Actualizamos la burbuja con el texto completo
       setMessages((prev) =>
         prev.map((msg) => (msg.id === botMsgId ? { ...msg, content: data.text } : msg))
       );
       
     } catch (err) {
       console.error("Error al comunicarse con el Hermano Elías:", err);
-      // Si falla por límite de Groq, mostramos este mensaje amigable
       setMessages((prev) =>
         prev.map((msg) =>
           msg.id === botMsgId
@@ -414,103 +538,6 @@ function ParishAIBotFabWidget() {
     if (isLoading) return;
     handleSend(message);
   };
-
-  // ── SÍNTESIS DE VOZ MASCULINA ──
-  const getBestSpanishVoice = (): SpeechSynthesisVoice | null => {
-    if (typeof window === "undefined" || !("speechSynthesis" in window)) return null;
-    const voices = window.speechSynthesis.getVoices();
-    if (!voices || voices.length === 0) return null;
-
-    const spanishVoices = voices.filter((v) => v.lang.startsWith("es"));
-    if (spanishVoices.length === 0) return null;
-
-    // 1. Preferir voces con nombre masculino explícito o "male"
-    const maleVoice = spanishVoices.find((v) => {
-      const name = v.name.toLowerCase();
-      return (
-        name.includes("male") ||
-        name.includes("hombre") ||
-        name.includes("alvaro") ||
-        name.includes("jorge") ||
-        name.includes("pablo") ||
-        name.includes("miguel") ||
-        name.includes("diego") ||
-        name.includes("carlos") ||
-        name.includes("felipe") ||
-        name.includes("juan") ||
-        name.includes("pedro") ||
-        name.includes("luis") ||
-        name.includes("alex") ||
-        name.includes("jose") ||
-        name.includes("standard-b") ||
-        name.includes("natural-b")
-      );
-    });
-    if (maleVoice) return maleVoice;
-
-    // 2. Filtrar: excluir voces FEMENINAS conocidas, elegir la primera neutra/masculina
-    const FEMALE = /paulina|sabina|laura|mar[ií]a|sara|mónica|monica|helena|in[eé]s|carmen|luc[ií]a|elena|rosa|valentina|camila|andrea|fernanda|gabriela|ximena|female|mujer/i;
-    const notFemale = spanishVoices.find((v) => !FEMALE.test(v.name));
-    return notFemale || null;
-  };
-
-  const toggleSpeech = (text: string, id: string) => {
-    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
-    
-    if (speakingMsgId === id) {
-      window.speechSynthesis.cancel();
-      setSpeakingMsgId(null);
-      return;
-    }
-    
-    window.speechSynthesis.cancel();
-
-    const speakAction = () => {
-      const bestVoice = getBestSpanishVoice();
-      // Si no hay voz masculina disponible, no hablamos (nunca voz femenina)
-      if (!bestVoice) return;
-
-      const cleanVoiceText = text
-        .replace(/\*\*/g, "")
-        .replace(/^[-*•]\s+/gm, "")
-        .replace(/https?:\/\/[^\s]+/g, "enlace web");
-
-      const utterance = new SpeechSynthesisUtterance(cleanVoiceText);
-      utterance.voice = bestVoice;
-      utterance.rate = 0.90;
-      utterance.pitch = 0.88;
-
-      utterance.onend = () => setSpeakingMsgId(null);
-      utterance.onerror = () => setSpeakingMsgId(null);
-      
-      window.speechSynthesis.speak(utterance);
-      setSpeakingMsgId(id);
-    };
-
-    const voices = window.speechSynthesis.getVoices();
-    if (voices.length === 0) {
-      window.speechSynthesis.onvoiceschanged = () => {
-        speakAction();
-        window.speechSynthesis.onvoiceschanged = null;
-      };
-    } else {
-      speakAction();
-    }
-  };
-
-  useEffect(() => {
-    if (!autoRead || isLoading || messages.length === 0) return;
-    const lastMsg = messages[messages.length - 1];
-    
-    if (lastMsg.role === "assistant" && lastAutoReadIdRef.current !== lastMsg.id) {
-      lastAutoReadIdRef.current = lastMsg.id;
-      if (lastMsg.content) {
-        setTimeout(() => {
-          toggleSpeech(lastMsg.content, lastMsg.id);
-        }, 300);
-      }
-    }
-  }, [messages, isLoading, autoRead]);
 
   const shouldShowSecretariatButtons = (text: string): boolean => {
     return /915\s*049\s*850|secretar[ií]a|llamar|contacta directamente|matrimonio|bautismo|unc[ií][oó]n|partida/i.test(text);
@@ -578,11 +605,23 @@ function ParishAIBotFabWidget() {
                 {isLoading && <Sparkles size={13} className="text-[#C8A45C] animate-spin" />}
               </div>
               <p className="text-[#C8A45C] text-xs mt-1 flex items-center gap-1 font-medium">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
-                </span>
-                {isLoading ? "Consultando archivos..." : "Asistente Parroquial"}
+                {speakingMsgId ? (
+                  <>
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#C8A45C] opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-[#C8A45C]" />
+                    </span>
+                    <span className="animate-pulse text-[#E5C378]">Hablando...</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+                    </span>
+                    {isLoading ? "Consultando archivos..." : "Asistente Parroquial"}
+                  </>
+                )}
               </p>
             </div>
           </div>
@@ -593,25 +632,34 @@ function ParishAIBotFabWidget() {
               onClick={() => {
                 const nextState = !autoRead;
                 setAutoRead(nextState);
-                if (nextState && messages.length > 0) {
-                  const lastMsg = messages[messages.length - 1];
-                  if (lastMsg.role === "assistant") {
-                    toggleSpeech(lastMsg.content, lastMsg.id);
-                    lastAutoReadIdRef.current = lastMsg.id;
+                if (nextState) {
+                  // Al activar la voz, reproducir el último mensaje del Hermano Elías con contenido
+                  const lastAssistantMsg = [...messages].reverse().find((m) => m.role === "assistant" && m.content.trim().length > 0);
+                  if (lastAssistantMsg) {
+                    lastAutoReadIdRef.current = lastAssistantMsg.id;
+                    toggleSpeech(lastAssistantMsg.content, lastAssistantMsg.id);
                   }
-                } else if (!nextState && typeof window !== "undefined" && "speechSynthesis" in window) {
-                  window.speechSynthesis.cancel();
-                  setSpeakingMsgId(null);
+                } else {
+                  if (typeof window !== "undefined" && "speechSynthesis" in window) {
+                    window.speechSynthesis.cancel();
+                    setSpeakingMsgId(null);
+                  }
                 }
               }}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold transition-all border shadow-sm ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all border shadow-sm ${
                 autoRead
-                  ? "bg-[#C8A45C] text-white border-[#C8A45C] ring-2 ring-white/30 animate-pulse"
+                  ? "bg-[#C8A45C] text-[#0F1B2D] border-[#C8A45C] ring-2 ring-white/40 font-extrabold"
                   : "bg-white/10 text-white/80 border-white/15 hover:text-white hover:bg-white/20"
               }`}
-              title={autoRead ? "Desactivar lectura automática" : "Activar lectura automática de respuestas"}
+              title={autoRead ? "Desactivar voz automática" : "Activar voz del Hermano Elías"}
             >
-              <Volume2 size={13} className={autoRead ? "animate-bounce" : ""} />
+              {speakingMsgId ? (
+                <Volume2 size={14} className="text-[#0F1B2D] animate-bounce shrink-0" />
+              ) : autoRead ? (
+                <Volume2 size={14} className="text-[#0F1B2D] shrink-0" />
+              ) : (
+                <VolumeX size={14} className="text-white/60 shrink-0" />
+              )}
               <span>{autoRead ? "Voz: ON" : "Voz: OFF"}</span>
             </button>
 

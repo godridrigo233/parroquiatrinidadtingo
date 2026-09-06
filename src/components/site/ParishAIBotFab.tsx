@@ -211,16 +211,43 @@ export function ParishAIBotFab() {
 
 function cleanTextForSpeech(text: string): string {
   if (!text) return "";
-  return text
-    .replace(/https?:\/\/[^\s]+/g, "enlace en la página web")
-    .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, "")
-    .replace(/\*\*/g, "")
-    .replace(/\*/g, "")
-    .replace(/_{1,2}/g, "")
-    .replace(/^#+\s+/gm, "")
-    .replace(/^[-*•]\s+/gm, "")
-    .replace(/\s+/g, " ")
-    .trim();
+
+  let t = text;
+
+  // 1. Reemplazar URLs y menciones web
+  t = t.replace(/https?:\/\/[^\s]+/g, "enlace en la página");
+
+  // 2. Normalizar abreviaturas eclesiásticas y parroquiales
+  t = t.replace(/\bRvdo\.\s*P\./gi, "Reverendo Padre ");
+  t = t.replace(/\bP\.\s+(?=[A-ZÁÉÍÓÚ])/g, "Padre ");
+  t = t.replace(/\bHno\.\s+/gi, "Hermano ");
+  t = t.replace(/\bHna\.\s+/gi, "Hermana ");
+  t = t.replace(/\bCMI\b/g, "Padres Carmelitas");
+  t = t.replace(/\bAv\.\s+/gi, "Avenida ");
+  t = t.replace(/\bAmp\.\s+/gi, "Ampliación ");
+  t = t.replace(/\bLun[–\-]S[aá]b\b/gi, "Lunes a Sábado");
+  t = t.replace(/\bDom\b/gi, "Domingo");
+
+  // 3. Normalizar horarios litúrgicos
+  t = t.replace(/\b8:00\s*(AM|am|a\.m\.)/gi, "ocho de la mañana");
+  t = t.replace(/\b10:00\s*(AM|am|a\.m\.)/gi, "diez de la mañana");
+  t = t.replace(/\b12:00\s*(PM|pm|p\.m\.|m\.)/gi, "doce del mediodía");
+  t = t.replace(/\b3:00\s*(PM|pm|p\.m\.)/gi, "tres de la tarde");
+  t = t.replace(/\b6:00\s*(PM|pm|p\.m\.)/gi, "seis de la tarde");
+  t = t.replace(/\b3:00\s*[–\-]\s*6:00\s*(PM|pm|p\.m\.)/gi, "tres a seis de la tarde");
+
+  // 4. Normalizar teléfono y siglas
+  t = t.replace(/\+?51\s*915\s*049\s*850/g, "nueve quince, cero cuarenta y nueve, ocho cincuenta");
+  t = t.replace(/\bDNI\b/g, "D N I");
+  t = t.replace(/\bCCI\b/g, "cuenta interbancaria");
+
+  // 5. Eliminar emojis y caracteres especiales
+  t = t.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, "");
+  t = t.replace(/[*_#~`•|]/g, " ");
+  t = t.replace(/^[-*•]\s+/gm, "");
+  t = t.replace(/\s+/g, " ");
+
+  return t.trim();
 }
 
 function ParishAIBotFabWidget() {
@@ -375,28 +402,28 @@ function ParishAIBotFabWidget() {
   };
 
   // ── SÍNTESIS DE VOZ MASCULINA / SERENA ──
-  const getBestSpanishVoice = useCallback((): SpeechSynthesisVoice | null => {
-    if (typeof window === "undefined" || !("speechSynthesis" in window)) return null;
+  const getBestSpanishVoice = useCallback((): { voice: SpeechSynthesisVoice | null; isMale: boolean } => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return { voice: null, isMale: false };
     const voices = availableVoices.length > 0 ? availableVoices : window.speechSynthesis.getVoices();
-    if (!voices || voices.length === 0) return null;
+    if (!voices || voices.length === 0) return { voice: null, isMale: false };
 
     const spanishVoices = voices.filter(
       (v) => v.lang.toLowerCase().startsWith("es") || v.lang.toLowerCase().includes("spanish")
     );
-    if (spanishVoices.length === 0) return voices[0] || null;
+    if (spanishVoices.length === 0) return { voice: voices[0] || null, isMale: false };
 
-    // 1. Preferir voces con nombre masculino explícito
-    const MALE_NAMES = /jorge|alvaro|álvaro|diego|pablo|miguel|carlos|felipe|juan|pedro|luis|alex|raul|raúl|enrique|manuel|male|hombre|standard-b|natural-b|wavenet-b|wavenet-d|neural2-b/i;
-    const maleVoice = spanishVoices.find((v) => MALE_NAMES.test(v.name));
-    if (maleVoice) return maleVoice;
+    // 1. Preferir voces masculinas explícitas / naturales / neuronales
+    const MALE_REGEX = /(jorge|alvaro|álvaro|diego|pablo|miguel|carlos|felipe|juan|pedro|luis|alex|raul|raúl|enrique|manuel|mateo|gonzalo|fernando|ignacio|male|hombre|standard-b|natural-b|wavenet-b|wavenet-d|neural2-b)/i;
+    const maleVoice = spanishVoices.find((v) => MALE_REGEX.test(v.name) || MALE_REGEX.test(v.voiceURI));
+    if (maleVoice) return { voice: maleVoice, isMale: true };
 
     // 2. Voces neutras (excluyendo nombres femeninos específicos)
-    const FEMALE_NAMES = /paulina|sabina|laura|mar[ií]a|sara|mónica|monica|helena|in[eé]s|carmen|luc[ií]a|lucia|elena|rosa|valentina|camila|andrea|fernanda|gabriela|ximena|female|mujer/i;
-    const notFemale = spanishVoices.find((v) => !FEMALE_NAMES.test(v.name));
-    if (notFemale) return notFemale;
+    const FEMALE_REGEX = /(paulina|sabina|laura|mar[ií]a|sara|mónica|monica|helena|in[eé]s|carmen|luc[ií]a|lucia|elena|rosa|valentina|camila|andrea|fernanda|gabriela|ximena|soledad|francisca|paloma|mia|female|mujer|standard-a|standard-c|wavenet-a|wavenet-c)/i;
+    const notFemale = spanishVoices.find((v) => !FEMALE_REGEX.test(v.name) && !FEMALE_REGEX.test(v.voiceURI));
+    if (notFemale) return { voice: notFemale, isMale: true };
 
     // 3. Fallback a la primera voz en español disponible
-    return spanishVoices[0];
+    return { voice: spanishVoices[0], isMale: false };
   }, [availableVoices]);
 
   const toggleSpeech = useCallback((text: string, id: string) => {
@@ -419,7 +446,7 @@ function ParishAIBotFabWidget() {
     if (!cleanVoiceText) return;
 
     const utterance = new SpeechSynthesisUtterance(cleanVoiceText);
-    const bestVoice = getBestSpanishVoice();
+    const { voice: bestVoice, isMale } = getBestSpanishVoice();
     if (bestVoice) {
       utterance.voice = bestVoice;
       utterance.lang = bestVoice.lang;
@@ -427,9 +454,11 @@ function ParishAIBotFabWidget() {
       utterance.lang = "es-PE";
     }
 
-    // Tono sereno, pastoral y masculino (pitch 0.85)
-    utterance.pitch = 0.85;
-    utterance.rate = 0.95;
+    // Tono varonil, cálido y pastoral de sacerdote/fraile:
+    // Si la voz ya es masculina, 0.88 le da una resonancia grave y solemne.
+    // Si es voz de sistema genérica, 0.82 la modula hacia registro grave.
+    utterance.pitch = isMale ? 0.88 : 0.82;
+    utterance.rate = 0.90; // Ritmo pausado y solemne
 
     utterance.onstart = () => {
       setSpeakingMsgId(id);

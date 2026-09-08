@@ -571,13 +571,17 @@ ${PARISH_STATIC_DATA}${dynamicContext}
         }
       }
 
-      // ── Envío automático de recordatorio de misa (llamado por GitHub Actions) ──
-      if (url.pathname === "/api/auto-misa-recordatorio" && request.method === "POST") {
+      if (url.pathname === "/api/auto-misa-recordatorio" && (request.method === "POST" || request.method === "GET")) {
         try {
-          // Verificar secreto para que solo GitHub Actions pueda llamarlo
+          const isVercelCron = request.headers.get("x-vercel-cron") === "1";
           const authHeader = request.headers.get("authorization") || "";
           const expectedSecret = process.env.CRON_SECRET;
-          if (!expectedSecret || authHeader !== `Bearer ${expectedSecret}`) {
+          const isAuthorized =
+            isVercelCron ||
+            (expectedSecret && authHeader === `Bearer ${expectedSecret}`) ||
+            process.env.NODE_ENV === "development";
+
+          if (!isAuthorized) {
             return new Response(JSON.stringify({ error: "No autorizado." }), {
               status: 403, headers: { "content-type": "application/json" },
             });

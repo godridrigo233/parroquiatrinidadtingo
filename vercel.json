@@ -27,9 +27,9 @@
     }
   ],
   "crons": [
-          {
-            "path": "/api/cron/evangelio",
-            "schedule": "0 12 * * *"
-          }
+    {
+      "path": "/api/auto-misa-recordatorio",
+      "schedule": "30 12,22 * * 0"
+    }
   ]
 }

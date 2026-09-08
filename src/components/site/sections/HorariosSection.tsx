@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
-import { Church, Heart, BookOpen, Flame, Users, Briefcase, ArrowRight } from "lucide-react";
+import { Church, Heart, BookOpen, Flame, Users, Briefcase, ArrowRight, BellRing } from "lucide-react";
 import { Reveal } from "@/components/site/Reveal";
+import { PushNotificationToggle } from "@/components/site/PushNotificationToggle";
 
 type Schedule = { id: string; category: string; day_label: string; time_label: string; notes: string | null; sort_order: number };
 
@@ -70,7 +71,26 @@ export default function HorariosSection({
           )}
         </div>
 
-        
+        {/* 🔔 Banner de Recordatorio de Misa Dominical */}
+        <Reveal delay={200} className="mt-12 max-w-3xl mx-auto">
+          <div className="bg-gradient-to-r from-[#1e2a5e] via-[#162048] to-[#0f1736] text-white p-6 sm:p-7 rounded-3xl shadow-elegant border border-gold/40 flex flex-col sm:flex-row items-center justify-between gap-5">
+            <div className="flex items-center gap-4 text-left">
+              <div className="h-12 w-12 rounded-2xl bg-gold/20 text-gold flex items-center justify-center shrink-0 border border-gold/30">
+                <BellRing size={24} />
+              </div>
+              <div>
+                <h4 className="font-display font-semibold text-lg text-white">Recordatorio de Misa Dominical</h4>
+                <p className="text-xs text-white/80 mt-0.5">
+                  Recibe un aviso automático en tu celular 30 minutos antes (Domingos 7:30 AM y 5:30 PM).
+                </p>
+              </div>
+            </div>
+            <div className="w-full sm:w-auto shrink-0 min-w-[210px]">
+              <PushNotificationToggle />
+            </div>
+          </div>
+        </Reveal>
+
       </div>
     </section>
   );

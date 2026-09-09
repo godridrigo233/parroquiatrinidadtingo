@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Link } from "@tanstack/react-router";
 import { Church, Heart, BookOpen, Flame, Users, Briefcase, ArrowRight, BellRing } from "lucide-react";
 import { Reveal } from "@/components/site/Reveal";
@@ -20,6 +21,22 @@ export default function HorariosSection({
   groupedSchedules: Record<string, Schedule[]>;
   loadingSchedules: boolean;
 }) {
+  const [isMobileDevice, setIsMobileDevice] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      if (typeof window === "undefined") return;
+      const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera || "";
+      const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+      const isSmallScreen = window.innerWidth < 1024;
+      const hasTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+      setIsMobileDevice(isMobileUA || (isSmallScreen && hasTouch));
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
   return (
     <section id="horarios" className="py-24 px-5 lg:px-8">
       <div className="max-w-7xl mx-auto">
@@ -71,25 +88,27 @@ export default function HorariosSection({
           )}
         </div>
 
-        {/* 🔔 Banner de Recordatorio de Misa Dominical */}
-        <Reveal delay={200} className="mt-12 max-w-3xl mx-auto">
-          <div className="bg-gradient-to-r from-[#1e2a5e] via-[#162048] to-[#0f1736] text-white p-6 sm:p-7 rounded-3xl shadow-elegant border border-gold/40 flex flex-col sm:flex-row items-center justify-between gap-5">
-            <div className="flex items-center gap-4 text-left">
-              <div className="h-12 w-12 rounded-2xl bg-gold/20 text-gold flex items-center justify-center shrink-0 border border-gold/30">
-                <BellRing size={24} />
+        {/* 🔔 Banner de Recordatorio de Misa Dominical (Exclusivo para Celulares / Móviles) */}
+        {isMobileDevice && (
+          <Reveal delay={200} className="mt-12 max-w-3xl mx-auto">
+            <div className="bg-gradient-to-r from-[#1e2a5e] via-[#162048] to-[#0f1736] text-white p-6 sm:p-7 rounded-3xl shadow-elegant border border-gold/40 flex flex-col sm:flex-row items-center justify-between gap-5">
+              <div className="flex items-center gap-4 text-left">
+                <div className="h-12 w-12 rounded-2xl bg-gold/20 text-gold flex items-center justify-center shrink-0 border border-gold/30">
+                  <BellRing size={24} />
+                </div>
+                <div>
+                  <h4 className="font-display font-semibold text-lg text-white">Recordatorio de Misa Dominical</h4>
+                  <p className="text-xs text-white/80 mt-0.5">
+                    Recibe un aviso automático en tu celular 30 minutos antes (Domingos 7:30 AM y 5:30 PM).
+                  </p>
+                </div>
               </div>
-              <div>
-                <h4 className="font-display font-semibold text-lg text-white">Recordatorio de Misa Dominical</h4>
-                <p className="text-xs text-white/80 mt-0.5">
-                  Recibe un aviso automático en tu celular 30 minutos antes (Domingos 7:30 AM y 5:30 PM).
-                </p>
+              <div className="w-full sm:w-auto shrink-0 min-w-[210px]">
+                <PushNotificationToggle />
               </div>
             </div>
-            <div className="w-full sm:w-auto shrink-0 min-w-[210px]">
-              <PushNotificationToggle />
-            </div>
-          </div>
-        </Reveal>
+          </Reveal>
+        )}
 
       </div>
     </section>

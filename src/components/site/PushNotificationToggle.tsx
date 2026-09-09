@@ -20,6 +20,7 @@ export function PushNotificationToggle() {
   const [mode, setMode] = useState<"checking" | "subscribe" | "subscribed">("checking");
   const [working, setWorking] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
+  const [isMobileDevice, setIsMobileDevice] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
   const [showIOSModal, setShowIOSModal] = useState(false);
   const isMounted = useRef(true);
@@ -38,6 +39,11 @@ export function PushNotificationToggle() {
     const userAgent = window.navigator.userAgent.toLowerCase();
     const isIOSDevice = /iphone|ipad|ipod/.test(userAgent);
     setIsIOS(isIOSDevice);
+
+    const isMobileUA = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
+    const isSmallScreen = window.innerWidth < 1024;
+    const hasTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+    setIsMobileDevice(isMobileUA || (isSmallScreen && hasTouch));
 
     const mq = window.matchMedia("(display-mode: standalone)");
     const checkStandalone = () =>
@@ -223,6 +229,10 @@ export function PushNotificationToggle() {
       if (isMounted.current) setWorking(false);
     }
   }, []);
+
+  if (!isMobileDevice) {
+    return null;
+  }
 
   return (
     <>

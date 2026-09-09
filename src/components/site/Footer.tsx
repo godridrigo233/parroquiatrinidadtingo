@@ -1,4 +1,5 @@
-import { Facebook, Instagram } from "lucide-react";
+import { Facebook, Instagram, Youtube } from "lucide-react";
+import { TikTokIcon } from "@/components/site/sections/VideoSemanalSection";
 
 export function Footer() {
   return (
@@ -33,13 +34,19 @@ export function Footer() {
           </ul>
         </div>
         <div>
-          <p className="font-semibold text-white uppercase tracking-widest text-xs">Redes Sociales</p>
+          <p className="font-semibold text-white uppercase tracking-widest text-xs">Redes Sociales y Canales</p>
           <div className="mt-4 flex flex-wrap gap-2">
-            <a href="https://www.facebook.com/parroquiasantisimatrinidadtingo/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 text-sm hover:bg-white/20 transition-colors">
-              <Facebook size={16} /> Facebook
+            <a href="https://www.facebook.com/parroquiasantisimatrinidadtingo/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-white/10 text-xs sm:text-sm hover:bg-white/20 transition-colors">
+              <Facebook size={15} /> Facebook
             </a>
-            <a href="https://www.instagram.com/stma_trinidad_tingo/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 text-sm hover:bg-white/20 transition-colors">
-              <Instagram size={16} /> Instagram
+            <a href="https://www.instagram.com/stma_trinidad_tingo/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-white/10 text-xs sm:text-sm hover:bg-white/20 transition-colors">
+              <Instagram size={15} /> Instagram
+            </a>
+            <a href="https://youtu.be/AZG4COJy9MQ?si=AnCM6gOXQaATDMHk" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-white/10 text-xs sm:text-sm hover:bg-red-600/30 hover:text-white transition-colors">
+              <Youtube size={15} className="text-red-400" /> YouTube
+            </a>
+            <a href="https://www.tiktok.com/@p.santisimatrinidadtingo?_r=1&_t=ZS-99TwHvEUaQf" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-white/10 text-xs sm:text-sm hover:bg-white/20 transition-colors">
+              <TikTokIcon className="w-3.5 h-3.5 text-white" /> TikTok
             </a>
           </div>
         </div>

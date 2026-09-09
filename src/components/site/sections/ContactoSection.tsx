@@ -1,7 +1,8 @@
-import { Clock, MapPin, Phone, Facebook, Instagram, Mail } from "lucide-react";
+import { Clock, MapPin, Phone, Facebook, Instagram, Mail, Youtube } from "lucide-react";
 import { Reveal } from "@/components/site/Reveal";
 import { ComoLlegarCard } from "@/components/site/ComoLlegarCard";
 import { Footer } from "@/components/site/Footer";
+import { TikTokIcon } from "@/components/site/sections/VideoSemanalSection";
 
 export default function ContactoSection() {
   return (
@@ -64,6 +65,24 @@ export default function ContactoSection() {
                 <div>
                   <p className="font-semibold text-white">Instagram</p>
                   <a href="https://www.instagram.com/stma_trinidad_tingo/" target="_blank" rel="noopener noreferrer" className="text-white/90 text-sm hover:text-gold transition-colors">@stma_trinidad_tingo</a>
+                </div>
+              </li>
+              <li className="flex items-start gap-4">
+                <span className="h-11 w-11 rounded-xl bg-white/10 flex items-center justify-center text-gold shrink-0">
+                  <Youtube size={20} />
+                </span>
+                <div>
+                  <p className="font-semibold text-white">YouTube</p>
+                  <a href="https://youtu.be/AZG4COJy9MQ?si=AnCM6gOXQaATDMHk" target="_blank" rel="noopener noreferrer" className="text-white/90 text-sm hover:text-gold transition-colors">Canal Parroquial · Ver Video</a>
+                </div>
+              </li>
+              <li className="flex items-start gap-4">
+                <span className="h-11 w-11 rounded-xl bg-white/10 flex items-center justify-center text-gold shrink-0">
+                  <TikTokIcon className="w-5 h-5 text-gold" />
+                </span>
+                <div>
+                  <p className="font-semibold text-white">TikTok</p>
+                  <a href="https://www.tiktok.com/@p.santisimatrinidadtingo?_r=1&_t=ZS-99TwHvEUaQf" target="_blank" rel="noopener noreferrer" className="text-white/90 text-sm hover:text-gold transition-colors">@p.santisimatrinidadtingo</a>
                 </div>
               </li>
               <li className="flex items-start gap-4">

@@ -14,6 +14,7 @@ const AboutSection = lazy(() => import("@/components/site/sections/AboutSection"
 const SacramentosSection = lazy(() => import("@/components/site/sections/SacramentosSection"));
 const HorariosSection = lazy(() => import("@/components/site/sections/HorariosSection"));
 const GaleriaSection = lazy(() => import("@/components/site/sections/GaleriaSection"));
+const VideoSemanalSection = lazy(() => import("@/components/site/sections/VideoSemanalSection"));
 const DonacionesSection = lazy(() =>
   import("@/components/site/sections/DonacionesSection").then((m) => ({ default: m.DonacionesSection })),
 );
@@ -77,6 +78,8 @@ export const Route = createFileRoute("/")({
           sameAs: [
             "https://www.facebook.com/parroquiasantisimatrinidadtingo/",
             "https://www.instagram.com/stma_trinidad_tingo/",
+            "https://www.youtube.com/watch?v=AZG4COJy9MQ",
+            "https://www.tiktok.com/@p.santisimatrinidadtingo",
           ],
           openingHoursSpecification: [
             {
@@ -296,6 +299,10 @@ function Home() {
 
       <Suspense fallback={<SectionSkeleton height="h-[700px]" />}>
         <GaleriaSection gallery={gallery} />
+      </Suspense>
+
+      <Suspense fallback={<SectionSkeleton height="h-[500px]" />}>
+        <VideoSemanalSection />
       </Suspense>
       <Suspense fallback={<SectionSkeleton height="h-[700px]" />}>
         <SacramentosSection />

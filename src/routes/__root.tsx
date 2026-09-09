@@ -91,7 +91,9 @@ const ORG_JSONLD = {
       ],
       "sameAs": [
         "https://www.facebook.com/parroquiasantisimatrinidadtingo/",
-        "https://www.instagram.com/stma_trinidad_tingo/"
+        "https://www.instagram.com/stma_trinidad_tingo/",
+        "https://www.youtube.com/watch?v=AZG4COJy9MQ",
+        "https://www.tiktok.com/@p.santisimatrinidadtingo"
       ],
       "contactPoint": [
         {

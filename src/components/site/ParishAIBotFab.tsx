@@ -1,5 +1,6 @@
 "use client";
 import React, { useRef, useEffect, useState, useCallback } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { 
   MessageSquareText, 
   X, 
@@ -605,15 +606,17 @@ function ParishAIBotFabWidget() {
       )}
 
       {/* VENTANA DEL CHAT */}
-      <div
-        role="dialog"
-        aria-label="Asistente parroquial"
-        className={`mb-4 w-[calc(100vw-40px)] sm:w-[390px] bg-white rounded-3xl shadow-2xl border border-[#CBD5E1] overflow-hidden origin-bottom-right ${motionClass} ${
-          isOpen
-            ? "scale-100 opacity-100 translate-y-0"
-            : `${reducedMotion ? "scale-100" : "scale-95"} opacity-0 translate-y-4 pointer-events-none absolute`
-        }`}
-      >
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            role="dialog"
+            aria-label="Asistente parroquial"
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            transition={{ duration: reducedMotion ? 0.15 : 0.3, ease: "easeOut" }}
+            className="mb-4 w-[calc(100vw-40px)] sm:w-[390px] bg-white rounded-3xl shadow-2xl border border-[#CBD5E1] overflow-hidden origin-bottom-right"
+          >
         {/* Cabecera */}
         <div className="bg-[#0F1B2D] p-3.5 sm:p-4 flex items-center justify-between border-b border-[#C8A45C]/30">
           <div className="flex items-center gap-3">
@@ -846,10 +849,12 @@ function ParishAIBotFabWidget() {
             <Send size={16} className="ml-0.5" />
           </button>
         </form>
-      </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* BOTÓN FLOTANTE (FAB) */}
-      <div className="relative">
+      <div className="relative fab-float">
         {!isOpen && unread > 0 && (
           <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-white z-10 animate-bounce">
             {unread > 9 ? "9+" : unread}
@@ -858,12 +863,16 @@ function ParishAIBotFabWidget() {
         <button
           onClick={handleToggle}
           aria-label={isOpen ? "Cerrar asistente parroquial" : "Abrir asistente parroquial"}
-          className={`h-14 w-14 rounded-full flex items-center justify-center shadow-[0_8px_25px_rgba(15,27,45,0.35)] hover:scale-105 active:scale-95 border-2 border-[#C8A45C]/40 ${motionClass} ${
+          className={`relative h-14 w-14 rounded-full flex items-center justify-center shadow-[0_8px_25px_rgba(15,27,45,0.35)] hover:scale-105 active:scale-95 border-2 border-[#C8A45C]/40 ${motionClass} ${
             isOpen
               ? "bg-[#0F1B2D] text-white rotate-90"
               : "bg-[#0F1B2D] text-[#C8A45C] hover:bg-[#1a2e4a]"
           }`}
         >
+          <span className="absolute -top-0.5 -right-0.5 flex h-3.5 w-3.5" aria-hidden="true">
+            <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75 animate-ping" />
+            <span className="relative inline-flex h-3.5 w-3.5 rounded-full bg-emerald-500 ring-2 ring-[#0F1B2D]" />
+          </span>
           {isOpen ? (
             <X size={24} className="-rotate-90" />
           ) : (

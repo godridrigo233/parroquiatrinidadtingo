@@ -93,6 +93,19 @@
 }
 
 @layer utilities {
+  .fab-float {
+    animation: fabFloat 3.5s ease-in-out infinite;
+  }
+
+  @keyframes fabFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .fab-float { animation: none; }
+  }
+
   .font-display { font-family: var(--font-display); }
   .text-gold { color: var(--gold); }
   .bg-gold { background-color: var(--gold); }

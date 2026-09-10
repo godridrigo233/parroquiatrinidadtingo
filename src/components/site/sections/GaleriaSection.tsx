@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { Reveal } from "@/components/site/Reveal";
 import { OptimizedImage } from "@/components/site/OptimizedImage";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { ChevronLeft, ChevronRight, Share2, Download, X, Layers, Filter } from "lucide-react";
+import { ChevronLeft, ChevronRight, Share2, Download, X } from "lucide-react";
 
 export type GalleryImage = {
   id: string;
@@ -33,15 +33,8 @@ const defaultGalleryImgs: ProcessedImage[] = [
 
 type SpanType = "wide" | "tall" | "normal" | "featured";
 const SPAN_PATTERN: SpanType[] = [
-  "featured",
-  "normal",
-  "tall",
-  "normal",
-  "normal",
-  "wide",
-  "normal",
-  "normal",
-  "normal",
+  "featured", "normal", "tall", "normal", "normal",
+  "wide", "normal", "normal", "normal",
 ];
 
 function getDesktopSpanClass(type: SpanType): string {
@@ -70,8 +63,21 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
   const [selectedCategory, setSelectedCategory] = useState<string>("Todas");
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [visibleCount, setVisibleCount] = useState<number>(INITIAL_BATCH);
-  const [filmstripStart, setFilmstripStart] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
+  const [animKey, setAnimKey] = useState(0);
+  const [animDir, setAnimDir] = useState<"left" | "right">("right");
+
+  // Swipe tracking refs
+  const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
+
+  // Filmstrip scroll ref
+  const filmstripRef = useRef<HTMLDivElement>(null);
+  const activeThumbRef = useRef<HTMLButtonElement>(null);
+
+  // Filter scroll shadow tracking
+  const filterScrollRef = useRef<HTMLDivElement>(null);
+  const [filterCanScrollRight, setFilterCanScrollRight] = useState(false);
+  const [filterCanScrollLeft, setFilterCanScrollLeft] = useState(false);
 
   const allItems: ProcessedImage[] = useMemo(() => {
     return gallery && gallery.length > 0
@@ -84,22 +90,17 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
       : defaultGalleryImgs;
   }, [gallery]);
 
-  // Extraer categorías únicas preservando orden
   const categories = useMemo(() => {
     const set = new Set<string>();
-    allItems.forEach((item) => {
-      if (item.category) set.add(item.category);
-    });
+    allItems.forEach((item) => { if (item.category) set.add(item.category); });
     return ["Todas", ...Array.from(set)];
   }, [allItems]);
 
-  // Filtrar elementos por categoría
   const filteredItems = useMemo(() => {
     if (selectedCategory === "Todas") return allItems;
     return allItems.filter((item) => item.category === selectedCategory);
   }, [allItems, selectedCategory]);
 
-  // Resetear paginación al cambiar categoría
   const handleCategoryChange = (cat: string) => {
     setSelectedCategory(cat);
     setVisibleCount(INITIAL_BATCH);
@@ -109,38 +110,49 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
   const hasMoreImages = filteredItems.length > visibleCount;
   const remainingCount = filteredItems.length - visibleCount;
 
-  // Lightbox navigation
+  // ── Lightbox navigation with animation direction tracking ──
   const handlePrev = useCallback(() => {
+    setAnimDir("left");
+    setAnimKey((k) => k + 1);
     setLightboxIndex((prev) =>
       prev === null ? null : (prev - 1 + itemsToDisplay.length) % itemsToDisplay.length
     );
   }, [itemsToDisplay.length]);
 
   const handleNext = useCallback(() => {
+    setAnimDir("right");
+    setAnimKey((k) => k + 1);
     setLightboxIndex((prev) =>
       prev === null ? null : (prev + 1) % itemsToDisplay.length
     );
   }, [itemsToDisplay.length]);
 
+  // ── Load more: instant, no fake setTimeout ──
   const loadMoreImages = () => {
-    if (isLoading || !hasMoreImages) return;
-    setIsLoading(true);
-    setTimeout(() => {
-      setVisibleCount((prev) => prev + BATCH_STEP);
-      setIsLoading(false);
-    }, 200);
+    if (!hasMoreImages) return;
+    setVisibleCount((prev) => prev + BATCH_STEP);
   };
 
-  // Filmstrip
-  const FILMSTRIP_VISIBLE = 5;
-  useEffect(() => {
-    if (lightboxIndex === null) return;
-    const half = Math.floor(FILMSTRIP_VISIBLE / 2);
-    const maxStart = Math.max(0, itemsToDisplay.length - FILMSTRIP_VISIBLE);
-    const ideal = lightboxIndex - half;
-    setFilmstripStart(Math.min(Math.max(0, ideal), maxStart));
-  }, [lightboxIndex, itemsToDisplay.length]);
+  // ── Touch/Swipe handlers for lightbox ──
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  }, []);
 
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (touchStartX.current === null || touchStartY.current === null) return;
+    const deltaX = e.changedTouches[0].clientX - touchStartX.current;
+    const deltaY = Math.abs(e.changedTouches[0].clientY - touchStartY.current);
+    // Only trigger if horizontal swipe dominates and exceeds 45px threshold
+    if (Math.abs(deltaX) > 45 && Math.abs(deltaX) > deltaY * 1.5) {
+      if (deltaX < 0) handleNext();
+      else handlePrev();
+    }
+    touchStartX.current = null;
+    touchStartY.current = null;
+  }, [handleNext, handlePrev]);
+
+  // ── Keyboard navigation ──
   useEffect(() => {
     if (lightboxIndex === null) return;
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -151,6 +163,33 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [lightboxIndex, handlePrev, handleNext]);
+
+  // ── Auto-scroll filmstrip to keep active thumb visible ──
+  useEffect(() => {
+    if (lightboxIndex === null || !activeThumbRef.current || !filmstripRef.current) return;
+    activeThumbRef.current.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+      inline: "center",
+    });
+  }, [lightboxIndex]);
+
+  // ── Filter scroll shadow detection ──
+  useEffect(() => {
+    const el = filterScrollRef.current;
+    if (!el) return;
+    const check = () => {
+      setFilterCanScrollLeft(el.scrollLeft > 8);
+      setFilterCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 8);
+    };
+    check();
+    el.addEventListener("scroll", check, { passive: true });
+    window.addEventListener("resize", check);
+    return () => {
+      el.removeEventListener("scroll", check);
+      window.removeEventListener("resize", check);
+    };
+  }, [categories]);
 
   const shareWhatsApp = (item: ProcessedImage) => {
     const text = `✝️ Mira esta fotografía de la Parroquia Santísima Trinidad de Tingo: "${item.label}"\n${window.location.origin}${item.src}`;
@@ -167,7 +206,10 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
   };
 
   const activeItem = lightboxIndex !== null ? itemsToDisplay[lightboxIndex] : null;
-  const filmstripItems = itemsToDisplay.slice(filmstripStart, filmstripStart + FILMSTRIP_VISIBLE);
+
+  // Preload next and prev images when lightbox is open
+  const preloadNext = lightboxIndex !== null ? itemsToDisplay[(lightboxIndex + 1) % itemsToDisplay.length] : null;
+  const preloadPrev = lightboxIndex !== null ? itemsToDisplay[(lightboxIndex - 1 + itemsToDisplay.length) % itemsToDisplay.length] : null;
 
   return (
     <section id="galeria" className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-secondary/40 overflow-hidden">
@@ -190,32 +232,45 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
           </p>
         </Reveal>
 
-        {/* FILTROS POR CATEGORÍA (CHIPS MÓVILES) */}
+        {/* FILTROS POR CATEGORÍA — con sombras indicadoras de scroll */}
         <Reveal className="mt-8">
-          <div className="flex items-center gap-2 overflow-x-auto pb-3 pt-1 px-1 scrollbar-none justify-start md:justify-center">
-            {categories.map((cat) => {
-              const isActive = selectedCategory === cat;
-              const count = cat === "Todas" ? allItems.length : allItems.filter(i => i.category === cat).length;
-              return (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => handleCategoryChange(cat)}
-                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-300 cursor-pointer ${
-                    isActive
-                      ? "bg-gold text-black shadow-md shadow-gold/20 scale-105"
-                      : "bg-card hover:bg-card/80 text-muted-foreground hover:text-foreground border border-border/50"
-                  }`}
-                >
-                  <span>{cat}</span>
-                  <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none ${
-                    isActive ? "bg-black/15 text-black font-bold" : "bg-muted text-muted-foreground"
-                  }`}>
-                    {count}
-                  </span>
-                </button>
-              );
-            })}
+          <div className="relative">
+            {/* Sombra izquierda */}
+            <div
+              className={`pointer-events-none absolute left-0 top-0 h-full w-10 z-10 bg-gradient-to-r from-secondary/80 to-transparent transition-opacity duration-300 ${filterCanScrollLeft ? "opacity-100" : "opacity-0"}`}
+            />
+            {/* Sombra derecha */}
+            <div
+              className={`pointer-events-none absolute right-0 top-0 h-full w-10 z-10 bg-gradient-to-l from-secondary/80 to-transparent transition-opacity duration-300 ${filterCanScrollRight ? "opacity-100" : "opacity-0"}`}
+            />
+            <div
+              ref={filterScrollRef}
+              className="flex items-center gap-2 overflow-x-auto pb-3 pt-1 px-1 scrollbar-none"
+            >
+              {categories.map((cat) => {
+                const isActive = selectedCategory === cat;
+                const count = cat === "Todas" ? allItems.length : allItems.filter(i => i.category === cat).length;
+                return (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => handleCategoryChange(cat)}
+                    className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-300 cursor-pointer ${
+                      isActive
+                        ? "bg-gold text-black shadow-md shadow-gold/20 scale-105"
+                        : "bg-card hover:bg-card/80 text-muted-foreground hover:text-foreground border border-border/50"
+                    }`}
+                  >
+                    <span>{cat}</span>
+                    <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono leading-none ${
+                      isActive ? "bg-black/15 text-black font-bold" : "bg-muted text-muted-foreground"
+                    }`}>
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </Reveal>
 
@@ -227,7 +282,7 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
           </span>
         </div>
 
-        {/* MOSAICO ADAPTATIVO (Grilla 2-col limpia en Móvil + Mosaico en Desktop) */}
+        {/* MOSAICO */}
         <Reveal className="mt-8">
           {itemsToDisplay.length > 0 ? (
             <>
@@ -243,12 +298,13 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
                       className={`col-span-1 ${desktopSpanClass} group relative overflow-hidden rounded-xl sm:rounded-2xl bg-card border border-border/40 shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 cursor-pointer`}
                       onClick={() => setLightboxIndex(index)}
                     >
-                      {/* En móvil: aspect-[4/3] fijo. En desktop: altura según patrón */}
+                      {/* width/height explícitos para evitar CLS */}
                       <div className={`aspect-[4/3] ${desktopHeightClass} w-full overflow-hidden relative`}>
                         <OptimizedImage
                           src={`${item.src}?v=1`}
                           alt={item.label}
-                          loading="lazy"
+                          width={800}
+                          height={600}
                           className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
                         />
                       </div>
@@ -272,28 +328,18 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
                 })}
               </div>
 
-              {/* BOTÓN "VER MÁS RECUERDOS" */}
+              {/* BOTÓN "VER MÁS" — sin setTimeout falso */}
               {hasMoreImages && (
                 <div className="mt-10 text-center">
                   <button
                     type="button"
                     onClick={loadMoreImages}
-                    disabled={isLoading}
-                    className="group inline-flex items-center gap-2.5 px-6 py-3 rounded-full bg-foreground text-background text-xs sm:text-sm font-semibold hover:bg-gold hover:text-foreground transition-all duration-300 shadow-md hover:shadow-lg hover:scale-102 cursor-pointer border-0 disabled:opacity-50"
+                    className="group inline-flex items-center gap-2.5 px-6 py-3 rounded-full bg-foreground text-background text-xs sm:text-sm font-semibold hover:bg-gold hover:text-foreground transition-all duration-300 shadow-md hover:shadow-lg hover:scale-102 cursor-pointer border-0"
                   >
-                    {isLoading ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                        <span>Cargando fotos...</span>
-                      </>
-                    ) : (
-                      <>
-                        <span>Ver {remainingCount} fotografías más</span>
-                        <span className="w-5 h-5 rounded-full bg-background/10 flex items-center justify-center group-hover:bg-foreground/10 transition-colors">
-                          <ChevronRight size={13} />
-                        </span>
-                      </>
-                    )}
+                    <span>Ver {remainingCount} fotografías más</span>
+                    <span className="w-5 h-5 rounded-full bg-background/10 flex items-center justify-center group-hover:bg-foreground/10 transition-colors">
+                      <ChevronRight size={13} />
+                    </span>
                   </button>
                 </div>
               )}
@@ -315,13 +361,22 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
         </Reveal>
       </div>
 
-      {/* VISOR LIGHTBOX OPTIMIZADO */}
+      {/* VISOR LIGHTBOX CON SWIPE + PRELOAD + ALTURA MEJORADA */}
       <Dialog open={lightboxIndex !== null} onOpenChange={(o) => !o && setLightboxIndex(null)}>
         <DialogContent className="max-w-5xl p-0 bg-black/98 border-white/10 shadow-2xl backdrop-blur-xl overflow-hidden sm:rounded-3xl">
           <DialogTitle className="sr-only">Visor de fotografía parroquial</DialogTitle>
 
+          {/* Preload oculto de imágenes adyacentes */}
+          {preloadNext && (
+            <img src={preloadNext.src} alt="" aria-hidden="true" className="sr-only absolute pointer-events-none" />
+          )}
+          {preloadPrev && (
+            <img src={preloadPrev.src} alt="" aria-hidden="true" className="sr-only absolute pointer-events-none" />
+          )}
+
           {activeItem && (
             <div className="flex flex-col h-full">
+              {/* Barra superior */}
               <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
                 <div className="flex items-center gap-2">
                   <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" />
@@ -343,7 +398,12 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
                 </div>
               </div>
 
-              <div className="relative flex-1 flex items-center justify-center p-3 sm:p-6 min-h-[45vh] max-h-[60vh]">
+              {/* Área de imagen — altura mejorada con dvh para evitar teclado virtual */}
+              <div
+                className="relative flex-1 flex items-center justify-center p-3 sm:p-6 min-h-[55dvh] max-h-[72dvh]"
+                onTouchStart={handleTouchStart}
+                onTouchEnd={handleTouchEnd}
+              >
                 {itemsToDisplay.length > 1 && (
                   <button
                     onClick={handlePrev}
@@ -354,12 +414,21 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
                   </button>
                 )}
 
-                <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
+                {/* Imagen con animación de dirección correcta via key único */}
+                <div
+                  key={`${activeItem.id}-${animKey}`}
+                  className={`relative w-full h-full flex items-center justify-center overflow-hidden ${
+                    animDir === "right"
+                      ? "animate-in fade-in slide-in-from-right-8 duration-250"
+                      : "animate-in fade-in slide-in-from-left-8 duration-250"
+                  }`}
+                >
                   <OptimizedImage
-                    key={activeItem.id}
                     src={activeItem.src}
                     alt={activeItem.label}
-                    className="max-h-[55vh] w-auto max-w-full object-contain rounded-lg shadow-2xl animate-in fade-in zoom-in-95 duration-200"
+                    width={1200}
+                    height={900}
+                    className="max-h-[68dvh] w-auto max-w-full object-contain rounded-lg shadow-2xl"
                   />
                 </div>
 
@@ -374,28 +443,38 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
                 )}
               </div>
 
+              {/* FILMSTRIP SCROLLABLE COMPLETO */}
               {itemsToDisplay.length > 1 && (
                 <div className="px-4 pt-2 pb-2 border-t border-white/8">
-                  <div className="flex items-center justify-center gap-1.5 overflow-x-auto py-1">
-                    {filmstripItems.map((thumb, fi) => {
-                      const realIndex = filmstripStart + fi;
-                      const isActive = realIndex === lightboxIndex;
+                  <div
+                    ref={filmstripRef}
+                    className="flex items-center gap-1.5 overflow-x-auto py-1 scrollbar-none"
+                  >
+                    {itemsToDisplay.map((thumb, idx) => {
+                      const isActive = idx === lightboxIndex;
                       return (
                         <button
                           key={thumb.id}
+                          ref={isActive ? activeThumbRef : null}
                           type="button"
-                          onClick={() => setLightboxIndex(realIndex)}
+                          onClick={() => {
+                            setAnimDir(idx > (lightboxIndex ?? 0) ? "right" : "left");
+                            setAnimKey((k) => k + 1);
+                            setLightboxIndex(idx);
+                          }}
                           className={`relative flex-shrink-0 rounded-md overflow-hidden transition-all duration-200 cursor-pointer border-2 ${
                             isActive
-                              ? "border-gold scale-105 shadow-md"
-                              : "border-transparent opacity-40 hover:opacity-80"
+                              ? "border-gold scale-110 shadow-md shadow-gold/30"
+                              : "border-transparent opacity-35 hover:opacity-75 hover:scale-105"
                           }`}
-                          style={{ width: 50, height: 36 }}
+                          style={{ width: 52, height: 38 }}
                           aria-label={`Ver ${thumb.label}`}
                         >
                           <OptimizedImage
                             src={`${thumb.src}?v=1`}
                             alt={thumb.label}
+                            width={104}
+                            height={76}
                             className="w-full h-full object-cover"
                           />
                         </button>
@@ -405,6 +484,7 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
                 </div>
               )}
 
+              {/* Barra inferior: info + acciones */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-4 py-3.5 border-t border-white/10">
                 <div>
                   <p className="text-white font-display text-base sm:text-lg font-medium leading-tight">

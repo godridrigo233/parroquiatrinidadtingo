@@ -3,7 +3,6 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { QRCodeSVG } from "qrcode.react";
 import { User, Search, ShieldCheck, KeyRound } from "lucide-react";
-import { encryptQR } from "@/utils/crypto"; 
 
 export const Route = createFileRoute("/carnet")({
   component: CarnetDigital,
@@ -13,6 +12,7 @@ function CarnetDigital() {
   const [code, setCode] = useState("");
   const [dni, setDni] = useState(""); 
   const [catechist, setCatechist] = useState<{ id: string; full_name: string } | null>(null);
+  const [qrToken, setQrToken] = useState("");
   const [error, setError] = useState("");
   
   const buscarCarnet = async (e: React.FormEvent) => {
@@ -27,7 +27,9 @@ function CarnetDigital() {
       .eq("dni", dni.trim())
       .single();
     
-    if (data) setCatechist(data);
+    if (data) {
+      setError("La función de carnet QR no está disponible actualmente.");
+    }
     else setError("Datos incorrectos. Verifica tu código y DNI.");
   };
 
@@ -65,7 +67,7 @@ function CarnetDigital() {
             <p className="text-xs font-mono text-muted-foreground uppercase mb-6">ID: {code.toUpperCase()}</p>
             
             <div className="bg-white p-4 rounded-2xl inline-block border-4 border-secondary shadow-sm mb-4">
-              <QRCodeSVG value={encryptQR(catechist.id)} size={200} level="H" />
+              <QRCodeSVG value={qrToken} size={200} level="H" />
             </div>
             
             <p className="text-sm text-muted-foreground mb-6 flex flex-col items-center gap-1.5">
@@ -75,7 +77,7 @@ function CarnetDigital() {
               Toma una captura de pantalla a este código.
             </p>
             
-            <button onClick={() => { setCatechist(null); setCode(""); setDni(""); }} className="text-sm text-muted-foreground underline hover:text-foreground transition-colors">
+            <button onClick={() => { setCatechist(null); setQrToken(""); setCode(""); setDni(""); }} className="text-sm text-muted-foreground underline hover:text-foreground transition-colors">
               Salir
             </button>
           </div>

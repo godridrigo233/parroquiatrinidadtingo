@@ -182,11 +182,17 @@ export function EventsManager({ showToast }: { showToast?: (m: string, t?: "succ
       return;
     }
 
-    // Notificación automática vía Webhook (Make.com)
+    // La URL de Make permanece en el servidor, nunca en el bundle del navegador.
     try {
-      await fetch("https://hook.us2.make.com/k1clffm3rgfvp43hww8j9gokoty7y2gm", {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error("Sesión no disponible");
+
+      await fetch("/api/webhooks/notificar-evento", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
         body: JSON.stringify({
           title: form.title,
           event_date: new Date(form.event_date).toISOString(),

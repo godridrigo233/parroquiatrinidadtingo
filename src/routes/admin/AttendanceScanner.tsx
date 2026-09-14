@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Scanner } from "@yudiel/react-qr-scanner";
 import { CheckCircle2, XCircle, Calendar, Camera, Loader2, Plus, Trash2, ListTodo, Clock, CalendarPlus, History, FileText, UserPlus, AlertTriangle } from "lucide-react";
 import { AttendanceReport } from "./AttendanceReport";
-import { decryptQR } from "@/utils/crypto";
 import { DirectoryManager } from "./DirectoryManager";
 
 export function AttendanceScanner() {
@@ -94,7 +93,7 @@ export function AttendanceScanner() {
     setProcessing(true);
 
     try {
-      const decryptedId = decryptQR(scannedText);
+      const decryptedId = null;
 
       if (!decryptedId) {
         setLastScan({ status: 'error', msg: "QR Inválido o Falso", subMsg: "Código no reconocido por el sistema" });

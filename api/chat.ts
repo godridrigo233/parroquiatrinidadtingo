@@ -1,6 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
 import { createGroq } from "@ai-sdk/groq";
 import { generateText } from "ai";
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
 
 export const config = {
   runtime: "edge",
@@ -9,8 +11,22 @@ export const config = {
 // ── CONTROL DE TASA (RATE LIMITING) EN MEMORIA EDGE ──
 const ipRequestMap = new Map<string, { count: number; resetTime: number }>();
 
+const distributedRateLimiter = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
+  ? new Ratelimit({
+      redis: new Redis({
+        url: process.env.UPSTASH_REDIS_REST_URL,
+        token: process.env.UPSTASH_REDIS_REST_TOKEN,
+      }),
+      limiter: Ratelimit.slidingWindow(8, "1 m"),
+      analytics: false,
+    })
+  : null;
+
 function checkRateLimit(ip: string, limit = 8, windowMs = 60 * 1000): boolean {
   const now = Date.now();
+  for (const [key, value] of ipRequestMap) {
+    if (now > value.resetTime) ipRequestMap.delete(key);
+  }
   const record = ipRequestMap.get(ip);
   if (!record || now > record.resetTime) {
     ipRequestMap.set(ip, { count: 1, resetTime: now + windowMs });
@@ -21,6 +37,18 @@ function checkRateLimit(ip: string, limit = 8, windowMs = 60 * 1000): boolean {
   }
   record.count += 1;
   return true;
+}
+
+async function allowRequest(ip: string): Promise<boolean> {
+  if (distributedRateLimiter) {
+    try {
+      const result = await distributedRateLimiter.limit(ip);
+      return result.success;
+    } catch (error) {
+      console.error("Rate limit distribuido no disponible:", error);
+    }
+  }
+  return checkRateLimit(ip);
 }
 
 const PARISH_STATIC_DATA = `
@@ -133,13 +161,21 @@ export default async function handler(req: Request) {
     req.headers.get("x-real-ip") ||
     "ip-anonima";
 
-  if (!checkRateLimit(ip, 8, 60 * 1000)) {
+  if (!(await allowRequest(ip))) {
     return new Response(
       JSON.stringify({
         error: "Límite de mensajes por minuto alcanzado. Por favor, espera un momento antes de volver a escribir.",
       }),
       { status: 429, headers: { "Content-Type": "application/json" } }
     );
+  }
+
+  const contentLength = Number(req.headers.get("content-length") || 0);
+  if (contentLength > 32_000) {
+    return new Response(JSON.stringify({ error: "Solicitud demasiado grande" }), {
+      status: 413,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 
   const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
@@ -151,9 +187,10 @@ export default async function handler(req: Request) {
       throw new Error("Falta GROQ_API_KEY en las variables de entorno.");
     }
 
-    const { messages } = await req.json();
+    const body = await req.json();
+    const messages = body?.messages;
 
-    if (!Array.isArray(messages) || messages.length === 0) {
+    if (!Array.isArray(messages) || messages.length === 0 || messages.length > 12) {
       return new Response(JSON.stringify({ error: "Formato de mensajes inválido" }), {
         status: 400,
         headers: { "Content-Type": "application/json" },

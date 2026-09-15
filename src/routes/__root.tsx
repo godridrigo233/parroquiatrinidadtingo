@@ -12,6 +12,8 @@ import appCss from "../styles.css?url";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CookieBanner } from '../components/auth/CookieBanner';
 import { useAnalytics } from '../hooks/useAnalytics';
+import { InstallBanner } from '@/components/site/InstallBanner';
+
 const ORG_JSONLD = {
   "@context": "https://schema.org",
   "@graph": [
@@ -299,6 +301,7 @@ function RootComponent() {
         <Outlet />
       </AuthProvider>
       <CookieBanner />
+      <InstallBanner />
     </QueryClientProvider>
     
   );

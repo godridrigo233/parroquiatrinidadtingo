@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { Reveal } from "@/components/site/Reveal";
 import { OptimizedImage } from "@/components/site/OptimizedImage";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { ChevronLeft, ChevronRight, Share2, Download, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Share2, Download, X, Camera } from "lucide-react";
 
 export type GalleryImage = {
   id: string;
@@ -31,32 +31,8 @@ const defaultGalleryImgs: ProcessedImage[] = [
   { id: "9", src: "/assets/gallery-hermandad-dolores.jpg", label: "Hermandad Virgen de los Dolores", category: "Ministerios" },
 ];
 
-type SpanType = "wide" | "tall" | "normal" | "featured";
-const SPAN_PATTERN: SpanType[] = [
-  "featured", "normal", "tall", "normal", "normal",
-  "wide", "normal", "normal", "normal",
-];
-
-function getDesktopSpanClass(type: SpanType): string {
-  switch (type) {
-    case "featured": return "md:col-span-2 md:row-span-2";
-    case "wide":     return "md:col-span-2 md:row-span-1";
-    case "tall":     return "md:col-span-1 md:row-span-2";
-    default:         return "md:col-span-1 md:row-span-1";
-  }
-}
-
-function getDesktopImgHeight(type: SpanType): string {
-  switch (type) {
-    case "featured": return "md:h-[460px]";
-    case "wide":     return "md:h-[220px]";
-    case "tall":     return "md:h-[460px]";
-    default:         return "md:h-[220px]";
-  }
-}
-
-const INITIAL_BATCH = 8;
-const BATCH_STEP = 8;
+const INITIAL_BATCH = 12;
+const BATCH_STEP = 12;
 const MAX_IMAGES = 60;
 
 export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }) {
@@ -66,15 +42,15 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
   const [animKey, setAnimKey] = useState(0);
   const [animDir, setAnimDir] = useState<"left" | "right">("right");
 
-  // Swipe tracking refs
+  // Swipe tracking
   const touchStartX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
 
-  // Filmstrip scroll ref
+  // Filmstrip
   const filmstripRef = useRef<HTMLDivElement>(null);
   const activeThumbRef = useRef<HTMLButtonElement>(null);
 
-  // Filter scroll shadow tracking
+  // Filter scroll shadows
   const filterScrollRef = useRef<HTMLDivElement>(null);
   const [filterCanScrollRight, setFilterCanScrollRight] = useState(false);
   const [filterCanScrollLeft, setFilterCanScrollLeft] = useState(false);
@@ -110,7 +86,7 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
   const hasMoreImages = filteredItems.length > visibleCount;
   const remainingCount = filteredItems.length - visibleCount;
 
-  // ── Lightbox navigation with animation direction tracking ──
+  // ── Lightbox navigation ──
   const handlePrev = useCallback(() => {
     setAnimDir("left");
     setAnimKey((k) => k + 1);
@@ -127,13 +103,12 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
     );
   }, [itemsToDisplay.length]);
 
-  // ── Load more: instant, no fake setTimeout ──
   const loadMoreImages = () => {
     if (!hasMoreImages) return;
     setVisibleCount((prev) => prev + BATCH_STEP);
   };
 
-  // ── Touch/Swipe handlers for lightbox ──
+  // ── Touch/Swipe ──
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
     touchStartY.current = e.touches[0].clientY;
@@ -143,7 +118,6 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
     if (touchStartX.current === null || touchStartY.current === null) return;
     const deltaX = e.changedTouches[0].clientX - touchStartX.current;
     const deltaY = Math.abs(e.changedTouches[0].clientY - touchStartY.current);
-    // Only trigger if horizontal swipe dominates and exceeds 45px threshold
     if (Math.abs(deltaX) > 45 && Math.abs(deltaX) > deltaY * 1.5) {
       if (deltaX < 0) handleNext();
       else handlePrev();
@@ -152,7 +126,7 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
     touchStartY.current = null;
   }, [handleNext, handlePrev]);
 
-  // ── Keyboard navigation ──
+  // ── Keyboard ──
   useEffect(() => {
     if (lightboxIndex === null) return;
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -164,7 +138,7 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [lightboxIndex, handlePrev, handleNext]);
 
-  // ── Auto-scroll filmstrip to keep active thumb visible ──
+  // ── Auto-scroll filmstrip ──
   useEffect(() => {
     if (lightboxIndex === null || !activeThumbRef.current || !filmstripRef.current) return;
     activeThumbRef.current.scrollIntoView({
@@ -174,7 +148,7 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
     });
   }, [lightboxIndex]);
 
-  // ── Filter scroll shadow detection ──
+  // ── Filter scroll shadow ──
   useEffect(() => {
     const el = filterScrollRef.current;
     if (!el) return;
@@ -206,8 +180,6 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
   };
 
   const activeItem = lightboxIndex !== null ? itemsToDisplay[lightboxIndex] : null;
-
-  // Preload next and prev images when lightbox is open
   const preloadNext = lightboxIndex !== null ? itemsToDisplay[(lightboxIndex + 1) % itemsToDisplay.length] : null;
   const preloadPrev = lightboxIndex !== null ? itemsToDisplay[(lightboxIndex - 1 + itemsToDisplay.length) % itemsToDisplay.length] : null;
 
@@ -215,7 +187,7 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
     <section id="galeria" className="py-16 md:py-24 px-4 sm:px-6 lg:px-8 bg-secondary/40 overflow-hidden">
       <div className="max-w-7xl mx-auto">
 
-        {/* ENCABEZADO */}
+        {/* ── ENCABEZADO ── */}
         <Reveal className="text-center max-w-2xl mx-auto">
           <div className="flex items-center justify-center gap-3 mb-3">
             <span className="h-px w-10 bg-gold/40 block" />
@@ -232,21 +204,12 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
           </p>
         </Reveal>
 
-        {/* FILTROS POR CATEGORÍA — con sombras indicadoras de scroll */}
+        {/* ── FILTROS con sombras de scroll ── */}
         <Reveal className="mt-8">
           <div className="relative">
-            {/* Sombra izquierda */}
-            <div
-              className={`pointer-events-none absolute left-0 top-0 h-full w-10 z-10 bg-gradient-to-r from-secondary/80 to-transparent transition-opacity duration-300 ${filterCanScrollLeft ? "opacity-100" : "opacity-0"}`}
-            />
-            {/* Sombra derecha */}
-            <div
-              className={`pointer-events-none absolute right-0 top-0 h-full w-10 z-10 bg-gradient-to-l from-secondary/80 to-transparent transition-opacity duration-300 ${filterCanScrollRight ? "opacity-100" : "opacity-0"}`}
-            />
-            <div
-              ref={filterScrollRef}
-              className="flex items-center gap-2 overflow-x-auto pb-3 pt-1 px-1 scrollbar-none"
-            >
+            <div className={`pointer-events-none absolute left-0 top-0 h-full w-10 z-10 bg-gradient-to-r from-secondary/80 to-transparent transition-opacity duration-300 ${filterCanScrollLeft ? "opacity-100" : "opacity-0"}`} />
+            <div className={`pointer-events-none absolute right-0 top-0 h-full w-10 z-10 bg-gradient-to-l from-secondary/80 to-transparent transition-opacity duration-300 ${filterCanScrollRight ? "opacity-100" : "opacity-0"}`} />
+            <div ref={filterScrollRef} className="flex items-center gap-2 overflow-x-auto pb-3 pt-1 px-1 scrollbar-none">
               {categories.map((cat) => {
                 const isActive = selectedCategory === cat;
                 const count = cat === "Todas" ? allItems.length : allItems.filter(i => i.category === cat).length;
@@ -274,81 +237,65 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
           </div>
         </Reveal>
 
-        {/* CONTADOR RESUMEN */}
-        <div className="mt-3 text-center">
-          <span className="text-[11px] text-muted-foreground/80">
-            Mostrando {itemsToDisplay.length} de {filteredItems.length} fotografías
-            {selectedCategory !== "Todas" && ` en ${selectedCategory}`}
-          </span>
-        </div>
-
-        {/* MOSAICO */}
+        {/* ── MASONRY con CSS columns ── */}
         <Reveal className="mt-8">
           {itemsToDisplay.length > 0 ? (
             <>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 auto-rows-auto gap-2.5 sm:gap-4">
-                {itemsToDisplay.map((item, index) => {
-                  const spanType = SPAN_PATTERN[index % SPAN_PATTERN.length];
-                  const desktopSpanClass = getDesktopSpanClass(spanType);
-                  const desktopHeightClass = getDesktopImgHeight(spanType);
+              <div className="columns-2 md:columns-3 lg:columns-4 gap-3 sm:gap-4 [column-fill:_balance]">
+                {itemsToDisplay.map((item, index) => (
+                  <div
+                    key={item.id}
+                    className="break-inside-avoid mb-3 sm:mb-4 group relative overflow-hidden rounded-2xl bg-card border border-border/30 shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer"
+                    onClick={() => setLightboxIndex(index)}
+                  >
+                    {/* Imagen sin aspect forzado: se muestra en proporción real */}
+                    <OptimizedImage
+                      src={`${item.src}?v=1`}
+                      alt={item.label}
+                      width={600}
+                      height={400}
+                      className="w-full h-auto object-cover block transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+                    />
 
-                  return (
-                    <div
-                      key={item.id}
-                      className={`col-span-1 ${desktopSpanClass} group relative overflow-hidden rounded-xl sm:rounded-2xl bg-card border border-border/40 shadow-sm hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 cursor-pointer`}
-                      onClick={() => setLightboxIndex(index)}
-                    >
-                      {/* width/height explícitos para evitar CLS */}
-                      <div className={`aspect-[4/3] ${desktopHeightClass} w-full overflow-hidden relative`}>
-                        <OptimizedImage
-                          src={`${item.src}?v=1`}
-                          alt={item.label}
-                          width={800}
-                          height={600}
-                          className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-                        />
-                      </div>
+                    {/* Overlay info — siempre visible en móvil, hover en desktop */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 sm:transition-opacity sm:duration-300 flex flex-col justify-end p-3.5 sm:p-4">
+                      <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-gold/90 mb-0.5">
+                        {item.category}
+                      </span>
+                      <p className="text-white font-display font-medium text-sm sm:text-base leading-snug line-clamp-2">
+                        {item.label}
+                      </p>
+                    </div>
 
-                      {/* Capa de información superpuesta */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent transition-opacity duration-300 flex flex-col justify-end p-3 sm:p-4 opacity-90 sm:opacity-0 group-hover:opacity-100">
-                        <span className="inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-gold mb-1 w-fit">
-                          <span className="w-1 h-1 rounded-full bg-gold inline-block" />
-                          {item.category}
-                        </span>
-                        <p className="text-white font-display font-medium text-xs sm:text-base leading-snug line-clamp-2">
-                          {item.label}
-                        </p>
-                      </div>
-
-                      <span className="absolute top-2 right-2 sm:top-3 sm:right-3 text-[9px] font-mono text-white/40 bg-black/40 px-1.5 py-0.5 rounded backdrop-blur-sm select-none">
-                        {String(index + 1).padStart(2, "0")}
+                    {/* Hover icon */}
+                    <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-black/40 backdrop-blur-sm border border-white/10 text-white/70">
+                        <Camera size={14} />
                       </span>
                     </div>
-                  );
-                })}
+                  </div>
+                ))}
               </div>
 
-              {/* BOTÓN "VER MÁS" — sin setTimeout falso */}
+              {/* BOTÓN VER MÁS */}
               {hasMoreImages && (
                 <div className="mt-10 text-center">
                   <button
                     type="button"
                     onClick={loadMoreImages}
-                    className="group inline-flex items-center gap-2.5 px-6 py-3 rounded-full bg-foreground text-background text-xs sm:text-sm font-semibold hover:bg-gold hover:text-foreground transition-all duration-300 shadow-md hover:shadow-lg hover:scale-102 cursor-pointer border-0"
+                    className="group inline-flex items-center gap-2.5 px-6 py-3 rounded-full bg-foreground text-background text-xs sm:text-sm font-semibold hover:bg-gold hover:text-foreground transition-all duration-300 shadow-md hover:shadow-lg cursor-pointer border-0"
                   >
-                    <span>Ver {remainingCount} fotografías más</span>
-                    <span className="w-5 h-5 rounded-full bg-background/10 flex items-center justify-center group-hover:bg-foreground/10 transition-colors">
-                      <ChevronRight size={13} />
-                    </span>
+                    <span>Ver {remainingCount} más</span>
+                    <ChevronRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
                   </button>
                 </div>
               )}
 
-              {/* FIN DE COLECCIÓN */}
+              {/* FIN */}
               {!hasMoreImages && allItems.length > 0 && (
                 <div className="mt-8 text-center">
                   <p className="text-xs text-muted-foreground/60 border-t border-border/30 pt-6">
-                    ✝️ Has explorado todas las {filteredItems.length} fotografías {selectedCategory !== "Todas" ? `en ${selectedCategory}` : ""}
+                    ✝️ {filteredItems.length} fotografías{selectedCategory !== "Todas" ? ` en ${selectedCategory}` : ""}
                   </p>
                 </div>
               )}
@@ -361,18 +308,13 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
         </Reveal>
       </div>
 
-      {/* VISOR LIGHTBOX CON SWIPE + PRELOAD + ALTURA MEJORADA */}
+      {/* ── LIGHTBOX ── */}
       <Dialog open={lightboxIndex !== null} onOpenChange={(o) => !o && setLightboxIndex(null)}>
         <DialogContent className="max-w-5xl p-0 bg-black/98 border-white/10 shadow-2xl backdrop-blur-xl overflow-hidden sm:rounded-3xl">
           <DialogTitle className="sr-only">Visor de fotografía parroquial</DialogTitle>
 
-          {/* Preload oculto de imágenes adyacentes */}
-          {preloadNext && (
-            <img src={preloadNext.src} alt="" aria-hidden="true" className="sr-only absolute pointer-events-none" />
-          )}
-          {preloadPrev && (
-            <img src={preloadPrev.src} alt="" aria-hidden="true" className="sr-only absolute pointer-events-none" />
-          )}
+          {preloadNext && <img src={preloadNext.src} alt="" aria-hidden="true" className="sr-only absolute pointer-events-none" />}
+          {preloadPrev && <img src={preloadPrev.src} alt="" aria-hidden="true" className="sr-only absolute pointer-events-none" />}
 
           {activeItem && (
             <div className="flex flex-col h-full">
@@ -386,7 +328,7 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-white/40 tabular-nums">
-                    {String(lightboxIndex! + 1).padStart(2, "0")} / {String(itemsToDisplay.length).padStart(2, "0")}
+                    {lightboxIndex! + 1} / {itemsToDisplay.length}
                   </span>
                   <button
                     onClick={() => setLightboxIndex(null)}
@@ -398,7 +340,7 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
                 </div>
               </div>
 
-              {/* Área de imagen — altura mejorada con dvh para evitar teclado virtual */}
+              {/* Imagen con swipe */}
               <div
                 className="relative flex-1 flex items-center justify-center p-3 sm:p-6 min-h-[55dvh] max-h-[72dvh]"
                 onTouchStart={handleTouchStart}
@@ -414,7 +356,6 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
                   </button>
                 )}
 
-                {/* Imagen con animación de dirección correcta via key único */}
                 <div
                   key={`${activeItem.id}-${animKey}`}
                   className={`relative w-full h-full flex items-center justify-center overflow-hidden ${
@@ -443,13 +384,10 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
                 )}
               </div>
 
-              {/* FILMSTRIP SCROLLABLE COMPLETO */}
+              {/* Filmstrip */}
               {itemsToDisplay.length > 1 && (
                 <div className="px-4 pt-2 pb-2 border-t border-white/8">
-                  <div
-                    ref={filmstripRef}
-                    className="flex items-center gap-1.5 overflow-x-auto py-1 scrollbar-none"
-                  >
+                  <div ref={filmstripRef} className="flex items-center gap-1.5 overflow-x-auto py-1 scrollbar-none">
                     {itemsToDisplay.map((thumb, idx) => {
                       const isActive = idx === lightboxIndex;
                       return (
@@ -484,7 +422,7 @@ export default function GaleriaSection({ gallery }: { gallery?: GalleryImage[] }
                 </div>
               )}
 
-              {/* Barra inferior: info + acciones */}
+              {/* Info + acciones */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-4 py-3.5 border-t border-white/10">
                 <div>
                   <p className="text-white font-display text-base sm:text-lg font-medium leading-tight">

@@ -1,50 +1,57 @@
-import { Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 
-// Ahora el componente recibe si está cargando o no
 export function Preloader({ isLoading }: { isLoading: boolean }) {
-  // Controlamos cuándo destruirlo del DOM definitivamente
   const [show, setShow] = useState(true);
+  const [minTimeElapsed, setMinTimeElapsed] = useState(false);
+
+  // Asegura un mínimo de tiempo para que la animación de entrada se aprecie con elegancia
+  useEffect(() => {
+    const minTimer = setTimeout(() => setMinTimeElapsed(true), 650);
+    return () => clearTimeout(minTimer);
+  }, []);
+
+  const isActuallyFinished = !isLoading && minTimeElapsed;
 
   useEffect(() => {
-    // Si ya dejó de cargar, esperamos 700ms (lo que dura la animación) para borrarlo
-    if (!isLoading) {
+    if (isActuallyFinished) {
       const timer = setTimeout(() => setShow(false), 700);
       return () => clearTimeout(timer);
     }
-  }, [isLoading]);
+  }, [isActuallyFinished]);
 
-  // Si ya terminó la animación, no renderizamos nada
   if (!show) return null;
 
   return (
-    <div 
-      className={`fixed inset-0 z-[9999] flex md:hidden flex-col items-center justify-center text-white select-none transition-all duration-700 ease-in-out ${
-        isLoading 
-          ? "opacity-100 translate-y-0" 
-          : "opacity-0 -translate-y-8 pointer-events-none" // Animación de salida (se desvanece hacia arriba)
+    <div
+      className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center text-white select-none transition-all duration-700 ease-out ${
+        isActuallyFinished
+          ? "opacity-0 -translate-y-6 blur-sm pointer-events-none scale-105"
+          : "opacity-100 translate-y-0 blur-0 scale-100"
       }`}
     >
-      {/* Fondo con gradiente radial (efecto foco de luz premium) */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#140e72] to-[#0a0735]" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.15)_0%,transparent_60%)]" />
+      {/* Fondo celestial profundo con destello dorado central */}
+      <div className="absolute inset-0 bg-[#0c1226]" />
+      <div className="absolute inset-0 bg-gradient-to-b from-[#141d3d] via-[#0c1226] to-[#070b18]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.2)_0%,transparent_65%)]" />
 
       {/* Contenedor central */}
-      <div className="relative z-10 flex flex-col items-center gap-7 text-center px-6">
+      <div className="relative z-10 flex flex-col items-center gap-6 text-center px-6 max-w-sm mx-auto">
         
-        {/* Logo circular con anillo dorado giratorio y resplandor */}
-        <div className="relative h-28 w-28">
-          {/* Anillo giratorio */}
-          <span className="absolute inset-0 rounded-full border-2 border-transparent border-t-gold border-r-gold/40 animate-spin [animation-duration:1.4s]" />
+        {/* Logo circular con halo dorado pulsante */}
+        <div className="relative h-28 w-28 sm:h-32 sm:w-32">
+          {/* Anillo de luz exterior giratorio */}
+          <span className="absolute inset-0 rounded-full border-2 border-transparent border-t-gold border-r-gold/50 animate-spin [animation-duration:1.6s]" />
+          
           {/* Halo pulsante detrás del logo */}
-          <span className="absolute inset-1 rounded-full bg-gold/20 blur-xl animate-pulse [animation-duration:1.6s]" />
-          {/* Logo recortado en círculo */}
-          <div className="absolute inset-[6px] rounded-full overflow-hidden ring-1 ring-white/15 shadow-[0_0_30px_rgba(212,175,55,0.45)]">
+          <span className="absolute -inset-2 rounded-full bg-gold/25 blur-2xl animate-pulse [animation-duration:1.8s]" />
+          
+          {/* Logo recortado en círculo con sombra premium */}
+          <div className="absolute inset-[6px] rounded-full overflow-hidden ring-2 ring-gold/40 shadow-[0_0_40px_rgba(212,175,55,0.45)] bg-[#0c1226]">
             <img
               src="/assets/logo.webp"
               alt="Logo Parroquia Santísima Trinidad"
-              width={112}
-              height={112}
+              width={128}
+              height={128}
               fetchPriority="high"
               loading="eager"
               decoding="async"
@@ -53,18 +60,21 @@ export function Preloader({ isLoading }: { isLoading: boolean }) {
           </div>
         </div>
 
-        {/* Textos con mayor espaciado (elegancia) */}
-        <div className="space-y-2">
-          <h2 className="font-display text-2xl font-medium tracking-wider text-white drop-shadow-md">
+        {/* Textos de bienvenida con tipografía solemne */}
+        <div className="space-y-1.5 mt-1">
+          <p className="text-[10px] sm:text-[11px] uppercase tracking-[0.35em] text-gold font-bold">
+            Comunidad de Fe
+          </p>
+          <h2 className="font-display text-2xl sm:text-3xl font-medium tracking-tight text-white drop-shadow-md">
             Parroquia Santísima Trinidad
           </h2>
-          <p className="text-[10px] uppercase tracking-[0.4em] text-gold/90 font-semibold">
-            Tingo - Arequipa
+          <p className="text-xs text-white/70 italic font-display mt-1">
+            «Paz y Bien a quienes entran a esta casa de Dios»
           </p>
         </div>
 
-        {/* Línea de carga moderna en lugar del spinner circular */}
-        <div className="mt-6 w-32 h-[2px] bg-white/10 rounded-full overflow-hidden">
+        {/* Barra de carga dorada fina */}
+        <div className="mt-3 w-28 h-[2px] bg-white/10 rounded-full overflow-hidden">
           <div className="h-full w-1/2 bg-gradient-to-r from-transparent via-gold to-transparent animate-[pulse_1s_ease-in-out_infinite]" />
         </div>
       </div>

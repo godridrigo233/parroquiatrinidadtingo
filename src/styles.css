@@ -167,4 +167,31 @@
   .hero-title-glow {
     text-shadow: 0 2px 30px oklch(0.22 0.04 260 / 0.55), 0 0 80px oklch(0.22 0.04 260 / 0.3);
   }
+
+  /* Shimmer dorado suave para el título principal */
+  @keyframes goldShimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  .text-gold-shimmer {
+    background: linear-gradient(
+      90deg,
+      #d4af37 0%,
+      #fff8db 25%,
+      #d4af37 50%,
+      #fef3c7 75%,
+      #d4af37 100%
+    );
+    background-size: 200% auto;
+    color: transparent;
+    -webkit-background-clip: text;
+    background-clip: text;
+    animation: goldShimmer 7s linear infinite;
+  }
 }
+

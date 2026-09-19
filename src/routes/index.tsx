@@ -126,6 +126,30 @@ function SectionSkeleton({ height = "h-[600px]" }: { height?: string }) {
 function Home() {
   const [scrollY, setScrollY] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
+  const [greeting, setGreeting] = useState("Paz y Bien");
+  const [massNotice, setMassNotice] = useState("Comunidad Católica Viva");
+
+  useEffect(() => {
+    const now = new Date();
+    const hour = now.getHours();
+    const day = now.getDay();
+
+    if (hour >= 5 && hour < 12) {
+      setGreeting("Buenos días · Paz y Bien");
+    } else if (hour >= 12 && hour < 19) {
+      setGreeting("Buenas tardes · Bienvenidos");
+    } else {
+      setGreeting("Buenas noches · Dios te bendiga");
+    }
+
+    if (day === 0) {
+      setMassNotice("Hoy Domingo de Misa: 8:00 AM y 6:00 PM");
+    } else if (day === 6) {
+      setMassNotice("Hoy Misa de precepto: 6:00 PM");
+    } else {
+      setMassNotice("Hoy Santa Misa: 6:00 PM");
+    }
+  }, []);
 
   useEffect(() => {
     const checkMobile = () => window.matchMedia("(max-width: 768px)").matches;
@@ -156,8 +180,6 @@ function Home() {
   }, []);
 
   const staleConfig = { staleTime: 1000 * 60 * 15, gcTime: 1000 * 60 * 30 };
-
-  
 
   const { data: ministries = [], isLoading: loadingMinistries } = useQuery({
     queryKey: ["home_ministries"],
@@ -223,7 +245,7 @@ function Home() {
       <Navbar />
 
       {/* SECCIÓN HERO (Primer pantallazo — cargado de forma inmediata y prioritaria) */}
-      <section id="inicio" className="relative h-[100svh] min-h-[640px] w-full overflow-hidden">
+      <section id="inicio" className="relative h-[100svh] min-h-[600px] w-full overflow-hidden flex items-center justify-center">
         <div
           className="absolute inset-0 will-change-transform"
           style={{ transform: isMobile ? "none" : `translate3d(0, ${scrollY * 0.35}px, 0)` }}
@@ -238,56 +260,61 @@ function Home() {
           />
         </div>
 
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/70 via-primary/40 to-primary/85" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,oklch(0.18_0.03_265/0.55)_75%,oklch(0.14_0.03_265/0.9)_100%)]" />
+        {/* Gradientes atmosféricos de profundidad con halo celestial */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0a0f24]/80 via-[#0a0f24]/50 to-[#070a18]/90" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.18)_0%,rgba(10,15,36,0.6)_60%,rgba(7,10,24,0.95)_100%)]" />
 
         <div
-          className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6 max-w-5xl mx-auto"
+          className="relative z-10 w-full flex flex-col items-center justify-center text-center px-5 sm:px-6 max-w-5xl mx-auto pt-16 sm:pt-0"
           style={{ transform: `translate3d(0, ${scrollY * -0.15}px, 0)`, opacity: Math.max(0, 1 - scrollY / 600) }}
         >
-          <span className="fade-up gold-divider text-white/90">
-            <Sparkles size={14} className="text-gold" />
-            <span>Arequipa · Perú</span>
-          </span>
-          <h1 className="fade-up fade-up-delay-1 hero-title-glow mt-7 font-display text-5xl md:text-7xl lg:text-[5.5rem] font-medium text-white leading-[1.02] tracking-tight">
+          {/* Badge contextual de bienvenida y próxima misa */}
+          <div className="fade-up inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/15 backdrop-blur-md border border-gold/40 text-white shadow-lg transition-all mb-4 sm:mb-6">
+            <Sparkles size={13} className="text-gold shrink-0 animate-pulse" />
+            <span className="text-[11px] sm:text-xs font-medium tracking-wide">{greeting}</span>
+            <span className="text-white/30 hidden sm:inline">·</span>
+            <span className="text-[10px] sm:text-[11px] text-gold font-semibold hidden sm:inline">{massNotice}</span>
+          </div>
+
+          {/* Título majestuoso con Shimmer dorado */}
+          <h1 className="fade-up fade-up-delay-1 hero-title-glow font-display text-4xl sm:text-6xl md:text-7xl lg:text-[5.5rem] font-medium text-white leading-[1.05] tracking-tight">
             Parroquia<br />
-            <span className="text-gold italic">Santísima Trinidad</span>
+            <span className="text-gold-shimmer italic font-normal">Santísima Trinidad</span>
           </h1>
-          <div className="fade-up fade-up-delay-2 mt-7 flex flex-col items-center justify-center gap-2">
-            <div className="flex items-center justify-center">
-              <span className="h-px w-12 bg-gold/70" />
-              <p className="px-5 text-sm sm:text-base md:text-lg text-white/90 leading-relaxed italic font-display max-w-2xl">
+
+          {/* Cita bíblica con líneas doradas */}
+          <div className="fade-up fade-up-delay-2 mt-5 sm:mt-6 flex flex-col items-center justify-center gap-1.5 max-w-xl mx-auto">
+            <div className="flex items-center justify-center gap-2 sm:gap-3">
+              <span className="h-px w-6 sm:w-12 bg-gold/50" />
+              <p className="px-1 sm:px-3 text-xs sm:text-base md:text-lg text-white/90 leading-relaxed italic font-display">
                 «Donde dos o tres se reúnen en mi nombre, allí estoy yo en medio de ellos.»
               </p>
-              <span className="h-px w-12 bg-gold/70" />
+              <span className="h-px w-6 sm:w-12 bg-gold/50" />
             </div>
-            <span className="text-[11px] tracking-[0.3em] uppercase text-gold/90">Mateo 18, 20</span>
+            <span className="text-[9px] sm:text-[11px] tracking-[0.3em] uppercase text-gold/90 font-semibold">Mateo 18, 20 · Tingo, Arequipa</span>
           </div>
-          <div className="fade-up fade-up-delay-3 mt-11 flex flex-wrap gap-3 justify-center">
+
+          {/* Botones de acción directos y elegantes para entrar a la web */}
+          <div className="fade-up fade-up-delay-3 mt-7 sm:mt-9 flex flex-wrap gap-3 justify-center items-center">
             <a
               href="#horarios"
-              className="px-7 py-3.5 rounded-full bg-gradient-gold text-primary-foreground font-semibold shadow-elegant hover:scale-105 transition-all flex items-center gap-2"
+              className="px-6 sm:px-7 py-3 sm:py-3.5 rounded-full bg-gradient-gold text-primary font-bold text-xs sm:text-sm shadow-elegant hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
             >
-              <Clock size={18} /> Ver horarios
+              <Clock size={16} /> Ver horarios de Misa
             </a>
             <a
-              href="#noticias"
-              className="px-7 py-3.5 rounded-full bg-white/10 border border-white/30 backdrop-blur text-white font-semibold hover:bg-white/20 transition-colors"
+              href="#sobre-nosotros"
+              className="px-5 sm:px-6 py-3 sm:py-3.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/25 backdrop-blur-md text-white font-medium text-xs sm:text-sm hover:scale-105 active:scale-95 transition-all flex items-center gap-1.5"
             >
-              Eventos
-            </a>
-            <a
-              href="#contacto"
-              className="px-7 py-3.5 rounded-full bg-white text-foreground font-semibold hover:bg-white/90 transition-colors flex items-center gap-2"
-            >
-              Contacto <ArrowRight size={18} />
+              Conocer la parroquia <ArrowRight size={15} />
             </a>
           </div>
         </div>
 
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/60">
-          <span className="text-[10px] tracking-[0.35em] uppercase">Desliza</span>
-          <span className="block h-10 w-px bg-gradient-to-b from-gold/80 to-transparent animate-pulse" />
+        {/* Indicador sutil de scroll hacia abajo */}
+        <div className="absolute bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 text-white/50 pointer-events-none">
+          <span className="text-[9px] tracking-[0.3em] uppercase">Desliza</span>
+          <span className="block h-7 w-px bg-gradient-to-b from-gold/80 to-transparent animate-pulse" />
         </div>
       </section>
       <Suspense fallback={<SectionSkeleton height="h-[1800px]" />}>

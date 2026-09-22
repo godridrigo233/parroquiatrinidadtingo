@@ -268,34 +268,25 @@ function Home() {
           className="relative z-10 w-full flex flex-col items-center justify-center text-center px-5 sm:px-6 max-w-5xl mx-auto pt-16 sm:pt-0"
           style={{ transform: `translate3d(0, ${scrollY * -0.15}px, 0)`, opacity: Math.max(0, 1 - scrollY / 600) }}
         >
-          {/* Badge contextual de bienvenida y próxima misa */}
-          <div className="fade-up inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/15 backdrop-blur-md border border-gold/40 text-white shadow-lg transition-all mb-4 sm:mb-6">
-            <Sparkles size={13} className="text-gold shrink-0 animate-pulse" />
-            <span className="text-[11px] sm:text-xs font-medium tracking-wide">{greeting}</span>
-            <span className="text-white/30 hidden sm:inline">·</span>
-            <span className="text-[10px] sm:text-[11px] text-gold font-semibold hidden sm:inline">{massNotice}</span>
-          </div>
-
-          {/* Título majestuoso con Shimmer dorado */}
-          <h1 className="fade-up fade-up-delay-1 hero-title-glow font-display text-4xl sm:text-6xl md:text-7xl lg:text-[5.5rem] font-medium text-white leading-[1.05] tracking-tight">
+          <span className="fade-up gold-divider text-white/90">
+            <Sparkles size={14} className="text-gold" />
+            <span>Arequipa · Perú</span>
+          </span>
+          <h1 className="fade-up fade-up-delay-1 hero-title-glow mt-7 font-display text-5xl md:text-7xl lg:text-[5.5rem] font-medium text-white leading-[1.02] tracking-tight animate-[floatIn_0.9s_ease-out]">
             Parroquia<br />
             <span className="text-gold-shimmer italic font-normal">Santísima Trinidad</span>
           </h1>
-
-          {/* Cita bíblica con líneas doradas */}
-          <div className="fade-up fade-up-delay-2 mt-5 sm:mt-6 flex flex-col items-center justify-center gap-1.5 max-w-xl mx-auto">
-            <div className="flex items-center justify-center gap-2 sm:gap-3">
-              <span className="h-px w-6 sm:w-12 bg-gold/50" />
-              <p className="px-1 sm:px-3 text-xs sm:text-base md:text-lg text-white/90 leading-relaxed italic font-display">
+          <div className="fade-up fade-up-delay-2 mt-7 flex flex-col items-center justify-center gap-2 animate-[floatIn_1.1s_ease-out]">
+            <div className="flex items-center justify-center">
+              <span className="h-px w-12 bg-gold/70" />
+              <p className="px-5 text-sm sm:text-base md:text-lg text-white/90 leading-relaxed italic font-display max-w-2xl">
                 «Donde dos o tres se reúnen en mi nombre, allí estoy yo en medio de ellos.»
               </p>
               <span className="h-px w-6 sm:w-12 bg-gold/50" />
             </div>
-            <span className="text-[9px] sm:text-[11px] tracking-[0.3em] uppercase text-gold/90 font-semibold">Mateo 18, 20 · Tingo, Arequipa</span>
+            <span className="text-[11px] tracking-[0.3em] uppercase text-gold/90">Mateo 18, 20</span>
           </div>
-
-          {/* Botones de acción directos y elegantes para entrar a la web */}
-          <div className="fade-up fade-up-delay-3 mt-7 sm:mt-9 flex flex-wrap gap-3 justify-center items-center">
+          <div className="fade-up fade-up-delay-3 mt-11 flex flex-wrap gap-3 justify-center">
             <a
               href="#horarios"
               className="px-6 sm:px-7 py-3 sm:py-3.5 rounded-full bg-gradient-gold text-primary font-bold text-xs sm:text-sm shadow-elegant hover:scale-105 active:scale-95 transition-all flex items-center gap-2"

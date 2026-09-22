@@ -294,7 +294,7 @@ function Home() {
               <Clock size={16} /> Ver horarios de Misa
             </a>
             <a
-              href="#sobre-nosotros"
+              href="#parroquia"
               className="px-5 sm:px-6 py-3 sm:py-3.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/25 backdrop-blur-md text-white font-medium text-xs sm:text-sm hover:scale-105 active:scale-95 transition-all flex items-center gap-1.5"
             >
               Conocer la parroquia <ArrowRight size={15} />

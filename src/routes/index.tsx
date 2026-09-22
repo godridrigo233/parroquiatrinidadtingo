@@ -308,6 +308,86 @@ function Home() {
           <span className="block h-7 w-px bg-gradient-to-b from-gold/80 to-transparent animate-pulse" />
         </div>
       </section>
+
+      <section className="bg-[#f3f4f6] px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-6 flex items-center justify-between gap-4">
+            <div>
+              <h2 className="text-[15px] font-semibold tracking-[-0.02em] text-[#111827]">Get Started</h2>
+              <p className="mt-1 text-sm text-[#6b7280]">To start counting visitors and page views, follow these steps.</p>
+            </div>
+
+            <button
+              type="button"
+              className="inline-flex items-center gap-2 rounded-md border border-[#d1d5db] bg-white px-3 py-2 text-xs font-medium text-[#374151] shadow-sm"
+            >
+              Next.js
+              <ArrowRight size={12} className="rotate-90" />
+            </button>
+          </div>
+
+          <div className="grid gap-5 md:grid-cols-3">
+            {[
+              {
+                step: "1",
+                title: "Install our package",
+                description: "Start by installing @vercel/analytics in your existing project.",
+                code: ["npm i @vercel/analytics", "npm install @vercel/analytics"],
+              },
+              {
+                step: "2",
+                title: "Add the React component",
+                description: "Import and use the <Analytics /> React component into your app's layout.",
+                code: ["import { Analytics } from '@vercel/analytics/react'"],
+              },
+              {
+                step: "3",
+                title: "Deploy & visit your site",
+                description: "Deploy your changes and visit the deployment to collect your page views.",
+                code: ["If you don't see data after 30 seconds, please check for content blockers and try to navigate between pages on your site."],
+              },
+            ].map((item) => (
+              <div
+                key={item.step}
+                className="rounded-xl border border-[#dfe3e8] bg-white p-4 shadow-[0_1px_0_rgba(17,24,39,0.02)]"
+              >
+                <div className="mb-4 flex items-center gap-3">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#111827] text-xs font-semibold text-white">
+                    {item.step}
+                  </div>
+                  <h3 className="text-base font-semibold text-[#111827]">{item.title}</h3>
+                </div>
+
+                <p className="min-h-[50px] text-sm leading-6 text-[#6b7280]">{item.description}</p>
+
+                <div className="mt-4 rounded-lg border border-[#e5e7eb] bg-[#f9fafb] p-3 text-xs text-[#374151]">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1 whitespace-pre-wrap break-words font-mono text-[12px] leading-6 text-[#374151]">
+                      {item.code.map((line, idx) => (
+                        <div key={`${line}-${idx}`} className="mb-1 last:mb-0">
+                          {line}
+                        </div>
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      aria-label="Copy command"
+                      className="mt-0.5 rounded border border-[#e5e7eb] bg-white px-1.5 py-1 text-[10px] text-[#6b7280]"
+                    >
+                      ⧉
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <p className="mt-5 text-xs text-[#6b7280]">
+            Or, install automatically with Vercel Agent (free).
+          </p>
+        </div>
+      </section>
+
       <Suspense fallback={<SectionSkeleton height="h-[1800px]" />}>
         <AboutSection ministries={ministries} loadingMinistries={loadingMinistries} />
       </Suspense>

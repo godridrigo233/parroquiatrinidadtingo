@@ -256,8 +256,6 @@ function ParishAIBotFabWidget() {
   const [inputValue, setInputValue] = useState("");
   const [hasOpenedOnce, setHasOpenedOnce] = useState(false);
   const [unread, setUnread] = useState(0);
-  const [showTeaser, setShowTeaser] = useState(false);
-  const [teaserDismissed, setTeaserDismissed] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
 
   // Estados de interfaz y voz
@@ -339,16 +337,6 @@ function ParishAIBotFabWidget() {
     mq.addEventListener("change", handler);
     return () => mq.removeEventListener("change", handler);
   }, [isOpen]);
-
-  useEffect(() => {
-    if (hasOpenedOnce || teaserDismissed) return;
-    const showTimer = setTimeout(() => setShowTeaser(true), 3500);
-    const hideTimer = setTimeout(() => setShowTeaser(false), 16000);
-    return () => {
-      clearTimeout(showTimer);
-      clearTimeout(hideTimer);
-    };
-  }, [hasOpenedOnce, teaserDismissed]);
 
   useEffect(() => {
     if (messages.length > prevMessageCountRef.current) {
@@ -586,24 +574,6 @@ function ParishAIBotFabWidget() {
       className="fixed bottom-24 right-5 md:bottom-28 md:right-8 z-50 flex flex-col items-end"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
-      {/* BURBUJA DE INVITACIÓN */}
-      {showTeaser && !isOpen && (
-        <div className="mb-3 mr-1 max-w-[230px] bg-white rounded-2xl rounded-br-sm shadow-lg border border-[#CBD5E1] p-3 flex items-start gap-2">
-          <p className="text-xs text-[#1A2940] leading-snug flex-1">
-            ¿Dudas sobre horarios, sacramentos o eventos? Pregúntale al Hermano Elías 🙏
-          </p>
-          <button
-            onClick={() => {
-              setShowTeaser(false);
-              setTeaserDismissed(true);
-            }}
-            className="text-[#94A3B8] hover:text-[#0F1B2D] shrink-0 -mt-0.5"
-            aria-label="Cerrar mensaje"
-          >
-            <X size={14} />
-          </button>
-        </div>
-      )}
 
       {/* VENTANA DEL CHAT */}
       <AnimatePresence>

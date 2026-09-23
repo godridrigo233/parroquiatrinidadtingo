@@ -13,6 +13,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { CookieBanner } from '../components/auth/CookieBanner';
 import { useAnalytics } from '../hooks/useAnalytics';
 import { InstallBanner } from '@/components/site/InstallBanner';
+import { Analytics } from '@vercel/analytics/react';
 
 const ORG_JSONLD = {
   "@context": "https://schema.org",
@@ -302,6 +303,7 @@ function RootComponent() {
       </AuthProvider>
       <CookieBanner />
       <InstallBanner />
+      <Analytics />
     </QueryClientProvider>
     
   );

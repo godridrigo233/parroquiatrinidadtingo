@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Trash2, Pencil, Save } from "lucide-react";
+import { Plus, Trash2, Pencil, Save, Sparkles, Wand2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { logActivity } from "@/utils/Logactivity";
 import imageCompression from "browser-image-compression";
@@ -132,6 +132,87 @@ export function EventsManager({ showToast }: { showToast?: (m: string, t?: "succ
   const [editImageFile, setEditImageFile] = useState<File | null>(null);
   const [editing, setEditing] = useState<EventRow | null>(null);
   const [saving, setSaving] = useState(false);
+
+  // ── Estados para Asistente de IA (Afiches / Facebook) ──
+  const [aiImageFile, setAiImageFile] = useState<File | null>(null);
+  const [aiText, setAiText] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
+  const handleAIExtract = async () => {
+    if (!aiImageFile && !aiText.trim()) {
+      toast.error("Selecciona la foto del afiche o pega el texto del post.");
+      return;
+    }
+
+    setAiLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error("Sesión no disponible o expirada.");
+      }
+
+      let imageBase64: string | undefined = undefined;
+      if (aiImageFile) {
+        const compressed = await imageCompression(aiImageFile, {
+          maxSizeMB: 0.3,
+          maxWidthOrHeight: 1024,
+          useWebWorker: true,
+        });
+        imageBase64 = await fileToBase64(compressed);
+      }
+
+      const res = await fetch("/api/ai/extract-event", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          imageBase64,
+          text: aiText.trim() || undefined,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "No se pudo procesar la información del evento.");
+      }
+
+      const extracted = data.event;
+      setForm({
+        title: extracted.title || "",
+        event_date: extracted.event_date ? extracted.event_date.slice(0, 16) : "",
+        location: extracted.location || "",
+        description: extracted.description || "",
+      });
+
+      // Si subió un afiche en el analizador de IA, lo asignamos automáticamente al formulario
+      if (aiImageFile) {
+        setImageFile(aiImageFile);
+      }
+
+      toast.success("✨ ¡Evento detectado y autocompletado!", {
+        description: "Revisa los campos autocompletados y pulsa 'Publicar evento'.",
+        duration: 5000,
+      });
+    } catch (err: any) {
+      console.error("[AI Extract Event Error]:", err);
+      toast.error("Error al analizar con IA", {
+        description: err.message || "Intenta con otra imagen o texto.",
+      });
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
   const uploadPoster = async (f: File) => {
     const ext = f.name.split(".").pop()?.toLowerCase() || "jpg";
@@ -311,9 +392,89 @@ export function EventsManager({ showToast }: { showToast?: (m: string, t?: "succ
 
   return (
     <div className="grid lg:grid-cols-3 gap-6">
-      <Card>
-        <h2 className="font-display text-lg text-primary mb-1">Nuevo evento</h2>
-        <p className="text-xs text-muted-foreground mb-4">Aparecerá en la página pública.</p>
+      <Card className="border-gold/30">
+        <div className="flex items-center justify-between mb-2">
+          <div>
+            <h2 className="font-display text-lg text-primary mb-0.5">Nuevo evento</h2>
+            <p className="text-xs text-muted-foreground">Aparecerá en la página pública.</p>
+          </div>
+        </div>
+
+        {/* ── ASISTENTE MÁGICO DE AUTOCOMPLETADO CON IA ── */}
+        <div className="bg-gradient-to-br from-indigo-950/15 via-primary/5 to-gold/15 border border-gold/40 rounded-2xl p-3.5 mb-4 shadow-sm">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-gold uppercase tracking-wider">
+              <Wand2 size={13} className="text-gold" />
+              Autocompletar con IA
+            </span>
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-gold/20 text-gold font-semibold">
+              Afiche o Facebook
+            </span>
+          </div>
+          <p className="text-[11px] text-muted-foreground leading-relaxed mb-3">
+            Sube el afiche o pega el texto del post y la IA rellenará los campos automáticamente:
+          </p>
+
+          <div className="space-y-2.5">
+            <div>
+              <label className="block text-[11px] font-medium text-foreground/80 mb-1">
+                📸 Foto del Afiche / Flyer:
+              </label>
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/jpg,image/webp"
+                onChange={(e) => setAiImageFile(e.target.files?.[0] ?? null)}
+                className="w-full text-xs file:mr-2 file:py-1.5 file:px-2.5 file:rounded-md file:border-0 file:bg-gradient-gold file:text-primary file:font-semibold file:cursor-pointer cursor-pointer text-muted-foreground"
+              />
+              {aiImageFile && (
+                <p className="text-[11px] text-emerald-600 font-medium mt-1">
+                  ✓ Afiche seleccionado: {aiImageFile.name}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-medium text-foreground/80 mb-1">
+                📝 O pega el texto del post (opcional):
+              </label>
+              <textarea
+                placeholder="Ej: Te invitamos a participar del tema: La Familia Cristiana este viernes 2 de octubre a las 7 pm..."
+                rows={2}
+                value={aiText}
+                onChange={(e) => setAiText(e.target.value)}
+                className="w-full px-2.5 py-1.5 rounded-lg border border-input bg-background outline-none focus:border-gold text-xs resize-none transition-colors"
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={handleAIExtract}
+              disabled={aiLoading || (!aiImageFile && !aiText.trim())}
+              className="w-full py-2.5 px-3 rounded-xl bg-gradient-gold text-primary font-bold text-xs flex items-center justify-center gap-2 shadow-card hover:shadow-elegant transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            >
+              {aiLoading ? (
+                <>
+                  <Loader2 size={14} className="animate-spin" />
+                  <span>Analizando afiche con IA...</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles size={14} />
+                  <span>✨ Rellenar formulario con IA</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+
+        <div className="relative flex py-1 items-center mb-3">
+          <div className="flex-grow border-t border-border"></div>
+          <span className="flex-shrink mx-2 text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">
+            Formulario manual / revisado
+          </span>
+          <div className="flex-grow border-t border-border"></div>
+        </div>
+
         <form onSubmit={submit} className="space-y-3">
           <Input required placeholder="Título del evento" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
           <Input required type="datetime-local" value={form.event_date} onChange={e => setForm({ ...form, event_date: e.target.value })} />

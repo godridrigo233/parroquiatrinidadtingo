@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Trash2, Pencil, Save, Sparkles, Wand2, Loader2 } from "lucide-react";
+import { Plus, Trash2, Pencil, Save, Sparkles, Wand2, Loader2, UploadCloud, FileImage } from "lucide-react";
 import { toast } from "sonner";
 import { logActivity } from "@/utils/Logactivity";
 import imageCompression from "browser-image-compression";
@@ -133,10 +133,13 @@ export function EventsManager({ showToast }: { showToast?: (m: string, t?: "succ
   const [editing, setEditing] = useState<EventRow | null>(null);
   const [saving, setSaving] = useState(false);
 
-  // ── Estados para Asistente de IA (Afiches / Facebook) ──
   const [aiImageFile, setAiImageFile] = useState<File | null>(null);
   const [aiText, setAiText] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
+
+  const aiFileInputRef = useRef<HTMLInputElement>(null);
+  const manualFileInputRef = useRef<HTMLInputElement>(null);
+  const editFileInputRef = useRef<HTMLInputElement>(null);
 
   const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -157,7 +160,7 @@ export function EventsManager({ showToast }: { showToast?: (m: string, t?: "succ
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) {
-        throw new Error("Sesión no disponible o expirada.");
+        throw new Error("Sesión no disponible o expirada. Vuelve a iniciar sesión.");
       }
 
       let imageBase64: string | undefined = undefined;
@@ -215,20 +218,22 @@ export function EventsManager({ showToast }: { showToast?: (m: string, t?: "succ
   };
 
   const uploadPoster = async (f: File) => {
-    const ext = f.name.split(".").pop()?.toLowerCase() || "jpg";
-    if (!["png", "jpg", "jpeg"].includes(ext)) {
-      throw new Error("Formato no permitido. Usa PNG, JPG o JPEG.");
+    let ext = f.name.split(".").pop()?.toLowerCase() || "jpg";
+    if (ext === "jpeg") ext = "jpg";
+    if (!["png", "jpg", "webp", "avif"].includes(ext)) {
+      ext = "jpg";
     }
+    const isPng = ext === "png";
     const compressed = await imageCompression(f, {
-      maxSizeMB: 0.5,
-      maxWidthOrHeight: 1200,
+      maxSizeMB: 0.6,
+      maxWidthOrHeight: 1280,
       useWebWorker: true,
-      fileType: ext === "png" ? "image/png" : "image/jpeg",
+      fileType: isPng ? "image/png" : "image/jpeg",
     });
     const path = `events/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
     const { error: upErr } = await supabase.storage
       .from("parroquia-images")
-      .upload(path, compressed, { contentType: compressed.type, upsert: false, cacheControl: '31536000' });
+      .upload(path, compressed, { contentType: compressed.type || (isPng ? "image/png" : "image/jpeg"), upsert: false, cacheControl: '31536000' });
     if (upErr) throw upErr;
     return supabase.storage.from("parroquia-images").getPublicUrl(path).data.publicUrl;
   };
@@ -415,26 +420,34 @@ export function EventsManager({ showToast }: { showToast?: (m: string, t?: "succ
             Sube el afiche o pega el texto del post y la IA rellenará los campos automáticamente:
           </p>
 
-          <div className="space-y-2.5">
+          <div className="space-y-3">
             <div>
-              <label className="block text-[11px] font-medium text-foreground/80 mb-1">
+              <label className="block text-[11px] font-semibold text-foreground/90 mb-1.5">
                 📸 Foto del Afiche / Flyer:
               </label>
-              <input
-                type="file"
-                accept="image/png,image/jpeg,image/jpg,image/webp"
-                onChange={(e) => setAiImageFile(e.target.files?.[0] ?? null)}
-                className="w-full text-xs file:mr-2 file:py-1.5 file:px-2.5 file:rounded-md file:border-0 file:bg-gradient-gold file:text-primary file:font-semibold file:cursor-pointer cursor-pointer text-muted-foreground"
-              />
-              {aiImageFile && (
-                <p className="text-[11px] text-emerald-600 font-medium mt-1">
-                  ✓ Afiche seleccionado: {aiImageFile.name}
-                </p>
-              )}
+              <div
+                onClick={() => aiFileInputRef.current?.click()}
+                className="border-2 border-dashed border-gold/40 hover:border-gold rounded-xl p-3 bg-background/60 flex flex-col items-center justify-center cursor-pointer transition-all hover:bg-gold/5 text-center group"
+              >
+                <UploadCloud size={22} className="text-gold mb-1 group-hover:scale-110 transition-transform" />
+                <span className="text-xs font-semibold text-foreground">
+                  {aiImageFile ? `✓ ${aiImageFile.name}` : "Toca aquí para seleccionar el afiche"}
+                </span>
+                <span className="text-[10px] text-muted-foreground mt-0.5">
+                  {aiImageFile ? "Toca para cambiar la imagen" : "Soporta JPG, JPEG, PNG, WEBP"}
+                </span>
+                <input
+                  ref={aiFileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setAiImageFile(e.target.files?.[0] ?? null)}
+                  className="hidden"
+                />
+              </div>
             </div>
 
             <div>
-              <label className="block text-[11px] font-medium text-foreground/80 mb-1">
+              <label className="block text-[11px] font-semibold text-foreground/90 mb-1">
                 📝 O pega el texto del post (opcional):
               </label>
               <textarea
@@ -480,16 +493,46 @@ export function EventsManager({ showToast }: { showToast?: (m: string, t?: "succ
           <Input required type="datetime-local" value={form.event_date} onChange={e => setForm({ ...form, event_date: e.target.value })} />
           <Input placeholder="Lugar (opcional)" value={form.location} onChange={e => setForm({ ...form, location: e.target.value })} />
           <Textarea placeholder="Descripción breve…" rows={3} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
+          
           <div>
-            <label className="block text-xs text-muted-foreground mb-1.5">Afiche del evento (PNG, JPG)</label>
+            <label className="block text-xs font-medium text-foreground/80 mb-1.5">
+              Afiche del evento (opcional)
+            </label>
+            <div
+              onClick={() => manualFileInputRef.current?.click()}
+              className="border border-input hover:border-gold rounded-lg p-2 bg-background flex items-center justify-between cursor-pointer transition-colors"
+            >
+              <div className="flex items-center gap-2 min-w-0 pr-2">
+                <FileImage size={15} className="text-gold shrink-0" />
+                <span className="text-xs text-foreground truncate">
+                  {imageFile ? imageFile.name : "Seleccionar afiche (JPG, PNG, WEBP)..."}
+                </span>
+              </div>
+              <span className="text-[11px] px-2.5 py-1 rounded bg-gradient-gold text-primary font-bold shrink-0">
+                Examinar
+              </span>
+            </div>
             <input
+              ref={manualFileInputRef}
               type="file"
-              accept="image/png,image/jpeg,image/jpg"
+              accept="image/*"
               onChange={e => setImageFile(e.target.files?.[0] ?? null)}
-              className="w-full text-xs file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-gradient-gold file:text-primary file:font-semibold file:cursor-pointer cursor-pointer text-muted-foreground"
+              className="hidden"
             />
-            {imageFile && <p className="text-xs text-gold mt-1.5">📎 {imageFile.name}</p>}
+            {imageFile && (
+              <div className="flex items-center justify-between mt-1 text-[11px]">
+                <span className="text-emerald-600 font-medium">✓ Imagen lista para publicar</span>
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); setImageFile(null); }}
+                  className="text-destructive hover:underline text-[10px]"
+                >
+                  Quitar
+                </button>
+              </div>
+            )}
           </div>
+
           <PrimaryBtn type="submit" disabled={saving}>
             <Plus size={15} /> {saving ? "Publicando…" : "Publicar evento"}
           </PrimaryBtn>
@@ -537,7 +580,7 @@ export function EventsManager({ showToast }: { showToast?: (m: string, t?: "succ
             <Input placeholder="Lugar" value={editing.location ?? ""} onChange={e => setEditing({ ...editing, location: e.target.value })} />
             <Textarea rows={3} value={editing.description ?? ""} onChange={e => setEditing({ ...editing, description: e.target.value })} />
             <div>
-              <label className="block text-xs text-muted-foreground mb-1.5">Afiche del evento (PNG, JPG)</label>
+              <label className="block text-xs font-medium text-foreground/80 mb-1.5">Afiche del evento</label>
               {(editImageFile || editing.image_url) && (
                   <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-secondary border border-border mb-2">
                     <img
@@ -554,13 +597,27 @@ export function EventsManager({ showToast }: { showToast?: (m: string, t?: "succ
                     </button>
                   </div>
                 )}
+              <div
+                onClick={() => editFileInputRef.current?.click()}
+                className="border border-input hover:border-gold rounded-lg p-2 bg-background flex items-center justify-between cursor-pointer transition-colors"
+              >
+                <div className="flex items-center gap-2 min-w-0 pr-2">
+                  <FileImage size={15} className="text-gold shrink-0" />
+                  <span className="text-xs text-foreground truncate">
+                    {editImageFile ? editImageFile.name : "Cambiar afiche (JPG, PNG, WEBP)..."}
+                  </span>
+                </div>
+                <span className="text-[11px] px-2.5 py-1 rounded bg-gradient-gold text-primary font-bold shrink-0">
+                  Examinar
+                </span>
+              </div>
               <input
+                ref={editFileInputRef}
                 type="file"
-                accept="image/png,image/jpeg,image/jpg"
+                accept="image/*"
                 onChange={e => setEditImageFile(e.target.files?.[0] ?? null)}
-                className="w-full text-xs file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-gradient-gold file:text-primary file:font-semibold file:cursor-pointer cursor-pointer text-muted-foreground"
+                className="hidden"
               />
-              {editImageFile && <p className="text-xs text-gold mt-1.5">📎 {editImageFile.name}</p>}
             </div>
             <PrimaryBtn type="submit" disabled={saving}>
               <Save size={15} /> {saving ? "Guardando…" : "Guardar cambios"}

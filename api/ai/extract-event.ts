@@ -81,7 +81,7 @@ Responde ÚNICAMENTE un objeto JSON válido con esta estructura exacta (sin form
 
     if (imageBase64) {
       const result = await generateText({
-        model: groq("llama-3.2-11b-vision-preview"),
+        model: groq("qwen/qwen3.8-27b"),
         messages: [
           {
             role: "user",

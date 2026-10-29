@@ -9,15 +9,15 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SacramentosRouteImport } from './routes/sacramentos'
-import { Route as CarnetRouteImport } from './routes/carnet'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CarnetRouteImport } from './routes/carnet'
+import { Route as SacramentosRouteImport } from './routes/sacramentos'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
 
-const SacramentosRoute = SacramentosRouteImport.update({
-  id: '/sacramentos',
-  path: '/sacramentos',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CarnetRoute = CarnetRouteImport.update({
@@ -25,9 +25,9 @@ const CarnetRoute = CarnetRouteImport.update({
   path: '/carnet',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const SacramentosRoute = SacramentosRouteImport.update({
+  id: '/sacramentos',
+  path: '/sacramentos',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
@@ -81,11 +81,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/sacramentos': {
-      id: '/sacramentos'
-      path: '/sacramentos'
-      fullPath: '/sacramentos'
-      preLoaderRoute: typeof SacramentosRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/carnet': {
@@ -95,11 +95,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CarnetRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/sacramentos': {
+      id: '/sacramentos'
+      path: '/sacramentos'
+      fullPath: '/sacramentos'
+      preLoaderRoute: typeof SacramentosRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/': {

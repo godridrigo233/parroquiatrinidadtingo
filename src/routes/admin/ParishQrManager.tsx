@@ -1,8 +1,11 @@
 import { useState, useRef } from "react";
-import { QRCodeCanvas } from "qrcode.react";
-import { Download, Printer, QrCode, Globe, Clock, BookOpen, Calendar, Check, ExternalLink } from "lucide-react";
+import { QRCodeCanvas, QRCodeSVG } from "qrcode.react";
+import { Download, Printer, QrCode, Globe, Clock, BookOpen, Calendar, Check, ExternalLink, Sparkles } from "lucide-react";
 
 const SITE_URL = "https://parroquiatrinidadtingo.vercel.app";
+
+// Logo de alta resolución oficial de la parroquia (512x512)
+const PARISH_HD_LOGO = "/pwa-512x512.png";
 
 const PRESET_DESTINATIONS = [
   {
@@ -41,34 +44,59 @@ export function ParishQrManager({ showToast }: { showToast?: (msg: string, type?
   const [copied, setCopied] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
 
+  // Descarga en Alta Resolución (1200x1200px con antialiasing nítido y logo HD)
   const downloadHighResPng = () => {
-    // Generar un canvas temporal de 1024x1024 para máxima nitidez en imprenta
-    const canvas = document.createElement("canvas");
-    canvas.width = 1000;
-    canvas.height = 1000;
-    const ctx = canvas.getContext("2d");
+    const hdCanvas = document.getElementById("parish-hd-canvas") as HTMLCanvasElement;
+    if (!hdCanvas) {
+      if (showToast) showToast("Generando imagen... intenta en un segundo", "error");
+      return;
+    }
+
+    const exportCanvas = document.createElement("canvas");
+    exportCanvas.width = 1200;
+    exportCanvas.height = 1200;
+    const ctx = exportCanvas.getContext("2d");
     if (!ctx) return;
 
-    // Obtener el canvas visible generado por qrcode.react
-    const visibleCanvas = document.getElementById("parish-active-qr") as HTMLCanvasElement;
-    if (!visibleCanvas) return;
-
-    // Fondo blanco limpio
+    // Fondo blanco puro
     ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, 1000, 1000);
+    ctx.fillRect(0, 0, 1200, 1200);
 
-    // Dibujar el QR escalado
-    ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(visibleCanvas, 60, 60, 880, 880);
+    // Renderizado suave y de máxima calidad
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(hdCanvas, 0, 0, 1200, 1200);
 
     const a = document.createElement("a");
-    a.download = `QR-Parroquia-Tingo-${selectedDestination.id}.png`;
-    a.href = canvas.toDataURL("image/png");
+    a.download = `QR-Parroquia-Santisima-Trinidad-${selectedDestination.id}-HD.png`;
+    a.href = exportCanvas.toDataURL("image/png");
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
 
-    if (showToast) showToast("Código QR descargado en alta resolución (PNG)", "success");
+    if (showToast) showToast("Código QR descargado en alta definición (1200px)", "success");
+  };
+
+  // Descarga Vectorial SVG (Calidad infinita sin ningún tipo de píxel)
+  const downloadVectorSvg = () => {
+    const svgEl = document.getElementById("parish-vector-qr");
+    if (!svgEl) return;
+    const serializer = new XMLSerializer();
+    let source = serializer.serializeToString(svgEl);
+    if (!source.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)) {
+      source = source.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
+    }
+    const blob = new Blob([source], { type: "image/svg+xml;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.download = `QR-Parroquia-Santisima-Trinidad-${selectedDestination.id}-Vectorial.svg`;
+    a.href = url;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    if (showToast) showToast("Vector SVG descargado (calidad infinita para imprenta)", "success");
   };
 
   const handlePrint = () => {
@@ -84,6 +112,33 @@ export function ParishQrManager({ showToast }: { showToast?: (msg: string, type?
 
   return (
     <div className="space-y-8">
+      {/* Canvas invisible en Ultra Alta Definición (1200x1200) para exportación PNG nítida */}
+      <div
+        style={{
+          position: "absolute",
+          left: "-99999px",
+          top: "-99999px",
+          pointerEvents: "none",
+          opacity: 0,
+        }}
+        aria-hidden="true"
+      >
+        <QRCodeCanvas
+          id="parish-hd-canvas"
+          value={selectedDestination.url}
+          size={1200}
+          level="H"
+          includeMargin={true}
+          marginSize={3}
+          imageSettings={{
+            src: PARISH_HD_LOGO,
+            height: 330,
+            width: 330,
+            excavate: true,
+          }}
+        />
+      </div>
+
       {/* Estilos para impresión limpia del cartel oficial */}
       <style>{`
         @media print {
@@ -125,17 +180,24 @@ export function ParishQrManager({ showToast }: { showToast?: (msg: string, type?
             <div>
               <h2 className="font-display text-xl text-primary font-bold">Generador de Código QR Parroquial con Logo</h2>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Genera carteles listos para imprimir y colocar en el templo (puertas, despacho y bancas) para que los fieles escaneen la web.
+                Genera códigos y carteles listos para imprimir en el templo con el escudo oficial totalmente nítido en alta resolución.
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 self-stretch md:self-auto">
+          <div className="flex flex-wrap items-center gap-2 self-stretch md:self-auto">
+            <button
+              onClick={downloadVectorSvg}
+              className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl bg-secondary text-secondary-foreground text-xs font-semibold hover:bg-border transition-colors"
+              title="Descargar en formato vectorial sin pérdida de calidad"
+            >
+              <Sparkles size={14} className="text-amber-500" /> Vector SVG
+            </button>
             <button
               onClick={downloadHighResPng}
               className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-secondary text-secondary-foreground text-xs font-semibold hover:bg-border transition-colors"
             >
-              <Download size={15} /> Descargar solo PNG
+              <Download size={15} /> Descargar PNG HD
             </button>
             <button
               onClick={handlePrint}
@@ -237,7 +299,7 @@ export function ParishQrManager({ showToast }: { showToast?: (msg: string, type?
         {/* PANEL DERECHO: VISTA PREVIA DEL CARTEL OFICIAL */}
         <div className="lg:col-span-7 flex flex-col items-center">
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 self-start">
-            Vista Previa del Cartel (Listo para Imprimir / A4)
+            Vista Previa del Cartel (Vectorial · Máxima Nitidez)
           </p>
 
           {/* CONTENEDOR DEL CARTEL IMPRIMIBLE */}
@@ -249,13 +311,14 @@ export function ParishQrManager({ showToast }: { showToast?: (msg: string, type?
             {/* Adorno superior dorado */}
             <div className="w-16 h-1 bg-gradient-to-r from-amber-400 via-amber-600 to-amber-400 rounded-full mb-4" />
 
-            {/* Logo de la Parroquia */}
+            {/* Logo de la Parroquia (Cabecera) */}
             <div className="relative mb-3">
               <div className="w-20 h-20 rounded-full border-2 border-amber-500 p-0.5 shadow-md overflow-hidden bg-white mx-auto">
                 <img
-                  src="/assets/logo.png"
+                  src={PARISH_HD_LOGO}
                   alt="Logo Parroquia Santísima Trinidad"
                   className="w-full h-full object-cover rounded-full"
+                  loading="eager"
                 />
               </div>
             </div>
@@ -275,19 +338,19 @@ export function ParishQrManager({ showToast }: { showToast?: (msg: string, type?
               {customSubtitle}
             </p>
 
-            {/* CÓDIGO QR ENMARCADO CON LOGO AL CENTRO */}
-            <div className="my-5 p-4 bg-white rounded-2xl border-2 border-slate-200 shadow-inner inline-block">
-              <QRCodeCanvas
-                id="parish-active-qr"
+            {/* CÓDIGO QR ENMARCADO VECTORIAL CON LOGO AL CENTRO EN ALTA DEFINICIÓN */}
+            <div className="my-5 p-4 bg-white rounded-2xl border-2 border-slate-200 shadow-inner inline-flex items-center justify-center">
+              <QRCodeSVG
+                id="parish-vector-qr"
                 value={selectedDestination.url}
-                size={240}
+                size={270}
                 level="H"
                 includeMargin={true}
                 marginSize={2}
                 imageSettings={{
-                  src: "/assets/logo.png",
-                  height: 52,
-                  width: 52,
+                  src: PARISH_HD_LOGO,
+                  height: 74,
+                  width: 74,
                   excavate: true,
                 }}
               />
@@ -320,19 +383,25 @@ export function ParishQrManager({ showToast }: { showToast?: (msg: string, type?
             </div>
           </div>
 
-          {/* BOTÓN RÁPIDO DEBAJO */}
-          <div className="mt-4 flex items-center gap-3">
+          {/* BOTONES DE ACCIÓN */}
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
             <button
               onClick={handlePrint}
               className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-gradient-gold text-primary font-bold text-xs shadow-md hover:scale-105 active:scale-95 transition-all"
             >
-              <Printer size={15} /> Imprimir o Guardar en PDF
+              <Printer size={15} /> Imprimir Cartel A4
             </button>
             <button
               onClick={downloadHighResPng}
               className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-secondary text-secondary-foreground font-semibold text-xs hover:bg-border transition-colors"
             >
-              <Download size={14} /> Guardar Imagen
+              <Download size={14} /> Guardar PNG HD
+            </button>
+            <button
+              onClick={downloadVectorSvg}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-secondary text-secondary-foreground font-semibold text-xs hover:bg-border transition-colors"
+            >
+              <Sparkles size={14} className="text-amber-500" /> Guardar Vector SVG
             </button>
           </div>
         </div>

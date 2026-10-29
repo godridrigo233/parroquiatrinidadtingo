@@ -100,7 +100,196 @@ export function ParishQrManager({ showToast }: { showToast?: (msg: string, type?
   };
 
   const handlePrint = () => {
-    window.print();
+    const posterEl = document.getElementById("parish-printable-poster");
+    if (!posterEl) return;
+
+    // Crear un iframe invisible para aislar la hoja e imprimir en EXACTAMENTE 1 PÁGINA A4/Carta
+    const iframe = document.createElement("iframe");
+    iframe.style.position = "fixed";
+    iframe.style.right = "0";
+    iframe.style.bottom = "0";
+    iframe.style.width = "0";
+    iframe.style.height = "0";
+    iframe.style.border = "0";
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentWindow?.document;
+    if (!doc) return;
+
+    // Clonamos el contenido del cartel
+    const htmlContent = posterEl.innerHTML;
+
+    doc.open();
+    doc.write(`
+      <!DOCTYPE html>
+      <html lang="es">
+        <head>
+          <meta charset="utf-8" />
+          <title>Cartel Oficial - Parroquia Santísima Trinidad de Tingo</title>
+          <style>
+            @page {
+              size: A4 portrait;
+              margin: 0.6cm;
+            }
+            * {
+              box-sizing: border-box;
+              margin: 0;
+              padding: 0;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+              color-adjust: exact !important;
+            }
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+              background: #ffffff;
+              color: #0f172a;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              min-height: 100vh;
+              padding: 0;
+              margin: 0;
+            }
+            .poster-card {
+              width: 100%;
+              max-width: 520px;
+              margin: auto;
+              border: 3.5px solid #d97706 !important;
+              border-radius: 24px !important;
+              padding: 24px 20px !important;
+              text-align: center;
+              background: #ffffff !important;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              page-break-inside: avoid !important;
+              break-inside: avoid !important;
+            }
+            .gold-bar {
+              width: 60px;
+              height: 4px;
+              background: linear-gradient(90deg, #f59e0b, #d97706, #f59e0b) !important;
+              border-radius: 9999px;
+              margin-bottom: 12px;
+            }
+            .logo-wrap {
+              width: 72px;
+              height: 72px;
+              border-radius: 9999px;
+              border: 2px solid #f59e0b !important;
+              padding: 2px;
+              margin: 0 auto 10px auto;
+              background: #ffffff !important;
+              overflow: hidden;
+            }
+            .logo-wrap img {
+              width: 100%;
+              height: 100%;
+              object-fit: cover;
+              border-radius: 9999px;
+            }
+            h1 {
+              font-size: 19px;
+              font-weight: 900;
+              text-transform: uppercase;
+              color: #0f172a;
+              letter-spacing: -0.02em;
+              line-height: 1.15;
+            }
+            .sub-arch {
+              font-size: 11px;
+              font-weight: 700;
+              text-transform: uppercase;
+              color: #b45309;
+              letter-spacing: 0.12em;
+              margin-top: 3px;
+            }
+            .divider {
+              width: 100%;
+              border-top: 1px solid #e2e8f0;
+              margin: 12px 0;
+            }
+            .invitation {
+              font-size: 13px;
+              font-weight: 700;
+              color: #1e293b;
+              padding: 0 10px;
+              line-height: 1.3;
+            }
+            .qr-box {
+              margin: 14px 0;
+              padding: 12px;
+              background: #ffffff !important;
+              border: 2px solid #cbd5e1 !important;
+              border-radius: 18px;
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+            }
+            .qr-box svg {
+              display: block;
+              width: 230px !important;
+              height: 230px !important;
+            }
+            .grid-features {
+              width: 100%;
+              background: #f8fafc !important;
+              border: 1px solid #e2e8f0 !important;
+              border-radius: 14px;
+              padding: 10px 14px;
+              margin-bottom: 14px;
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 8px 12px;
+              text-align: left;
+              font-size: 11px;
+              color: #334155;
+            }
+            .grid-item {
+              display: flex;
+              align-items: center;
+              gap: 6px;
+              font-weight: 600;
+            }
+            .grid-item span {
+              color: #d97706;
+              font-size: 13px;
+            }
+            .footer-url {
+              font-size: 13px;
+              font-weight: 800;
+              font-family: monospace;
+              color: #0f172a;
+              letter-spacing: -0.01em;
+            }
+            .footer-info {
+              font-size: 9.5px;
+              color: #475569;
+              text-transform: uppercase;
+              letter-spacing: 0.08em;
+              margin-top: 2px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="poster-card">
+            ${htmlContent}
+          </div>
+        </body>
+      </html>
+    `);
+    doc.close();
+
+    // Esperar a que se renderice el SVG y lanzar el diálogo de impresión
+    setTimeout(() => {
+      iframe.contentWindow?.focus();
+      iframe.contentWindow?.print();
+      setTimeout(() => {
+        if (document.body.contains(iframe)) {
+          document.body.removeChild(iframe);
+        }
+      }, 3000);
+    }, 400);
   };
 
   const copyUrl = () => {
@@ -309,75 +498,73 @@ export function ParishQrManager({ showToast }: { showToast?: (msg: string, type?
             className="w-full max-w-[480px] bg-white text-slate-900 rounded-3xl p-8 border-4 border-amber-600/30 shadow-2xl flex flex-col items-center text-center relative overflow-hidden"
           >
             {/* Adorno superior dorado */}
-            <div className="w-16 h-1 bg-gradient-to-r from-amber-400 via-amber-600 to-amber-400 rounded-full mb-4" />
+            <div className="gold-bar w-16 h-1 bg-gradient-to-r from-amber-400 via-amber-600 to-amber-400 rounded-full mb-3" />
 
             {/* Logo de la Parroquia (Cabecera) */}
-            <div className="relative mb-3">
-              <div className="w-20 h-20 rounded-full border-2 border-amber-500 p-0.5 shadow-md overflow-hidden bg-white mx-auto">
-                <img
-                  src={PARISH_HD_LOGO}
-                  alt="Logo Parroquia Santísima Trinidad"
-                  className="w-full h-full object-cover rounded-full"
-                  loading="eager"
-                />
-              </div>
+            <div className="logo-wrap w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-amber-500 p-0.5 shadow-md overflow-hidden bg-white mx-auto mb-2">
+              <img
+                src={PARISH_HD_LOGO}
+                alt="Logo Parroquia Santísima Trinidad"
+                className="w-full h-full object-cover rounded-full"
+                loading="eager"
+              />
             </div>
 
             {/* Título institucional */}
-            <h1 className="font-display text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-tight uppercase">
+            <h1 className="font-display text-lg sm:text-xl font-black text-slate-900 tracking-tight leading-tight uppercase">
               Parroquia Santísima Trinidad
             </h1>
-            <p className="text-xs tracking-widest uppercase font-bold text-amber-700 mt-0.5">
+            <p className="sub-arch text-[11px] tracking-widest uppercase font-bold text-amber-700 mt-0.5">
               Tingo · Arquidiócesis de Arequipa
             </p>
 
-            <div className="w-full border-t border-slate-200 my-4" />
+            <div className="divider w-full border-t border-slate-200 my-3" />
 
             {/* Llamado a la acción */}
-            <p className="text-sm font-bold text-slate-800 px-4 leading-snug">
+            <p className="invitation text-xs sm:text-sm font-bold text-slate-800 px-3 leading-snug">
               {customSubtitle}
             </p>
 
             {/* CÓDIGO QR ENMARCADO VECTORIAL CON LOGO AL CENTRO EN ALTA DEFINICIÓN */}
-            <div className="my-5 p-4 bg-white rounded-2xl border-2 border-slate-200 shadow-inner inline-flex items-center justify-center">
+            <div className="qr-box my-3.5 p-3 bg-white rounded-2xl border-2 border-slate-200 shadow-inner inline-flex items-center justify-center">
               <QRCodeSVG
                 id="parish-vector-qr"
                 value={selectedDestination.url}
-                size={270}
+                size={230}
                 level="H"
                 includeMargin={true}
                 marginSize={2}
                 imageSettings={{
                   src: PARISH_HD_LOGO,
-                  height: 74,
-                  width: 74,
+                  height: 64,
+                  width: 64,
                   excavate: true,
                 }}
               />
             </div>
 
             {/* VIÑETAS DE CONTENIDO DISPONIBLE */}
-            <div className="w-full bg-slate-50 border border-slate-200/80 rounded-xl p-3.5 mb-4 text-left grid grid-cols-2 gap-2 text-[11px] text-slate-700">
-              <div className="flex items-center gap-1.5 font-medium">
+            <div className="grid-features w-full bg-slate-50 border border-slate-200/80 rounded-xl p-3 mb-3 text-left grid grid-cols-2 gap-2 text-[11px] text-slate-700">
+              <div className="grid-item flex items-center gap-1.5 font-medium">
                 <span className="text-amber-600 text-sm">⏰</span> Horarios de Misa
               </div>
-              <div className="flex items-center gap-1.5 font-medium">
+              <div className="grid-item flex items-center gap-1.5 font-medium">
                 <span className="text-amber-600 text-sm">🕊️</span> Sacramentos y Fechas
               </div>
-              <div className="flex items-center gap-1.5 font-medium">
+              <div className="grid-item flex items-center gap-1.5 font-medium">
                 <span className="text-amber-600 text-sm">📢</span> Avisos de la Semana
               </div>
-              <div className="flex items-center gap-1.5 font-medium">
+              <div className="grid-item flex items-center gap-1.5 font-medium">
                 <span className="text-amber-600 text-sm">🤖</span> Hermano Elías (IA)
               </div>
             </div>
 
             {/* ENLACE ESCRITO Y PIE DE PÁGINA */}
-            <div className="text-center space-y-1">
-              <p className="text-xs font-mono font-bold text-slate-900 tracking-tight">
+            <div className="text-center space-y-0.5">
+              <p className="footer-url text-xs font-mono font-bold text-slate-900 tracking-tight">
                 parroquiatrinidadtingo.vercel.app
               </p>
-              <p className="text-[10px] text-slate-700 uppercase tracking-wider">
+              <p className="footer-info text-[9.5px] text-slate-700 uppercase tracking-wider">
                 Calle Ferrocarril 200 · Tingo · Tel. 915 049 850
               </p>
             </div>

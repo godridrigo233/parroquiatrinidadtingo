@@ -1,4 +1,17 @@
 {
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "parroquiatrinidadtingo.vercel.app"
+        }
+      ],
+      "destination": "https://www.psantisimatrinidadtingo.org.pe/",
+      "statusCode": 308
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",

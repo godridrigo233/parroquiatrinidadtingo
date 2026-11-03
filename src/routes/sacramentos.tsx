@@ -21,7 +21,7 @@ import { Navbar } from "@/components/site/Navbar";
 import { Reveal } from "@/components/site/Reveal";
 import { Footer } from "@/components/site/Footer";
 
-const SITE_URL = "https://parroquiatrinidadtingo.vercel.app";
+const SITE_URL = "https://www.psantisimatrinidadtingo.org.pe";
 
 /* ─────────────────────── DATOS ─────────────────────── */
 

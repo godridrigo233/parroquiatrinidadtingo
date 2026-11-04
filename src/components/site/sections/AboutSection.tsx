@@ -16,6 +16,20 @@ const ministryPhotos = [
   null,
 ];
 
+// Helper para asegurar que cada ministerio cargue su foto correspondiente
+function getMinistryPhoto(m: Ministry, index: number): string | null {
+  if (m.image_url) return m.image_url;
+  const n = (m.name || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  if (n.includes("ala") || n.includes("fe")) return "/assets/ministries/alas-de-fe.png";
+  if (n.includes("siervo") || n.includes("luz")) return "/assets/ministries/siervos-de-luz.png";
+  if (n.includes("acolito") || n.includes("monaguillo")) return "/assets/ministries/acolitos.png";
+  if (n.includes("milagro")) return "/assets/ministries/senor-de-los-milagros.png";
+  if (n.includes("legion") || n.includes("maria")) return "/assets/ministries/legion-de-maria.png";
+  if (n.includes("catequi")) return "/assets/ministries/catequistas.png";
+  if (n.includes("dolor")) return "/assets/ministries/virgen-de-los-dolores.png";
+  return ministryPhotos[index] ?? null;
+}
+
 // Datos enriquecidos con Rutas SIT y Coordenadas GPS para cada capilla y la Sede Central
 const locationsData: { 
   key: string; 
@@ -424,7 +438,7 @@ export default function AboutSection({
                         <div className={`grid gap-5 ${activeLocation ? "sm:grid-cols-2" : "md:grid-cols-2 lg:grid-cols-3"}`}>
                           {filtered.map((m, i) => {
                             const Icon = ministryIcons[i % ministryIcons.length];
-                            const ministryImage = m.image_url || ministryPhotos[i];
+                            const ministryImage = getMinistryPhoto(m, i);
                             return (
                               <Reveal key={m.id} delay={i * 80}>
                                 <article className="group h-full flex flex-col bg-card rounded-2xl border border-border shadow-card hover:shadow-elegant hover:-translate-y-1 transition-all overflow-hidden will-change-transform">

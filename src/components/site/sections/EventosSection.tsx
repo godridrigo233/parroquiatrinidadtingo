@@ -82,8 +82,9 @@ const DEFAULT_FALLBACK_POSTS: FacebookPost[] = [
 ];
 
 function FacebookPostsGrid() {
-  const [posts, setPosts] = useState<FacebookPost[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [posts, setPosts] = useState<FacebookPost[]>(DEFAULT_FALLBACK_POSTS);
+  const [isLoading, setIsLoading] = useState(false);
+  const [viewMode, setViewMode] = useState<"live" | "cards">("live");
 
   useEffect(() => {
     const fetchFacebookFeed = async () => {
@@ -103,65 +104,9 @@ function FacebookPostsGrid() {
             image_url: p.image_url || "/assets/hero-church.webp",
           }));
           setPosts(formattedDbPosts);
-          setIsLoading(false);
-          return;
         }
-
-        // 2. Si no hay en Supabase, obtener del feed de RSS filtrando estrictamente fotos reales
-        const rssUrl = "https://fetchrss.com/feed/1wk26cD118cU1wk26x4gR7gD.rss"; 
-        const response = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`);
-
-        if (response.ok) {
-          const data = await response.json();
-          if (data.status === "ok" && data.items && data.items.length > 0) {
-            const formattedPosts = data.items
-              .filter((item: any) => {
-                const link = (item.link || "").toLowerCase();
-                const title = (item.title || "").toLowerCase();
-                const content = (item.content || "").toLowerCase();
-
-                // 🚫 Descartar videos, transmisiones en vivo y contenidos restringidos
-                const isVideoOrLive = link.includes("/videos/") || link.includes("/watch") || link.includes("/reel") || link.includes("/live");
-                const isUnavailable = title.includes("isn't available") || title.includes("no disponible") || content.includes("when this happens");
-                const hasRealPhoto = !!(item.enclosure?.link || item.thumbnail || item.content?.includes("<img"));
-
-                return hasRealPhoto && !isVideoOrLive && !isUnavailable;
-              })
-              .map((item: any) => {
-                let rawImageUrl = item.enclosure?.link || item.thumbnail;
-                if (!rawImageUrl && item.content) {
-                  const imgMatch = item.content.match(/<img[^>]+src="([^">]+)"/);
-                  if (imgMatch && imgMatch[1]) {
-                    rawImageUrl = imgMatch[1];
-                  }
-                }
-
-                const cleanDescription = (item.content || item.description || "")
-                  .replace(/<[^>]*>?/gm, '')
-                  .replace(/\(Feed generated with FetchRSS\)/gi, '')
-                  .trim() || "Mira nuestra última actividad o aviso parroquial en nuestra página oficial de Facebook.";
-
-                return {
-                  id: item.guid || item.link || Math.random().toString(),
-                  post_url: item.link || "https://www.facebook.com/parroquiasantisimatrinidadtingo/",
-                  description: cleanDescription,
-                  image_url: rawImageUrl || "/assets/hero-church.webp"
-                };
-              })
-              .slice(0, 3);
-
-            setPosts(formattedPosts.length > 0 ? formattedPosts : DEFAULT_FALLBACK_POSTS);
-            setIsLoading(false);
-            return;
-          }
-        }
-
-        setPosts(DEFAULT_FALLBACK_POSTS);
       } catch (error) {
-        console.warn("Feed de Facebook temporalmente no disponible, usando respaldo:", error);
-        setPosts(DEFAULT_FALLBACK_POSTS);
-      } finally {
-        setIsLoading(false);
+        console.warn("Error consultando publicaciones:", error);
       }
     };
 
@@ -177,40 +122,88 @@ function FacebookPostsGrid() {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-      {posts.map((post) => (
-        <div
-          key={post.id}
-          className="rounded-2xl bg-card border border-border/60 shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden flex flex-col p-3.5"
-        >
-          {/* Incrustación nativa de la publicación de Facebook */}
-          <div className="flex-1 flex justify-center overflow-hidden rounded-xl bg-muted/20 min-h-[460px]">
-            <iframe
-              src={`https://www.facebook.com/plugins/post.php?href=${encodeURIComponent(post.post_url ?? "https://www.facebook.com/parroquiasantisimatrinidadtingo/")}&show_text=true&width=350`}
-              width="100%"
-              height="480"
-              style={{ border: "none", overflow: "hidden", minHeight: "480px", maxWidth: "360px" }}
-              scrolling="no"
-              frameBorder="0"
-              allowFullScreen={true}
-              allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
-              title={post.description || "Publicación de Facebook"}
-            />
-          </div>
-
-          {/* Botón interactivo directo a la publicación en Facebook */}
-          <a
-            href={post.post_url ?? "https://www.facebook.com/parroquiasantisimatrinidadtingo/"}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full mt-3.5 py-2.5 px-4 rounded-xl bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground font-semibold text-xs flex items-center justify-center gap-2 transition-all duration-300 shadow-sm cursor-pointer group"
+    <div className="space-y-6">
+      {/* Pestañas de Selección de Vista */}
+      <div className="flex items-center justify-between flex-wrap gap-4 border-b border-border/40 pb-3">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setViewMode("live")}
+            className={`px-4 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+              viewMode === "live"
+                ? "bg-[#1877F2] text-white shadow-md shadow-[#1877F2]/20 scale-105"
+                : "bg-secondary/60 text-muted-foreground hover:text-foreground"
+            }`}
           >
-            <Facebook size={14} className="text-[#1877F2] group-hover:text-white transition-colors" />
-            <span>Ver publicación en Facebook</span>
-            <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-          </a>
+            📱 Muro de Facebook en Vivo (Fotos y Noticias)
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode("cards")}
+            className={`px-4 py-2 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+              viewMode === "cards"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "bg-secondary/60 text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            📰 Resumen en Tarjetas
+          </button>
         </div>
-      ))}
+
+        <a
+          href="https://www.facebook.com/parroquiasantisimatrinidadtingo/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 text-xs text-primary font-semibold hover:text-gold transition-colors"
+        >
+          <Facebook size={14} /> Abrir página oficial ↗
+        </a>
+      </div>
+
+      {/* VISTA EN VIVO CON IFRAME OFICIAL DE FACEBOOK */}
+      {viewMode === "live" ? (
+        <div className="w-full flex justify-center py-4 bg-card rounded-2xl border border-border/50 shadow-sm overflow-hidden min-h-[620px]">
+          <iframe
+            src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Fparroquiasantisimatrinidadtingo&tabs=timeline&width=500&height=700&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true"
+            width="500"
+            height="700"
+            style={{ border: "none", overflow: "hidden", maxWidth: "100%", borderRadius: "16px" }}
+            scrolling="no"
+            frameBorder="0"
+            allowFullScreen={true}
+            allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+            title="Muro Oficial de la Parroquia Santísima Trinidad de Tingo en Facebook"
+          />
+        </div>
+      ) : (
+        /* VISTA DE TARJETAS DESTACADAS */
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
+          {posts.map((post) => (
+            <a
+              key={post.id}
+              href={post.post_url ?? "https://www.facebook.com/parroquiasantisimatrinidadtingo/"}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group flex flex-col h-full rounded-2xl bg-white border border-border/60 shadow-md hover:shadow-xl hover:-translate-y-1.5 transition-all duration-500 overflow-hidden"
+            >
+              <div className="relative aspect-video overflow-hidden bg-muted">
+                <FacebookImage src={post.image_url!} />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              </div>
+
+              <div className="flex flex-col flex-1 p-5">
+                <p className="text-xs text-muted-foreground line-clamp-3 leading-relaxed flex-1">
+                  {post.description}
+                </p>
+                <div className="mt-4 pt-3 border-t border-border/40 flex items-center justify-between text-xs text-primary font-medium group-hover:text-gold transition-colors">
+                  <span>Ver en Facebook</span>
+                  <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                </div>
+              </div>
+            </a>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

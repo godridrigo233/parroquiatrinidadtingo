@@ -7,7 +7,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/site/Navbar";
 import { WhatsAppFab } from "@/components/site/WhatsAppFab";
 import { DonationRow } from "@/components/site/sections/DonacionesSection";
-import { Preloader } from "@/components/ui/Preloader";
 import * as Sentry from "@sentry/react";
 // Carga modular diferida (Lazy-loading / Code-splitting) para optimizar el rendimiento y evitar bloqueos
 const AboutSection = lazy(() => import("@/components/site/sections/AboutSection"));
@@ -204,7 +203,7 @@ function Home() {
     ...staleConfig,
   });
 
-  const { data: gallery = [], isLoading: loadingGallery } = useQuery({
+  const { data: gallery = [] } = useQuery({
     queryKey: ["home_gallery"],
     queryFn: async () => {
       const { data } = await supabase.from("gallery_images").select("*").order("sort_order");
@@ -213,7 +212,7 @@ function Home() {
     ...staleConfig,
   });
 
-  const { data: donations = [], isLoading: loadingDonations } = useQuery({
+  const { data: donations = [] } = useQuery({
     queryKey: ["home_donations"],
     queryFn: async () => {
       const { data } = await supabase.from("donations_info" as any).select("*").order("sort_order");
@@ -237,11 +236,8 @@ function Home() {
     groupedSchedules[s.category].push(s);
   });
 
-  const globalLoading = loadingMinistries || loadingEvents || loadingGallery || loadingDonations;
-
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <Preloader isLoading={globalLoading} />
       <Navbar />
 
       {/* SECCIÓN HERO (Primer pantallazo — cargado de forma inmediata y prioritaria) */}

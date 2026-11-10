@@ -97,6 +97,7 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
   const [isMobileDevice, setIsMobileDevice] = useState(false);
   const clicks = useRef(0);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scrollCheckFrame = useRef<number | null>(null);
   const navigate = useNavigate();
   const matches = useMatches();
 
@@ -135,26 +136,30 @@ export function Navbar({ forceBackground }: { forceBackground?: boolean } = {}) 
         (document.getElementById("root")?.scrollTop ?? 0) ||
         0;
 
-      setScrolled(isPastHero || winScroll > 15);
+      const nextScrolled = isPastHero || winScroll > 15;
+      setScrolled(nextScrolled);
+    };
+
+    const scheduleScrollCheck = () => {
+      if (scrollCheckFrame.current !== null) return;
+      scrollCheckFrame.current = window.requestAnimationFrame(() => {
+        scrollCheckFrame.current = null;
+        checkScroll();
+      });
     };
 
     if (isHome) {
-      checkScroll();
-      // Escaneo por eventos táctiles y de scroll
-      window.addEventListener("scroll", checkScroll, true);
-      document.addEventListener("scroll", checkScroll, true);
-      window.addEventListener("touchmove", checkScroll, { passive: true });
-      window.addEventListener("resize", checkScroll);
-      
-      // EL SECRETO: Un intervalo de 150ms que verifica en silencio la posición en pantalla
-      const interval = setInterval(checkScroll, 150);
+      scheduleScrollCheck();
+      window.addEventListener("scroll", scheduleScrollCheck, { passive: true });
+      window.addEventListener("resize", scheduleScrollCheck);
 
       return () => {
-        window.removeEventListener("scroll", checkScroll, true);
-        document.removeEventListener("scroll", checkScroll, true);
-        window.removeEventListener("touchmove", checkScroll);
-        window.removeEventListener("resize", checkScroll);
-        clearInterval(interval);
+        window.removeEventListener("scroll", scheduleScrollCheck);
+        window.removeEventListener("resize", scheduleScrollCheck);
+        if (scrollCheckFrame.current !== null) {
+          window.cancelAnimationFrame(scrollCheckFrame.current);
+          scrollCheckFrame.current = null;
+        }
       };
     } else {
       setScrolled(true);
